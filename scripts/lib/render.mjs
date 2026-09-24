@@ -161,13 +161,21 @@ export function renderHostEntry(root, catalog, settings) {
     ? settings.skills.enabled.map((id) => skillLine(root, catalog, byId.get(id))).join("\n")
     : "- none";
   const localExceptions = localExceptionBlock(settings);
-  return template
-    .replaceAll("{{canonicalRoot}}", shown)
-    .replace("{{rules}}", rules)
-    .replace("{{skills}}", skills)
-    .replace("{{localExceptions}}", localExceptions)
-    .replace("{{operations}}", operationsBlock(settings))
-    .replace(/\s+$/, "\n");
+  return literalReplace(template, {
+    "{{canonicalRoot}}": shown,
+    "{{rules}}": rules,
+    "{{skills}}": skills,
+    "{{localExceptions}}": localExceptions,
+    "{{operations}}": operationsBlock(settings),
+  }).replace(/\s+$/, "\n");
+}
+
+function literalReplace(template, values) {
+  let text = template;
+  for (const [token, value] of Object.entries(values)) {
+    text = text.replaceAll(token, () => value);
+  }
+  return text;
 }
 
 function localExceptionBlock(settings) {

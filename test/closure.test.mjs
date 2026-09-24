@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { includedSkillIds, loadCatalog, offeredEntries } from "../scripts/lib/catalog.mjs";
 import { commitCount, emptyTreeId, writeDiff } from "../scripts/lib/diff.mjs";
 import { doctor } from "../scripts/lib/doctor.mjs";
-import { installHost, readSettings, repairHost } from "../scripts/lib/host.mjs";
+import { installHost, readSettings, repairHost, syncHosts } from "../scripts/lib/host.mjs";
 import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
 import { isOperationalCanonicalPath, readStoredZip, writeSnapshot } from "../scripts/lib/snapshot.mjs";
@@ -358,4 +358,21 @@ test("untracked diffs keep unicode names and refuse an unreadable file", () => {
   } finally {
     allowRead(locked);
   }
+});
+
+test("generated guidance keeps replacement metacharacters", () => {
+  const root = makeCanonical();
+  const catalogFile = path.join(root, "catalog.yaml");
+  const catalogText = fs.readFileSync(catalogFile, "utf8").replace(
+    "description: Audit and remove unused CSS-module selectors conservatively.",
+    () => "description: \"Audit $& $' $` selectors.\"",
+  );
+  fs.writeFileSync(catalogFile, catalogText);
+  const host = makeRepo("dollar-host");
+  installHost(root, host, { yes: true, id: "dollar-host", name: "Dollar", enable: ["css-cleanup"] });
+  const entry = fs.readFileSync(path.join(host, ".agents", "AGS.md"), "utf8");
+  assert.match(entry, /Audit \$& \$' \$` selectors\./);
+  assert.equal(syncHosts(root, { route: host })[0].status, "clean");
+  fs.writeFileSync(path.join(host, ".agents", "AGS.md"), entry.replace("$&", "{{skills}}"));
+  assert.equal(syncHosts(root, { route: host })[0].status, "repairable");
 });
