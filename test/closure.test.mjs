@@ -301,3 +301,13 @@ test("ui-library offering, doctor links, and private state stay narrow", () => {
   const hostsAfter = fs.existsSync(hostsFile) ? fs.readFileSync(hostsFile) : null;
   assert.equal(hostsBefore === null ? hostsAfter === null : hostsBefore.equals(hostsAfter), true);
 });
+
+test("malformed link escapes stay on the doctor path", () => {
+  const root = makeCanonical();
+  fs.mkdirSync(path.join(root, "skills", "bad-link"), { recursive: true });
+  fs.writeFileSync(path.join(root, "skills", "bad-link", "SKILL.md"), "---\nname: bad-link\ndescription: Bad link.\n---\n\n[x](%zz)\n");
+  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: bad-link\n    kind: custom\n    path: skills/bad-link/SKILL.md\n    description: Bad link.\n    default: false\n    entryPoint: true\n    keywords: [bad]\n");
+  const result = doctor(root);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((line) => line.includes("bad-link") && line.includes("%zz")));
+});

@@ -4,10 +4,18 @@ import { relativeInside } from "./util.mjs";
 
 const LINK = /\[[^\]]*\]\(([^)\s]+)\)/g;
 
+function decodedHref(raw) {
+  try {
+    return decodeURI(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export function markdownHrefs(text) {
   const hrefs = [];
   for (const match of String(text).matchAll(LINK)) {
-    const href = decodeURI(match[1]).split("#")[0].trim();
+    const href = decodedHref(match[1]).split("#")[0].trim();
     if (!href || href.startsWith("#")) continue;
     hrefs.push(href);
   }
@@ -39,7 +47,7 @@ export function crossSkillIds(canonicalRoot, fromDirectory, text) {
 export function relativeLinkErrors(root, fromDirectory, text) {
   const errors = [];
   for (const match of text.matchAll(LINK)) {
-    const href = decodeURI(match[1]).split("#")[0].trim();
+    const href = decodedHref(match[1]).split("#")[0].trim();
     if (!href || href.startsWith("#") || /^(?:[a-z]+:)?\/\//i.test(href) || href.startsWith("mailto:")) continue;
     if (path.isAbsolute(href)) {
       errors.push(href);
