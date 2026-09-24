@@ -896,42 +896,69 @@ export function repairHost(root, route, options) {
   const targets = planRepair(root, catalog, target, options);
   const warnings = targets.filter((item) => item.warning).map((item) => item.warning);
   if (!options.yes) return { applied: false, targets, hostRoot: target.hostRoot, issues: target.settingsError ? [target.settingsError] : [], warnings };
+  let settingNext = null;
+  if (options.setting) {
+    if (!target.settings) throw new AgsError(target.settingsError || "Settings are missing");
+    settingNext = applySetting(catalog, target.settings, options.setting, options.value, target.hostRoot);
+  }
+  let overwriteNext = null;
+  if (options.overwriteManaged || options.resetManaged) {
+    overwriteNext = repairedSettings(root, catalog, target.hostRoot, target.entry, target.settings);
+    const errors = [...validateSettings(overwriteNext, root), ...selectionErrors(catalog, overwriteNext)];
+    if (errors.length) throw new AgsError(errors.join("\n"));
+  }
+  const backups = [];
   const quarantined = [];
   const written = [];
-  if (options.removeInvalid || options.resetManaged) {
-    for (const item of targets.filter((item) => item.action === "quarantine")) {
-      if (fs.existsSync(item.path)) quarantined.push(quarantine(target.hostRoot, item.path, item.backupName));
+  try {
+    if (options.removeInvalid || options.resetManaged) {
+      for (const item of targets.filter((entry) => entry.action === "quarantine")) {
+        if (!fs.existsSync(item.path)) continue;
+        remember(backups, item.path);
+        const dest = quarantine(target.hostRoot, item.path, item.backupName);
+        backups.push({ file: dest, existed: false, data: null });
+        quarantined.push(dest);
+      }
     }
-  }
-  if (options.removeInvalid) {
-    for (const item of targets) {
-      if (item.action === "remove block" || item.action === "delete exact generated file") {
+    if (options.removeInvalid) {
+      for (const item of targets) {
+        if (item.action !== "remove block" && item.action !== "delete exact generated file") continue;
+        remember(backups, item.path);
         if (item.text == null) {
           if (fs.existsSync(item.path)) fs.rmSync(item.path, { force: true });
         } else writeAtomic(item.path, item.text);
         written.push(item.path);
       }
     }
+    let remaining = [];
+    if (options.setting) {
+      const parts = dependentParts(options.setting).filter((part) => part !== "entry" || selectionErrors(catalog, settingNext).length === 0);
+      written.push(...writeManaged(root, catalog, target.hostRoot, settingNext, { parts, backups, warnings }));
+      if (options.inject === "midway") throw new AgsError("injected failure");
+      const saved = readSettings(target.hostRoot);
+      remaining = [...new Set([...validateSettings(saved, root), ...selectionErrors(catalog, saved)])];
+    }
+    if (options.restoreRequired) {
+      written.push(...restoreRequired(root, catalog, target, backups));
+      if (options.inject === "midway") throw new AgsError("injected failure");
+    }
+    if (options.overwriteManaged || options.resetManaged) {
+      if (options.inject === "midway") {
+        written.push(...writeManaged(root, catalog, target.hostRoot, overwriteNext, { parts: ["settings"], backups, warnings }));
+        throw new AgsError("injected failure");
+      }
+      written.push(...writeManaged(root, catalog, target.hostRoot, overwriteNext, { backups, warnings }));
+    }
+    return { applied: true, targets, quarantined, written, hostRoot: target.hostRoot, warnings, remaining };
+  } catch (error) {
+    try {
+      restoreAll(backups);
+    } catch (restoreError) {
+      throw new AgsError(`${error.message}; restore failed: ${restoreError.message}`);
+    }
+    if (error instanceof AgsError) throw error;
+    throw new AgsError(error.message);
   }
-  let remaining = [];
-  if (options.setting) {
-    if (!target.settings) throw new AgsError(target.settingsError || "Settings are missing");
-    const next = applySetting(catalog, target.settings, options.setting, options.value, target.hostRoot);
-    const parts = dependentParts(options.setting).filter((part) => part !== "entry" || selectionErrors(catalog, next).length === 0);
-    written.push(...writeManaged(root, catalog, target.hostRoot, next, { parts, warnings }));
-    const saved = readSettings(target.hostRoot);
-    remaining = [...new Set([...validateSettings(saved, root), ...selectionErrors(catalog, saved)])];
-  }
-  if (options.restoreRequired) {
-    written.push(...restoreRequired(root, catalog, target));
-  }
-  if (options.overwriteManaged || options.resetManaged) {
-    const next = repairedSettings(root, catalog, target.hostRoot, target.entry, target.settings);
-    const errors = [...validateSettings(next, root), ...selectionErrors(catalog, next)];
-    if (errors.length) throw new AgsError(errors.join("\n"));
-    written.push(...writeManaged(root, catalog, target.hostRoot, next, { warnings }));
-  }
-  return { applied: true, targets, quarantined, written, hostRoot: target.hostRoot, warnings, remaining };
 }
 
 function dependentParts(key) {
@@ -949,25 +976,25 @@ function usableSettings(root, catalog, target) {
   return null;
 }
 
-function restoreRequired(root, catalog, target) {
+function restoreRequired(root, catalog, target, backups = null) {
   const written = [];
   const { hostRoot, entry } = target;
   const missingSettings = !fs.existsSync(settingsPath(hostRoot));
   const usable = usableSettings(root, catalog, target);
   if (missingSettings && usable) {
-    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["settings"] }));
+    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["settings"], backups }));
   }
   if (!fs.existsSync(path.join(hostRoot, ".agents", "AGS.md")) && usable) {
-    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["entry"] }));
+    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["entry"], backups }));
   }
   if (!fs.existsSync(path.join(hostRoot, "AGENTS.md"))) {
     const agentsSettings = usable || repairedSettings(root, catalog, hostRoot, entry, target.settings);
-    written.push(...writeManaged(root, catalog, hostRoot, agentsSettings, { parts: ["agents"] }));
+    written.push(...writeManaged(root, catalog, hostRoot, agentsSettings, { parts: ["agents"], backups }));
   }
   if (!fs.existsSync(path.join(hostRoot, ".agents", "local"))) fs.mkdirSync(path.join(hostRoot, ".agents", "local"), { recursive: true });
   const mode = claudeModeOf(usable?.adapters?.claude);
   if (usable && (mode === "block" || mode === "override") && !fs.existsSync(path.join(hostRoot, "CLAUDE.md"))) {
-    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["claude"] }));
+    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["claude"], backups }));
   }
   return written;
 }

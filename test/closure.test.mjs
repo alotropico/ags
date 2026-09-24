@@ -428,3 +428,13 @@ test("reporting write canonicalizes a legacy Claude boolean", () => {
   assert.equal(readSettings(host).adapters.claude, "block");
   assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
 });
+
+test("failed repair restores host bytes", () => {
+  const root = makeCanonical();
+  const host = makeRepo("repair-rollback");
+  installHost(root, host, { yes: true, id: "repair-rollback", name: "Rollback" });
+  const files = ["AGENTS.md", path.join(".agents", "AGS.md"), path.join(".agents", "ags.yaml")].map((rel) => path.join(host, rel));
+  const before = files.map((file) => fs.readFileSync(file));
+  assert.throws(() => repairHost(root, host, { yes: true, overwriteManaged: true, inject: "midway" }), /injected failure/);
+  files.forEach((file, index) => assert.ok(before[index].equals(fs.readFileSync(file))));
+});
