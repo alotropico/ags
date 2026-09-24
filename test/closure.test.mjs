@@ -438,3 +438,13 @@ test("failed repair restores host bytes", () => {
   assert.throws(() => repairHost(root, host, { yes: true, overwriteManaged: true, inject: "midway" }), /injected failure/);
   files.forEach((file, index) => assert.ok(before[index].equals(fs.readFileSync(file))));
 });
+
+test("bare snapshot --out is an AGS error", () => {
+  const script = path.join(REAL, "scripts", "ags.mjs");
+  for (const args of [["snapshot", "--out"], ["snapshot", "canonical", "--out"]]) {
+    const result = spawnSync(process.execPath, [script, ...args], { encoding: "utf8" });
+    assert.notEqual(result.status, 0, args.join(" "));
+    assert.match(result.stderr, /Missing value for --out/);
+    assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /[/\\]true/);
+  }
+});

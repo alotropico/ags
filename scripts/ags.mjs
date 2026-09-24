@@ -469,6 +469,7 @@ function checkCommand(flags) {
 }
 
 function snapshotCommand(action, flags) {
+  if (flags.out === true) throw new AgsError("Missing value for --out");
   const root = CANONICAL_ROOT;
   if (action === "canonical") expectFlags(flags, ["out", "only", "except", "include-standard-excluded", "help"]);
   else expectFlags(flags, ["route", "out", "help"]);
