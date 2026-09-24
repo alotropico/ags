@@ -294,46 +294,6 @@ test("ui-library offering, doctor links, and private state stay narrow", () => {
   assert.equal(hostsBefore === null ? hostsAfter === null : hostsBefore.equals(hostsAfter), true);
 });
 
-test("malformed link escapes stay on the doctor path", () => {
-  const root = makeCanonical();
-  fs.mkdirSync(path.join(root, "skills", "bad-link"), { recursive: true });
-  fs.writeFileSync(path.join(root, "skills", "bad-link", "SKILL.md"), "---\nname: bad-link\ndescription: Bad link.\n---\n\n[x](%zz)\n");
-  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: bad-link\n    kind: custom\n    path: skills/bad-link/SKILL.md\n    description: Bad link.\n    default: false\n    entryPoint: true\n    keywords: [bad]\n");
-  const result = doctor(root);
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((line) => line.includes("bad-link") && line.includes("%zz")));
-});
-
-test("doctor reports a missing guidance template", () => {
-  const root = makeCanonical();
-  fs.rmSync(path.join(root, "templates", "agents-block.md"));
-  const result = doctor(root);
-  assert.equal(result.ok, false);
-  assert.ok(result.failures.some((line) => line.includes("templates/agents-block.md")));
-});
-
-test("snapshot keeps nested hooks skill and host archive files", () => {
-  assert.equal(isOperationalCanonicalPath("hooks/old.md"), true);
-  assert.equal(isOperationalCanonicalPath("archive/old.md"), true);
-  assert.equal(isOperationalCanonicalPath("skills/hooks/SKILL.md"), false);
-  assert.equal(isOperationalCanonicalPath("canonical/skills/hooks/SKILL.md"), false);
-  assert.equal(isOperationalCanonicalPath("host/.agents/local/archive/note.txt"), false);
-  const selected = filterCanonicalSnapshotFiles(["hooks/old.md", "skills/hooks/SKILL.md", "archive/note.txt"]);
-  assert.deepEqual(selected, ["skills/hooks/SKILL.md"]);
-  const root = makeCanonical();
-  fs.mkdirSync(path.join(root, "skills", "hooks"), { recursive: true });
-  fs.writeFileSync(path.join(root, "skills", "hooks", "SKILL.md"), "---\nname: hooks\ndescription: Hook skill.\n---\n\n# hooks\n");
-  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: hooks\n    kind: custom\n    path: skills/hooks/SKILL.md\n    description: Hook skill.\n    default: false\n    entryPoint: true\n    keywords: [hooks]\n");
-  const host = makeRepo("hooks-host");
-  installHost(root, host, { yes: true, id: "hooks-host", name: "Hooks", enable: ["hooks"] });
-  fs.mkdirSync(path.join(host, ".agents", "local", "archive"), { recursive: true });
-  fs.writeFileSync(path.join(host, ".agents", "local", "archive", "note.txt"), "kept\n");
-  const written = writeSnapshot(root, host, loadCatalog(root), readSettings(host), path.join(host, ".tmp", "hooks.zip"));
-  const names = readStoredZip(fs.readFileSync(written.path)).map((entry) => entry.name);
-  assert.ok(names.includes("canonical/skills/hooks/SKILL.md"));
-  assert.ok(names.includes("host/.agents/local/archive/note.txt"));
-});
-
 function denyRead(file) {
   const result = spawnSync("icacls", [file, "/inheritance:r", "/grant:r", `${process.env.USERNAME}:(D)`], { encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -379,17 +339,44 @@ test("generated guidance keeps replacement metacharacters", () => {
   assert.equal(syncHosts(root, { route: host })[0].status, "repairable");
 });
 
-test("update leaves unmanaged AGENTS.md blank lines intact", () => {
+test("snapshot keeps nested hooks skill and host archive files", () => {
+  assert.equal(isOperationalCanonicalPath("hooks/old.md"), true);
+  assert.equal(isOperationalCanonicalPath("archive/old.md"), true);
+  assert.equal(isOperationalCanonicalPath("skills/hooks/SKILL.md"), false);
+  assert.equal(isOperationalCanonicalPath("canonical/skills/hooks/SKILL.md"), false);
+  assert.equal(isOperationalCanonicalPath("host/.agents/local/archive/note.txt"), false);
+  const selected = filterCanonicalSnapshotFiles(["hooks/old.md", "skills/hooks/SKILL.md", "archive/note.txt"]);
+  assert.deepEqual(selected, ["skills/hooks/SKILL.md"]);
   const root = makeCanonical();
-  const host = makeRepo("blank-host");
-  installHost(root, host, { yes: true, id: "blank-host", name: "Blank" });
-  const prose = "Para one.\n\n\n\nPara two.\n\n```\nexample\n\n\n\nstill fenced\n```\n\nTail.\n";
-  const suffix = "After.\n\n\n\nStill after.\n";
-  fs.writeFileSync(path.join(host, "AGENTS.md"), `${prose}${agentsBlock(root)}\n${suffix}`);
-  updateHost(root, host, { yes: true });
-  const after = fs.readFileSync(path.join(host, "AGENTS.md"), "utf8");
-  assert.ok(after.startsWith(prose));
-  assert.ok(after.endsWith(suffix));
+  fs.mkdirSync(path.join(root, "skills", "hooks"), { recursive: true });
+  fs.writeFileSync(path.join(root, "skills", "hooks", "SKILL.md"), "---\nname: hooks\ndescription: Hook skill.\n---\n\n# hooks\n");
+  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: hooks\n    kind: custom\n    path: skills/hooks/SKILL.md\n    description: Hook skill.\n    default: false\n    entryPoint: true\n    keywords: [hooks]\n");
+  const host = makeRepo("hooks-host");
+  installHost(root, host, { yes: true, id: "hooks-host", name: "Hooks", enable: ["hooks"] });
+  fs.mkdirSync(path.join(host, ".agents", "local", "archive"), { recursive: true });
+  fs.writeFileSync(path.join(host, ".agents", "local", "archive", "note.txt"), "kept\n");
+  const written = writeSnapshot(root, host, loadCatalog(root), readSettings(host), path.join(host, ".tmp", "hooks.zip"));
+  const names = readStoredZip(fs.readFileSync(written.path)).map((entry) => entry.name);
+  assert.ok(names.includes("canonical/skills/hooks/SKILL.md"));
+  assert.ok(names.includes("host/.agents/local/archive/note.txt"));
+});
+
+test("malformed link escapes stay on the doctor path", () => {
+  const root = makeCanonical();
+  fs.mkdirSync(path.join(root, "skills", "bad-link"), { recursive: true });
+  fs.writeFileSync(path.join(root, "skills", "bad-link", "SKILL.md"), "---\nname: bad-link\ndescription: Bad link.\n---\n\n[x](%zz)\n");
+  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: bad-link\n    kind: custom\n    path: skills/bad-link/SKILL.md\n    description: Bad link.\n    default: false\n    entryPoint: true\n    keywords: [bad]\n");
+  const result = doctor(root);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((line) => line.includes("bad-link") && line.includes("%zz")));
+});
+
+test("doctor reports a missing guidance template", () => {
+  const root = makeCanonical();
+  fs.rmSync(path.join(root, "templates", "agents-block.md"));
+  const result = doctor(root);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((line) => line.includes("templates/agents-block.md")));
 });
 
 test("repair creates a missing selection group without rewriting the other", () => {
@@ -413,6 +400,16 @@ test("repair creates a missing selection group without rewriting the other", () 
   assert.throws(() => repairHost(root, host, { yes: true, setting: "checks.type", value: "typecheck" }), /Invalid package\.json/);
 });
 
+test("failed repair restores host bytes", () => {
+  const root = makeCanonical();
+  const host = makeRepo("repair-rollback");
+  installHost(root, host, { yes: true, id: "repair-rollback", name: "Rollback" });
+  const files = ["AGENTS.md", path.join(".agents", "AGS.md"), path.join(".agents", "ags.yaml")].map((rel) => path.join(host, rel));
+  const before = files.map((file) => fs.readFileSync(file));
+  assert.throws(() => repairHost(root, host, { yes: true, overwriteManaged: true, inject: "midway" }), /injected failure/);
+  files.forEach((file, index) => assert.ok(before[index].equals(fs.readFileSync(file))));
+});
+
 test("reporting write canonicalizes a legacy Claude boolean", () => {
   const root = makeCanonical();
   const host = makeRepo("report-bool");
@@ -429,14 +426,17 @@ test("reporting write canonicalizes a legacy Claude boolean", () => {
   assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
 });
 
-test("failed repair restores host bytes", () => {
+test("update leaves unmanaged AGENTS.md blank lines intact", () => {
   const root = makeCanonical();
-  const host = makeRepo("repair-rollback");
-  installHost(root, host, { yes: true, id: "repair-rollback", name: "Rollback" });
-  const files = ["AGENTS.md", path.join(".agents", "AGS.md"), path.join(".agents", "ags.yaml")].map((rel) => path.join(host, rel));
-  const before = files.map((file) => fs.readFileSync(file));
-  assert.throws(() => repairHost(root, host, { yes: true, overwriteManaged: true, inject: "midway" }), /injected failure/);
-  files.forEach((file, index) => assert.ok(before[index].equals(fs.readFileSync(file))));
+  const host = makeRepo("blank-host");
+  installHost(root, host, { yes: true, id: "blank-host", name: "Blank" });
+  const prose = "Para one.\n\n\n\nPara two.\n\n```\nexample\n\n\n\nstill fenced\n```\n\nTail.\n";
+  const suffix = "After.\n\n\n\nStill after.\n";
+  fs.writeFileSync(path.join(host, "AGENTS.md"), `${prose}${agentsBlock(root)}\n${suffix}`);
+  updateHost(root, host, { yes: true });
+  const after = fs.readFileSync(path.join(host, "AGENTS.md"), "utf8");
+  assert.ok(after.startsWith(prose));
+  assert.ok(after.endsWith(suffix));
 });
 
 test("bare snapshot --out is an AGS error", () => {
@@ -448,3 +448,4 @@ test("bare snapshot --out is an AGS error", () => {
     assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /[/\\]true/);
   }
 });
+
