@@ -331,3 +331,31 @@ test("snapshot keeps nested hooks skill and host archive files", () => {
   assert.ok(names.includes("canonical/skills/hooks/SKILL.md"));
   assert.ok(names.includes("host/.agents/local/archive/note.txt"));
 });
+
+function denyRead(file) {
+  const result = spawnSync("icacls", [file, "/inheritance:r", "/grant:r", `${process.env.USERNAME}:(D)`], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+}
+
+function allowRead(file) {
+  spawnSync("icacls", [file, "/grant:r", `${process.env.USERNAME}:(F)`], { encoding: "utf8" });
+}
+
+test("untracked diffs keep unicode names and refuse an unreadable file", () => {
+  const repo = makeRepo("unicode-diff");
+  fs.writeFileSync(path.join(repo, "café.txt"), "café\n");
+  const untracked = writeDiff(repo, "uni", "untracked");
+  assert.match(fs.readFileSync(untracked.path, "utf8"), /café\.txt/);
+  const current = writeDiff(repo, "cur", "current");
+  assert.match(fs.readFileSync(current.path, "utf8"), /café\.txt/);
+  const prior = fs.readFileSync(untracked.path);
+  const locked = path.join(repo, "locked.txt");
+  fs.writeFileSync(locked, "hidden\n");
+  denyRead(locked);
+  try {
+    assert.throws(() => writeDiff(repo, "uni", "untracked"), /Untracked diff failed for locked\.txt/);
+    assert.ok(prior.equals(fs.readFileSync(untracked.path)));
+  } finally {
+    allowRead(locked);
+  }
+});

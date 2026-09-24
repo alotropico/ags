@@ -75,14 +75,29 @@ function gitNullSpec(repo) {
   throw new AgsError("Git did not accept a null diff target");
 }
 
-function untrackedPatch(repo) {
-  const list = git(["ls-files", "--others", "--exclude-standard"], repo).stdout;
-  const files = list.split(/\r?\n/).filter(Boolean);
+function untrackedFiles(repo) {
+  const listed = git(["-c", "core.quotepath=false", "ls-files", "-z", "--others", "--exclude-standard"], repo).stdout || "";
+  return listed.split("\0").filter((file) => file.length > 0);
+}
+
+function noIndexPatch(repo, file) {
   const empty = gitNullSpec(repo);
-  const parts = [];
-  for (const file of files) {
-    parts.push(gitBytes(repo, ["diff", "--no-color", "--no-ext-diff", "--no-textconv", "--no-index", "--", empty, file], { allow: [0, 1] }));
+  const result = git(
+    ["-c", "core.quotepath=false", "diff", "--no-color", "--no-ext-diff", "--no-textconv", "--no-index", "--", empty, file],
+    repo,
+    { allow: [0, 1, 128, 129] },
+  );
+  const stderr = result.stderr || "";
+  if ((result.status !== 0 && result.status !== 1) || /^(?:error|fatal):/m.test(stderr)) {
+    const detail = stderr.trim() || "git diff failed";
+    throw new AgsError(`Untracked diff failed for ${file}: ${detail}`);
   }
+  return Buffer.from(result.stdout || "", "utf8");
+}
+
+function untrackedPatch(repo) {
+  const parts = [];
+  for (const file of untrackedFiles(repo)) parts.push(noIndexPatch(repo, file));
   return Buffer.concat(parts);
 }
 
