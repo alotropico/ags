@@ -55,9 +55,10 @@ function commit(repo, message) {
 }
 
 function skillDir(dir, id, href) {
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(path.join(dir, "references"), { recursive: true });
   const link = href ? `\nSee [theme](${href}).\n` : "\n";
   fs.writeFileSync(path.join(dir, "SKILL.md"), `---\nname: ${id}\ndescription: Local skill.\n---\n# ${id}\n${link}`);
+  fs.writeFileSync(path.join(dir, "references", "keep.md"), "keep\n");
 }
 
 test("force-tracked ignored paths stay out of canonical snapshots", () => {
@@ -120,17 +121,21 @@ test("reconcile registers a host-local skill without replacing it", async () => 
   installHost(root, host, { yes: true, id: "local-reconcile", name: "Local" });
   fs.mkdirSync(path.join(host, "src"), { recursive: true });
   fs.writeFileSync(path.join(host, "src", "theme.css"), "body{}\n");
-  skillDir(path.join(host, ".agents", "skills", "vendor-skill"), "vendor-skill", "../../../src/theme.css");
-  const before = fs.readFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md"));
+  const skillRoot = path.join(host, ".agents", "skills", "vendor-skill");
+  skillDir(skillRoot, "vendor-skill", "../../../src/theme.css");
+  const before = fs.readFileSync(path.join(skillRoot, "SKILL.md"));
+  const companion = fs.readFileSync(path.join(skillRoot, "references", "keep.md"));
   const dry = await reconcile(root, { route: host, dryRun: true });
   const planned = dry.results.find((item) => item.id === "vendor-skill");
   assert.equal(planned.status, "host-local-exception");
   assert.equal(planned.path, ".agents/skills/vendor-skill/SKILL.md");
   assert.equal(planned.reason, "requires-host-location");
+  assert.ok(fs.readFileSync(path.join(skillRoot, "references", "keep.md")).equals(companion));
   assert.equal(fs.existsSync(path.join(root, "reports")), false);
   const wet = await reconcile(root, { route: host, dryRun: false });
   assert.equal(wet.results.find((item) => item.id === "vendor-skill").status, "host-local-exception");
-  assert.ok(fs.readFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md")).equals(before));
+  assert.ok(fs.readFileSync(path.join(skillRoot, "SKILL.md")).equals(before));
+  assert.ok(fs.readFileSync(path.join(skillRoot, "references", "keep.md")).equals(companion));
   const settings = readSettings(host);
   assert.deepEqual(settings.skills.localExceptions, [{
     id: "vendor-skill",
@@ -146,6 +151,7 @@ test("reconcile registers a host-local skill without replacing it", async () => 
   assert.equal(again.results.find((item) => item.id === "vendor-skill").status, "skipped");
   const linesAgain = fs.readFileSync(path.join(root, "reports", "exceptions", reports[0]), "utf8").trim().split(/\r?\n/);
   assert.equal(linesAgain.length, 1);
+  assert.ok(fs.readFileSync(path.join(skillRoot, "references", "keep.md")).equals(companion));
 });
 
 test("host-local install does not replace a different skill unless asked", async () => {
@@ -158,25 +164,35 @@ test("host-local install does not replace a different skill unless asked", async
   skillDir(from, "vendor-skill", "../../../src/theme.css");
   const first = await installSkill(root, { from, id: "vendor-skill", kind: "custom", description: "Vendor.", yes: true, route: host, source: "vendor/skill" });
   assert.equal(first.hostLocal, true);
-  const installed = fs.readFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md"));
+  const installedSkill = path.join(host, ".agents", "skills", "vendor-skill");
+  const installed = fs.readFileSync(path.join(installedSkill, "SKILL.md"));
+  const installedCompanion = fs.readFileSync(path.join(installedSkill, "references", "keep.md"));
+  assert.ok(installedCompanion.equals(fs.readFileSync(path.join(from, "references", "keep.md"))));
   const same = await installSkill(root, { from, id: "vendor-skill", kind: "custom", description: "Vendor.", yes: true, route: host, source: "vendor/skill" });
   assert.equal(same.idempotent, true);
+  assert.ok(fs.readFileSync(path.join(installedSkill, "references", "keep.md")).equals(installedCompanion));
   const reports = fs.readdirSync(path.join(root, "reports", "exceptions"));
   const reportFile = path.join(root, "reports", "exceptions", reports[0]);
   const once = fs.readFileSync(reportFile, "utf8").trim().split(/\r?\n/).length;
   assert.equal(once, 1);
-  fs.writeFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md"), "different\n");
+  fs.writeFileSync(path.join(installedSkill, "references", "keep.md"), "changed\n");
   const settingsBefore = fs.readFileSync(path.join(host, ".agents", "ags.yaml"));
   const entryBefore = fs.readFileSync(path.join(host, ".agents", "AGS.md"));
   await assert.rejects(() => installSkill(root, { from, id: "vendor-skill", kind: "custom", description: "Vendor.", yes: true, route: host, source: "vendor/skill" }), /different content/);
-  assert.equal(fs.readFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md"), "utf8"), "different\n");
+  assert.ok(fs.readFileSync(path.join(installedSkill, "SKILL.md")).equals(installed));
+  assert.equal(fs.readFileSync(path.join(installedSkill, "references", "keep.md"), "utf8"), "changed\n");
   assert.ok(settingsBefore.equals(fs.readFileSync(path.join(host, ".agents", "ags.yaml"))));
   assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
   const replaced = await installSkill(root, { from, id: "vendor-skill", kind: "custom", description: "Vendor.", yes: true, route: host, source: "vendor/skill", replace: true });
   assert.equal(replaced.hostLocal, true);
-  assert.ok(fs.readFileSync(path.join(host, ".agents", "skills", "vendor-skill", "SKILL.md")).equals(installed));
-  const quarantine = fs.readdirSync(path.join(host, ".tmp", "ags-quarantine"), { recursive: true }).map(String);
-  assert.ok(quarantine.some((name) => name.includes("SKILL.md")));
+  assert.ok(fs.readFileSync(path.join(installedSkill, "SKILL.md")).equals(installed));
+  assert.ok(fs.readFileSync(path.join(installedSkill, "references", "keep.md")).equals(installedCompanion));
+  const quarantineRoot = path.join(host, ".tmp", "ags-quarantine");
+  const quarantine = fs.readdirSync(quarantineRoot, { recursive: true }).map(String);
+  const kept = quarantine.find((name) => name.replaceAll("\\", "/").endsWith("references/keep.md"));
+  assert.ok(kept);
+  assert.equal(fs.readFileSync(path.join(quarantineRoot, kept), "utf8"), "changed\n");
+  assert.ok(quarantine.some((name) => name.replaceAll("\\", "/").endsWith("SKILL.md")));
 });
 
 test("repair one invalid setting while another selection stays invalid", () => {
