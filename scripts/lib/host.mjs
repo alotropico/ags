@@ -405,6 +405,10 @@ function restoreAll(backups) {
   for (const item of [...backups].reverse()) {
     if (!item.existed) {
       if (fs.existsSync(item.file)) fs.rmSync(item.file, { force: true, recursive: true });
+    } else if (item.restoreFrom) {
+      if (fs.existsSync(item.file)) fs.rmSync(item.file, { force: true, recursive: true });
+      fs.mkdirSync(path.dirname(item.file), { recursive: true });
+      fs.renameSync(item.restoreFrom, item.file);
     } else {
       fs.writeFileSync(item.file, item.data);
     }
@@ -914,9 +918,8 @@ export function repairHost(root, route, options) {
     if (options.removeInvalid || options.resetManaged) {
       for (const item of targets.filter((entry) => entry.action === "quarantine")) {
         if (!fs.existsSync(item.path)) continue;
-        remember(backups, item.path);
         const dest = quarantine(target.hostRoot, item.path, item.backupName);
-        backups.push({ file: dest, existed: false, data: null });
+        backups.push({ file: item.path, existed: true, restoreFrom: dest });
         quarantined.push(dest);
       }
     }

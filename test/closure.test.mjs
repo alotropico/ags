@@ -410,6 +410,23 @@ test("failed repair restores host bytes", () => {
   files.forEach((file, index) => assert.ok(before[index].equals(fs.readFileSync(file))));
 });
 
+test("remove-invalid quarantines an unexpected directory and rolls it back intact", () => {
+  const root = makeCanonical();
+  const host = makeRepo("dir-quarantine");
+  installHost(root, host, { yes: true, id: "dir-quarantine", name: "Dir" });
+  const notes = path.join(host, ".agents", "notes");
+  fs.mkdirSync(notes, { recursive: true });
+  fs.writeFileSync(path.join(notes, "a.md"), "precious\n");
+  assert.ok(syncHosts(root, { route: host })[0].issues.includes("unexpected managed path: .agents/notes"));
+  assert.throws(() => repairHost(root, host, { yes: true, resetManaged: true, inject: "midway" }), /injected failure/);
+  assert.equal(fs.readFileSync(path.join(notes, "a.md"), "utf8"), "precious\n");
+  const repaired = repairHost(root, host, { yes: true, removeInvalid: true });
+  assert.equal(fs.existsSync(notes), false);
+  const kept = repaired.quarantined.find((item) => item.endsWith(`${path.sep}notes`));
+  assert.equal(fs.readFileSync(path.join(kept, "a.md"), "utf8"), "precious\n");
+  assert.equal(syncHosts(root, { route: host })[0].status, "clean");
+});
+
 test("reporting write canonicalizes a legacy Claude boolean", () => {
   const root = makeCanonical();
   const host = makeRepo("report-bool");
@@ -448,4 +465,3 @@ test("bare snapshot --out is an AGS error", () => {
     assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, /[/\\]true/);
   }
 });
-
