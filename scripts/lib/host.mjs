@@ -15,7 +15,7 @@ import {
   skillAbs,
   whenMatches,
 } from "./catalog.mjs";
-import { assertCheckScript, isPackageScriptKey, migrateChecks } from "./packages.mjs";
+import { assertCheckScript, isPackageScriptKey, migrateChecks, readPackageScripts } from "./packages.mjs";
 import {
   agentsBlock,
   blockIntact,
@@ -1010,6 +1010,17 @@ function repairedSettings(root, catalog, hostRoot, entry, settings) {
   return base;
 }
 
+function selectionFieldErrors(catalog, group, ids, other) {
+  const errors = [];
+  for (const id of ids) {
+    const entry = catalogById(catalog).get(id);
+    if (!entry || entryGroup(catalog, id) !== group) errors.push(`unknown ${group} id: ${id}`);
+    else if (group === "skills" && !isEntryPoint(entry)) errors.push(`${id} is not a direct selection`);
+    if (Array.isArray(other) && other.includes(id)) errors.push(`${id} is both enabled and disabled`);
+  }
+  return errors;
+}
+
 function applySetting(catalog, settings, key, value, hostRoot) {
   const next = structuredClone(settings);
   if (key === "reporting") {
@@ -1025,22 +1036,26 @@ function applySetting(catalog, settings, key, value, hostRoot) {
   }
   else if (/^(rules|skills)\.(enabled|disabled)$/.test(key)) {
     const [group, list] = key.split(".");
-    next[group][list] = String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+    const ids = String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+    if (next[group] == null) next[group] = { enabled: [], disabled: [] };
+    else if (typeof next[group] !== "object" || Array.isArray(next[group])) {
+      throw new AgsError(`settings ${group} selections are invalid`);
+    }
+    const otherName = list === "enabled" ? "disabled" : "enabled";
+    const fieldErrors = selectionFieldErrors(catalog, group, ids, next[group][otherName]);
+    if (fieldErrors.length) throw new AgsError(fieldErrors.join("\n"));
+    next[group][list] = ids;
   } else if (key === "git.mainBranch") {
     if (!validBranchName(value)) throw new AgsError("git.mainBranch must be a branch name");
     next.git = { ...(next.git || {}), mainBranch: value };
   } else if (CHECK_KEYS.some((name) => key === `checks.${name}`)) {
     const name = key.slice("checks.".length);
     if (!isPackageScriptKey(value)) throw new AgsError(`checks.${name} must be a package script name`);
-    const scripts = fs.existsSync(path.join(hostRoot, "package.json"))
-      ? JSON.parse(fs.readFileSync(path.join(hostRoot, "package.json"), "utf8")).scripts || {}
-      : {};
+    const scripts = readPackageScripts(hostRoot);
     if (!Object.hasOwn(scripts, value)) throw new AgsError(`checks.${name} script is not in package.json: ${value}`);
     if (!next.checks || typeof next.checks !== "object" || Array.isArray(next.checks)) next.checks = {};
     next.checks[name] = value;
   } else throw new AgsError(`Unsupported setting: ${key}`);
-  void catalog;
-  void hostRoot;
   return next;
 }
 

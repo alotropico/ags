@@ -390,3 +390,24 @@ test("update leaves unmanaged AGENTS.md blank lines intact", () => {
   assert.ok(after.startsWith(prose));
   assert.ok(after.endsWith(suffix));
 });
+
+test("repair creates a missing selection group without rewriting the other", () => {
+  const root = makeCanonical();
+  const host = makeRepo("missing-group");
+  installHost(root, host, { yes: true, id: "missing-group", name: "Missing" });
+  const settings = readSettings(host);
+  settings.rules = "bad";
+  delete settings.skills;
+  writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), settings);
+  const entryBefore = fs.readFileSync(path.join(host, ".agents", "AGS.md"));
+  const yamlBefore = fs.readFileSync(path.join(host, ".agents", "ags.yaml"));
+  assert.throws(() => repairHost(root, host, { yes: true, setting: "skills.enabled", value: "not-a-skill" }), /unknown skills id/);
+  assert.ok(yamlBefore.equals(fs.readFileSync(path.join(host, ".agents", "ags.yaml"))));
+  const repaired = repairHost(root, host, { yes: true, setting: "skills.enabled", value: "css-cleanup" });
+  assert.deepEqual(readSettings(host).skills, { enabled: ["css-cleanup"], disabled: [] });
+  assert.equal(readSettings(host).rules, "bad");
+  assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
+  assert.ok(repaired.remaining.some((line) => /rules/.test(line)));
+  fs.writeFileSync(path.join(host, "package.json"), "{");
+  assert.throws(() => repairHost(root, host, { yes: true, setting: "checks.type", value: "typecheck" }), /Invalid package\.json/);
+});
