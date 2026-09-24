@@ -9,6 +9,7 @@ import { commitCount, emptyTreeId, writeDiff } from "../scripts/lib/diff.mjs";
 import { doctor } from "../scripts/lib/doctor.mjs";
 import { installHost, readSettings, repairHost, syncHosts, updateHost } from "../scripts/lib/host.mjs";
 import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
+import { setReporting } from "../scripts/lib/report-cmd.mjs";
 import { agentsBlock } from "../scripts/lib/render.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
 import { isOperationalCanonicalPath, readStoredZip, writeSnapshot } from "../scripts/lib/snapshot.mjs";
@@ -410,4 +411,20 @@ test("repair creates a missing selection group without rewriting the other", () 
   assert.ok(repaired.remaining.some((line) => /rules/.test(line)));
   fs.writeFileSync(path.join(host, "package.json"), "{");
   assert.throws(() => repairHost(root, host, { yes: true, setting: "checks.type", value: "typecheck" }), /Invalid package\.json/);
+});
+
+test("reporting write canonicalizes a legacy Claude boolean", () => {
+  const root = makeCanonical();
+  const host = makeRepo("report-bool");
+  installHost(root, host, { yes: true, id: "report-bool", name: "Report" });
+  const settings = readSettings(host);
+  settings.adapters.claude = true;
+  writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), settings);
+  const entryBefore = fs.readFileSync(path.join(host, ".agents", "AGS.md"));
+  const result = setReporting(root, { host: "report-bool", value: false });
+  assert.deepEqual(result.failures, []);
+  assert.deepEqual(result.changed, ["report-bool"]);
+  assert.equal(readSettings(host).reporting, false);
+  assert.equal(readSettings(host).adapters.claude, "block");
+  assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
 });

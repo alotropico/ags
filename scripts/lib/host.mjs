@@ -121,7 +121,7 @@ export function missingMaterialWarnings(root, catalog, settings, hostRoot) {
   return warnings;
 }
 
-function persistSettings(settings) {
+export function persistSettings(settings) {
   const next = structuredClone(settings);
   if (next.adapters) next.adapters = { ...next.adapters, claude: claudeModeOf(next.adapters.claude) || next.adapters.claude };
   if (Array.isArray(next.skills?.localExceptions) && next.skills.localExceptions.length === 0) {

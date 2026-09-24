@@ -1,5 +1,5 @@
 import path from "node:path";
-import { resolveRoute, settingsPath, verifyRegistered } from "./host.mjs";
+import { persistSettings, resolveRoute, settingsPath, verifyRegistered } from "./host.mjs";
 import { loadRegistry } from "./host.mjs";
 import { appendReport, canonicalFile, dedupeReportedFiles, parseUsageFiles, reportStamp } from "./reports.mjs";
 import { AgsError, samePath, singleLine, writeYamlAtomic } from "./util.mjs";
@@ -52,7 +52,7 @@ export function setReporting(root, { route, host, all, value }) {
     try {
       const verified = verifyRegistered(root, entry.path);
       verified.settings.reporting = value;
-      writeYamlAtomic(settingsPath(entry.path), verified.settings);
+      writeYamlAtomic(settingsPath(entry.path), persistSettings(verified.settings));
       changed.push(entry.id);
     } catch (error) {
       failures.push(`${entry.id}: ${error.message}`);
