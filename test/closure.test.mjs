@@ -7,8 +7,9 @@ import assert from "node:assert/strict";
 import { includedSkillIds, loadCatalog, offeredEntries } from "../scripts/lib/catalog.mjs";
 import { commitCount, emptyTreeId, writeDiff } from "../scripts/lib/diff.mjs";
 import { doctor } from "../scripts/lib/doctor.mjs";
-import { installHost, readSettings, repairHost, syncHosts } from "../scripts/lib/host.mjs";
+import { installHost, readSettings, repairHost, syncHosts, updateHost } from "../scripts/lib/host.mjs";
 import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
+import { agentsBlock } from "../scripts/lib/render.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
 import { isOperationalCanonicalPath, readStoredZip, writeSnapshot } from "../scripts/lib/snapshot.mjs";
 import { filterCanonicalSnapshotFiles, writeCanonicalSnapshot } from "../scripts/snapshot-canonical.mjs";
@@ -375,4 +376,17 @@ test("generated guidance keeps replacement metacharacters", () => {
   assert.equal(syncHosts(root, { route: host })[0].status, "clean");
   fs.writeFileSync(path.join(host, ".agents", "AGS.md"), entry.replace("$&", "{{skills}}"));
   assert.equal(syncHosts(root, { route: host })[0].status, "repairable");
+});
+
+test("update leaves unmanaged AGENTS.md blank lines intact", () => {
+  const root = makeCanonical();
+  const host = makeRepo("blank-host");
+  installHost(root, host, { yes: true, id: "blank-host", name: "Blank" });
+  const prose = "Para one.\n\n\n\nPara two.\n\n```\nexample\n\n\n\nstill fenced\n```\n\nTail.\n";
+  const suffix = "After.\n\n\n\nStill after.\n";
+  fs.writeFileSync(path.join(host, "AGENTS.md"), `${prose}${agentsBlock(root)}\n${suffix}`);
+  updateHost(root, host, { yes: true });
+  const after = fs.readFileSync(path.join(host, "AGENTS.md"), "utf8");
+  assert.ok(after.startsWith(prose));
+  assert.ok(after.endsWith(suffix));
 });

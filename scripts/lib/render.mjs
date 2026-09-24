@@ -220,18 +220,28 @@ export function upsertMarkedBlock(existing, block) {
   const normalized = block.replace(/\s+$/, "");
   if (existing == null) return `${normalized}\n`;
   const pattern = /<!-- AGS:BEGIN -->[\s\S]*?<!-- AGS:END -->/g;
-  const matches = existing.match(pattern);
-  if (!matches) {
+  const matches = [...existing.matchAll(pattern)];
+  if (!matches.length) {
     const separator = existing.endsWith("\n") ? "\n" : "\n\n";
     return `${existing}${separator}${normalized}\n`;
   }
-  let seen = false;
-  const replaced = existing.replace(pattern, () => {
-    if (seen) return "";
-    seen = true;
-    return normalized;
+  const pieces = [];
+  let cursor = 0;
+  matches.forEach((match, index) => {
+    pieces.push(existing.slice(cursor, match.index));
+    if (index === 0) pieces.push(normalized);
+    cursor = match.index + match[0].length;
   });
-  return replaced.replace(/\n{3,}/g, "\n\n");
+  pieces.push(existing.slice(cursor));
+  return pieces.reduce((left, right) => seam(left, right));
+}
+
+function seam(left, right) {
+  const leftNewlines = left.match(/\n*$/)[0];
+  const rightNewlines = right.match(/^\n*/)[0];
+  const count = leftNewlines.length + rightNewlines.length;
+  const newlines = count >= 3 ? "\n\n" : "\n".repeat(count);
+  return `${left.slice(0, left.length - leftNewlines.length)}${newlines}${right.slice(rightNewlines.length)}`;
 }
 
 export function upsertClaude(existing, block, legacy) {
