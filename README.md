@@ -83,7 +83,7 @@ Check values are package script names. AGS detects `pnpm`, `yarn`, or `npm` from
 | `ags check` | Run the host's configured type, lint, and Prettier checks |
 | `ags snapshot` | Zip one host's effective guidance, including selected companion skills |
 | `ags snapshot canonical` | Zip this checkout to `.tmp/snapshots/ags-canonical.zip`, including tracked `pnpm-lock.yaml` when it is not ignored. Git-ignored paths stay out even if force-tracked. `--include-standard-excluded` relaxes only the sensitive-path list. `--only base,rules` keeps root files and named folders. `--except skills` drops named paths |
-| `ags diff commits\|range\|staged\|changes\|untracked\|current` | Write a patch under the host `.tmp/`. N follows first-parent history. Last-N and current-N include the root commit by diffing from Git's empty tree |
+| `ags diff commits\|range\|staged\|changes\|untracked\|current` | Write a patch under the host `.tmp/`. Diff counts follow first-parent history. Last-N and current-N include the root commit by diffing from Git's empty tree |
 
 ## Layout
 
