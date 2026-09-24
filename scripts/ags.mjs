@@ -334,7 +334,9 @@ async function hostCommand(action, rest, flags, list) {
     const chosen = await chooseSelection(preview.plan, options, "install");
     if (!options.yes && stdin.isTTY) {
       if (!chosen.confirmed) throw new AgsError("Pass --yes to write the host install", { exitCode: 2 });
-      printHostResult(installHost(root, routeOf(flags), { ...options, ...chosen.options, yes: true }));
+      const installed = installHost(root, routeOf(flags), { ...options, ...chosen.options, yes: true });
+      for (const warning of installed.warnings || []) console.error(`warning: ${warning}`);
+      printHostResult(installed);
       return;
     }
     const yes = options.yes || await confirmWrite("Write this host install?");
@@ -351,7 +353,9 @@ async function hostCommand(action, rest, flags, list) {
     const chosen = await chooseSelection(preview.review, options, "update");
     if (!options.yes && stdin.isTTY) {
       if (!chosen.confirmed) throw new AgsError("Pass --yes to write the host update", { exitCode: 2 });
-      console.log(JSON.stringify(updateHost(root, routeOf(flags), { ...options, ...chosen.options, yes: true }).review, null, 2));
+      const updated = updateHost(root, routeOf(flags), { ...options, ...chosen.options, yes: true });
+      for (const warning of updated.warnings || []) console.error(`warning: ${warning}`);
+      console.log(JSON.stringify(updated.review, null, 2));
       return;
     }
     const yes = options.yes || await confirmWrite("Write this host update?");
