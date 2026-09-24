@@ -114,7 +114,8 @@ export function isStandardSensitivePath(rel) {
 export function isOperationalCanonicalPath(rel) {
   const name = normalizeRel(rel);
   if (!name || name === "hosts.yaml" || name.startsWith("reports/") || name.startsWith(".tmp/") || name.startsWith(".git/") || name.split("/").includes("node_modules")) return true;
-  if (name.split("/").some((part) => LEGACY_PARTS.includes(part))) return true;
+  const head = name.split("/").filter(Boolean)[0];
+  if (head && LEGACY_PARTS.includes(head)) return true;
   if (name.endsWith("versioning-todo.md")) return true;
   return false;
 }

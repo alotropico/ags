@@ -10,8 +10,8 @@ import { doctor } from "../scripts/lib/doctor.mjs";
 import { installHost, readSettings, repairHost } from "../scripts/lib/host.mjs";
 import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
-import { readStoredZip } from "../scripts/lib/snapshot.mjs";
-import { writeCanonicalSnapshot } from "../scripts/snapshot-canonical.mjs";
+import { isOperationalCanonicalPath, readStoredZip, writeSnapshot } from "../scripts/lib/snapshot.mjs";
+import { filterCanonicalSnapshotFiles, writeCanonicalSnapshot } from "../scripts/snapshot-canonical.mjs";
 import { installerHelp } from "../scripts/install-global.mjs";
 import { CANONICAL_ROOT, writeYamlAtomic } from "../scripts/lib/util.mjs";
 
@@ -308,4 +308,26 @@ test("doctor reports a missing guidance template", () => {
   const result = doctor(root);
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((line) => line.includes("templates/agents-block.md")));
+});
+
+test("snapshot keeps nested hooks skill and host archive files", () => {
+  assert.equal(isOperationalCanonicalPath("hooks/old.md"), true);
+  assert.equal(isOperationalCanonicalPath("archive/old.md"), true);
+  assert.equal(isOperationalCanonicalPath("skills/hooks/SKILL.md"), false);
+  assert.equal(isOperationalCanonicalPath("canonical/skills/hooks/SKILL.md"), false);
+  assert.equal(isOperationalCanonicalPath("host/.agents/local/archive/note.txt"), false);
+  const selected = filterCanonicalSnapshotFiles(["hooks/old.md", "skills/hooks/SKILL.md", "archive/note.txt"]);
+  assert.deepEqual(selected, ["skills/hooks/SKILL.md"]);
+  const root = makeCanonical();
+  fs.mkdirSync(path.join(root, "skills", "hooks"), { recursive: true });
+  fs.writeFileSync(path.join(root, "skills", "hooks", "SKILL.md"), "---\nname: hooks\ndescription: Hook skill.\n---\n\n# hooks\n");
+  fs.appendFileSync(path.join(root, "catalog.yaml"), "  - id: hooks\n    kind: custom\n    path: skills/hooks/SKILL.md\n    description: Hook skill.\n    default: false\n    entryPoint: true\n    keywords: [hooks]\n");
+  const host = makeRepo("hooks-host");
+  installHost(root, host, { yes: true, id: "hooks-host", name: "Hooks", enable: ["hooks"] });
+  fs.mkdirSync(path.join(host, ".agents", "local", "archive"), { recursive: true });
+  fs.writeFileSync(path.join(host, ".agents", "local", "archive", "note.txt"), "kept\n");
+  const written = writeSnapshot(root, host, loadCatalog(root), readSettings(host), path.join(host, ".tmp", "hooks.zip"));
+  const names = readStoredZip(fs.readFileSync(written.path)).map((entry) => entry.name);
+  assert.ok(names.includes("canonical/skills/hooks/SKILL.md"));
+  assert.ok(names.includes("host/.agents/local/archive/note.txt"));
 });
