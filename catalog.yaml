@@ -1,0 +1,71 @@
+format: 1
+
+rules: []
+
+skills:
+  - id: ui-library-css
+    kind: custom
+    path: skills/ui-library-css/SKILL.md
+    description: Check @platform/ui-library components, style APIs, and tokens before adding local CSS.
+    default: true
+    entryPoint: true
+    keywords: [css, ui, theme, tokens]
+    when:
+      any:
+        - package: "@platform/ui-library"
+    includes:
+      - css-authoring-conventions
+      - css-theme-tokens
+
+  - id: css-authoring-conventions
+    kind: custom
+    path: skills/css-authoring-conventions/SKILL.md
+    description: Apply concise CSS and SCSS authoring conventions.
+    default: false
+    entryPoint: true
+    keywords: [css, scss, styles, styling]
+    includes:
+      - css-cleanup
+
+  - id: css-cleanup
+    kind: custom
+    path: skills/css-cleanup/SKILL.md
+    description: Audit and remove unused CSS-module selectors conservatively.
+    default: false
+    keywords: [css, cleanup, unused, modules]
+
+  - id: css-theme-tokens
+    kind: custom
+    path: skills/css-theme-tokens/SKILL.md
+    description: Review and normalize UI-library theme-token usage.
+    default: false
+    entryPoint: false
+    keywords: [css, theme, tokens]
+
+  - id: git-cleanup
+    kind: custom
+    path: skills/git-cleanup/SKILL.md
+    description: Inspect and clean stale local Git state with explicit destructive confirmation.
+    default: false
+    keywords: [git, branches, cleanup]
+
+  - id: plan-work
+    kind: custom
+    path: skills/plan-work/SKILL.md
+    description: Plan ambiguous or cross-cutting work when a durable plan is useful.
+    default: true
+    keywords: [plan, planning, architecture]
+
+  - id: ship
+    kind: custom
+    path: skills/ship/SKILL.md
+    description: Push a feature branch and prepare the appropriate review link.
+    default: false
+    keywords: [ship, push, publish, review]
+
+  - id: check
+    kind: custom
+    path: skills/check/SKILL.md
+    description: Run the host's configured type, lint, and Prettier checks.
+    default: false
+    keywords: [check, typecheck, lint, prettier]

@@ -1,0 +1,17 @@
+{
+  "name": "@local/ags",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ags": "./scripts/ags.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "yaml": "^2.6.1"
+  }
+}

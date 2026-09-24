@@ -1,0 +1,4 @@
+hosts.yaml
+reports/
+.tmp/
+node_modules/
