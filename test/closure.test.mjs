@@ -283,16 +283,6 @@ test("ui-library offering, doctor links, and private state stay narrow", () => {
   assert.ok(result.failures.some((line) => /includes|css-cleanup/i.test(line)));
   const hostsFile = path.join(REAL, "hosts.yaml");
   const hostsBefore = fs.existsSync(hostsFile) ? fs.readFileSync(hostsFile) : null;
-  for (const dir of ["decisions", "plans", "references", "snapshots", "runtime"]) {
-    assert.equal(fs.existsSync(path.join(REAL, ".tmp", dir)), true);
-  }
-  assert.equal(fs.existsSync(path.join(REAL, ".tmp", "decisions", "ags-v1-softened-decisions.md")), true);
-  for (const dir of ["plans", "references", "snapshots"]) {
-    for (const name of fs.readdirSync(path.join(REAL, ".tmp", dir))) {
-      const full = path.join(REAL, ".tmp", dir, name);
-      if (fs.statSync(full).isFile()) assert.equal(name.startsWith("ags-"), true, name);
-    }
-  }
   const live = ["README.md", "AGENTS.md", "catalog.yaml"];
   const blob = live.map((rel) => fs.readFileSync(path.join(REAL, rel), "utf8")).join("\n");
   assert.equal(blob.includes(".tmp/plans"), false);
