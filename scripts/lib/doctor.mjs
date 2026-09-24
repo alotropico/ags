@@ -15,13 +15,10 @@ export function doctor(root = CANONICAL_ROOT, route = null) {
   if (major < 20) failures.push(`Node ${process.versions.node} is below 20`);
   else lines.push(`node: ${process.versions.node}`);
   lines.push(`canonical: ${root}`);
-  if (path.resolve(root) !== path.resolve(CANONICAL_ROOT) && root === CANONICAL_ROOT) {
-    failures.push("canonical root did not resolve from the CLI location");
-  }
   for (const name of LEGACY) {
     if (fs.existsSync(path.join(root, name))) failures.push(`unexpected legacy path: ${name}`);
   }
-  for (const name of ["AGENTS.md", "README.md", "package.json", "catalog.yaml", "rules/core.md", "templates/host-ags.md", "scripts/ags.mjs"]) {
+  for (const name of ["AGENTS.md", "README.md", "package.json", "catalog.yaml", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md", "scripts/ags.mjs"]) {
     if (!fs.existsSync(path.join(root, name))) failures.push(`missing ${name}`);
   }
   try {

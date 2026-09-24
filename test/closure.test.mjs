@@ -311,3 +311,11 @@ test("malformed link escapes stay on the doctor path", () => {
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((line) => line.includes("bad-link") && line.includes("%zz")));
 });
+
+test("doctor reports a missing guidance template", () => {
+  const root = makeCanonical();
+  fs.rmSync(path.join(root, "templates", "agents-block.md"));
+  const result = doctor(root);
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.some((line) => line.includes("templates/agents-block.md")));
+});
