@@ -494,7 +494,7 @@ async function reconcileOne(root, catalog, host, skill, { dryRun, noEnable, inje
   const stage = path.join(root, ".tmp", "runtime", "skill-stage", `${skill.id}-${process.pid}`);
   const catalogFile = path.join(root, "catalog.yaml");
   const catalogBackup = fs.readFileSync(catalogFile);
-  const hostFiles = [".agents/ags.yaml", ".agents/AGS.md", "AGENTS.md", "CLAUDE.md"].map((rel) => path.join(host.hostRoot, rel));
+  const hostFiles = [".agents/ags.yaml", ".agents/AGS.md", "AGENTS.md"].map((rel) => path.join(host.hostRoot, rel));
   const hostBackup = hostFiles.map((file) => ({ file, existed: fs.existsSync(file), data: fs.existsSync(file) ? fs.readFileSync(file) : null }));
   let committed = false;
   let placed = false;

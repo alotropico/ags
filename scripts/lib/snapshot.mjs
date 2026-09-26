@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { catalogById, includedSkillIds } from "./catalog.mjs";
-import { claudeModeOf } from "./render.mjs";
 import { AgsError, displayPath, relativeInside, samePath, walkFiles } from "./util.mjs";
 
 const CRC_TABLE = crc32Table();
@@ -146,10 +145,6 @@ export function collectSnapshot(root, hostRoot, catalog, settings) {
     files.push({ name, data: fs.readFileSync(abs) });
   };
   add(path.join(hostRoot, "AGENTS.md"), "host/AGENTS.md");
-  const claudeMode = claudeModeOf(settings.adapters?.claude);
-  if (claudeMode === "block" || claudeMode === "override") {
-    add(path.join(hostRoot, "CLAUDE.md"), "host/CLAUDE.md", { required: true, label: "CLAUDE.md" });
-  }
   add(path.join(hostRoot, ".agents", "AGS.md"), "host/.agents/AGS.md");
   add(path.join(hostRoot, ".agents", "ags.yaml"), "host/.agents/ags.yaml");
   const local = path.join(hostRoot, ".agents", "local");
@@ -227,7 +222,6 @@ export function assertSnapshotTarget(root, hostRoot, catalog, settings, outPath)
   if (hostRoot) {
     forbidden.push(
       path.join(hostRoot, "AGENTS.md"),
-      path.join(hostRoot, "CLAUDE.md"),
       path.join(hostRoot, ".agents", "AGS.md"),
       path.join(hostRoot, ".agents", "ags.yaml"),
     );

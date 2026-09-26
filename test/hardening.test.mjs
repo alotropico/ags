@@ -8,7 +8,6 @@ import { includedSkillIds, parseSelectionReply, validateCatalog } from "../scrip
 import { runChecks } from "../scripts/lib/checks.mjs";
 import { DISCOVERY_ROOTS } from "../scripts/lib/discovery.mjs";
 import { hostPlanPath, installHost, readMainBranch, readSettings, repairHost, resolveRepairTarget, updateHost } from "../scripts/lib/host.mjs";
-import { classifyClaude, claudeBlock, legacyClaudeText } from "../scripts/lib/render.mjs";
 import { recordChanges, recordUsage } from "../scripts/lib/report-cmd.mjs";
 import { withLock } from "../scripts/lib/reports.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
@@ -28,7 +27,7 @@ function git(args, cwd) {
 
 function makeCanonical() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ags-canon-"));
-  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md"]) {
+  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md"]) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     fs.copyFileSync(path.join(REAL, rel), path.join(root, rel));
   }
@@ -164,10 +163,10 @@ test("repair modes preserve local files and drifted content until overwrite", ()
   settings.checks = { type: "has\nnewline" };
   settings.skills.enabled = ["missing-skill"];
   const canonicalRoot = readSettings(host).canonicalRoot;
-  fs.writeFileSync(path.join(host, ".agents", "ags.yaml"), `format: 1\nhost: repair-host\ncanonicalRoot: ${canonicalRoot}\nreporting: true\nrules:\n  enabled: []\n  disabled: []\nskills:\n  enabled: [missing-skill]\n  disabled: []\nadapters:\n  claude: false\n`);
+  fs.writeFileSync(path.join(host, ".agents", "ags.yaml"), `format: 1\nhost: repair-host\ncanonicalRoot: ${canonicalRoot}\nreporting: true\nrules:\n  enabled: []\n  disabled: []\nskills:\n  enabled: [missing-skill]\n  disabled: []\n`);
   repairHost(root, host, { yes: true, setting: "skills.enabled", value: "plan-work" });
   assert.deepEqual(readSettings(host).skills.enabled, ["plan-work"]);
-  fs.writeFileSync(path.join(host, ".agents", "ags.yaml"), `format: 1\nhost: repair-host\ncanonicalRoot: ${canonicalRoot}\nreporting: "yes"\nrules:\n  enabled: []\n  disabled: []\nskills:\n  enabled: [plan-work]\n  disabled: []\nadapters:\n  claude: false\ngit:\n  mainBranch: "bad branch"\nchecks:\n  type: "bad\\ncommand"\n`);
+  fs.writeFileSync(path.join(host, ".agents", "ags.yaml"), `format: 1\nhost: repair-host\ncanonicalRoot: ${canonicalRoot}\nreporting: "yes"\nrules:\n  enabled: []\n  disabled: []\nskills:\n  enabled: [plan-work]\n  disabled: []\ngit:\n  mainBranch: "bad branch"\nchecks:\n  type: "bad\\ncommand"\n`);
   repairHost(root, host, { yes: true, setting: "reporting", value: "false" });
   assert.equal(readSettings(host).reporting, false);
   repairHost(root, host, { yes: true, setting: "git.mainBranch", value: "trunk" });
@@ -190,28 +189,6 @@ test("repair modes preserve local files and drifted content until overwrite", ()
   repairHost(root, host, { yes: true, removeInvalid: true });
   assert.equal(fs.existsSync(path.join(host, ".agents", "extra.txt")), false);
   assert.equal(fs.readFileSync(path.join(host, ".agents", "local", "keep.md"), "utf8"), "mine\n");
-});
-
-test("claude sync states and marked migration", () => {
-  const root = makeCanonical();
-  const block = claudeBlock(root);
-  const legacy = legacyClaudeText(root);
-  const override = `${legacy}\n`;
-  assert.equal(classifyClaude(null, { mode: "block", block, override }).state, "missing");
-  assert.equal(classifyClaude("", { mode: "block", block, override }).state, "missing");
-  assert.equal(classifyClaude(override, { mode: "block", block, override }).state, "missing");
-  assert.equal(classifyClaude(`${block}\n`, { mode: "block", block, override }).state, "clean");
-  assert.equal(classifyClaude(`${block}\n${block}\n`, { mode: "block", block, override }).state, "malformed");
-  assert.equal(classifyClaude("<!-- AGS:BEGIN -->\nopen\n", { mode: "block", block, override }).state, "malformed");
-  assert.equal(classifyClaude("# Notes\n", { mode: "skip", block, override }).state, "clean");
-  assert.equal(classifyClaude(`${block}\n`, { mode: "skip", block, override }).issue.includes("mode is skip"), true);
-  const host = makeRepo("claude-host");
-  fs.writeFileSync(path.join(host, "CLAUDE.md"), "# Notes\n\nKeep me.\n");
-  installHost(root, host, { yes: true, id: "claude-host", name: "Claude", claude: "block" });
-  const text = fs.readFileSync(path.join(host, "CLAUDE.md"), "utf8");
-  assert.match(text, /Keep me/);
-  assert.match(text, /AGS:BEGIN/);
-  assert.equal(text.split("AGS:BEGIN").length - 1, 1);
 });
 
 test("reconcile failure injection keeps a skill copy", async () => {

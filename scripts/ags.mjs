@@ -233,24 +233,6 @@ async function chooseSelection(plan, options, mode) {
       disable.push(...splitIds(await promptLine(`Disable ${label} ids (empty skips): `)));
     }
   }
-  let claude = options.claude;
-  console.log("skip: do not create or modify CLAUDE.md");
-  console.log("block: insert one AGS block and preserve all other content");
-  console.log("override: replace CLAUDE.md with the AGS pointer after a quarantine backup");
-  if (mode === "install" && options.claude == null) {
-    for (;;) {
-      const answer = (await promptLine("CLAUDE.md integration: [s]kip, add managed [b]lock, or [o]verride file? [s] ")).toLowerCase();
-      if (answer === "" || answer === "s" || answer === "skip") { claude = "skip"; break; }
-      if (answer === "b" || answer === "block") { claude = "block"; break; }
-      if (answer === "o" || answer === "override") { claude = "override"; break; }
-      console.log("Choose s, b, or o.");
-    }
-  } else if (mode === "update") {
-    const answer = (await promptLine(`CLAUDE.md mode is ${plan.claude}. [s]kip, [b]lock, [o]verride, or empty to keep: `)).toLowerCase();
-    if (answer === "s" || answer === "skip") claude = "skip";
-    else if (answer === "b" || answer === "block") claude = "block";
-    else if (answer === "o" || answer === "override") claude = "override";
-  }
   if (plan.proposal) {
     console.log("Host operational settings proposal:");
     console.log(JSON.stringify(plan.proposal, null, 2));
@@ -263,14 +245,13 @@ async function chooseSelection(plan, options, mode) {
       }
     }
   }
-  console.log(JSON.stringify({ enable, disable, claude, mainBranch: options.mainBranch, checks: options.checks }, null, 2));
+  console.log(JSON.stringify({ enable, disable, mainBranch: options.mainBranch, checks: options.checks }, null, 2));
   const confirmed = await confirmWrite(mode === "install" ? "Write this host install?" : "Write this host update?");
   return {
     confirmed,
     options: {
       enable: [...options.enable, ...enable],
       disable: [...options.disable, ...disable],
-      claude,
       mainBranch: options.mainBranch,
       checks: options.checks,
     },
@@ -290,8 +271,8 @@ async function confirmWrite(message) {
 
 async function hostCommand(action, rest, flags, list) {
   const allowed = {
-    install: ["route", "yes", "id", "name", "enable", "disable", "claude", "no-claude", "claude-mode", "main-branch", "check-type", "check-lint", "check-prettier", "help"],
-    update: ["route", "yes", "id", "name", "enable", "disable", "claude", "no-claude", "claude-mode", "main-branch", "check-type", "check-lint", "check-prettier", "help"],
+    install: ["route", "yes", "id", "name", "enable", "disable", "main-branch", "check-type", "check-lint", "check-prettier", "help"],
+    update: ["route", "yes", "id", "name", "enable", "disable", "main-branch", "check-type", "check-lint", "check-prettier", "help"],
     list: ["help"],
     sync: ["route", "all", "help"],
     repair: ["route", "host", "yes", "setting", "value", "remove-invalid", "restore-required", "overwrite-managed", "reset-managed", "help"],
@@ -300,18 +281,6 @@ async function hostCommand(action, rest, flags, list) {
   expectFlags(flags, allowed[action] || ["help"]);
   if (action === "sync") oneOf(flags, ["all", "route"]);
   if (action === "repair" || action === "unregister") oneOf(flags, ["host", "route"]);
-  if (flags.claude === true) console.error("Warning: --claude is deprecated. Use --claude-mode block.");
-  if (flags["no-claude"] === true) console.error("Warning: --no-claude is deprecated. Use --claude-mode skip.");
-  const claudeChoices = [];
-  if (typeof flags["claude-mode"] === "string") claudeChoices.push(flags["claude-mode"]);
-  if (flags.claude === true) claudeChoices.push("block");
-  if (flags["no-claude"] === true) claudeChoices.push("skip");
-  if (flags["claude-mode"] === true) throw new AgsError("Missing value for --claude-mode");
-  if (new Set(claudeChoices).size > 1) throw new AgsError("Use only one Claude mode");
-  const claudeMode = claudeChoices[0] ?? null;
-  if (claudeMode && !["skip", "block", "override"].includes(claudeMode)) {
-    throw new AgsError("Claude mode must be skip, block, or override");
-  }
   const root = CANONICAL_ROOT;
   const options = {
     yes: Boolean(flags.yes),
@@ -319,7 +288,6 @@ async function hostCommand(action, rest, flags, list) {
     name: flags.name,
     enable: [...csv(flags.enable), ...list("enable")],
     disable: [...csv(flags.disable), ...list("disable")],
-    claude: claudeMode,
     mainBranch: typeof flags["main-branch"] === "string" ? flags["main-branch"] : undefined,
     checks: {
       type: typeof flags["check-type"] === "string" ? flags["check-type"] : undefined,
@@ -328,7 +296,7 @@ async function hostCommand(action, rest, flags, list) {
     },
   };
   if (action === "install") {
-    const preview = installHost(root, routeOf(flags), { ...options, yes: false, claude: options.claude ?? "skip" });
+    const preview = installHost(root, routeOf(flags), { ...options, yes: false });
     for (const warning of preview.warnings || []) console.error(`warning: ${warning}`);
     printHostResult(preview);
     const chosen = await chooseSelection(preview.plan, options, "install");
@@ -341,13 +309,13 @@ async function hostCommand(action, rest, flags, list) {
     }
     const yes = options.yes || await confirmWrite("Write this host install?");
     if (!yes) throw new AgsError("Pass --yes to write the host install", { exitCode: 2 });
-    const installed = installHost(root, routeOf(flags), { ...options, yes: true, claude: options.claude ?? "skip" });
+    const installed = installHost(root, routeOf(flags), { ...options, yes: true });
     for (const warning of installed.warnings || []) console.error(`warning: ${warning}`);
     printHostResult(installed);
     return;
   }
   if (action === "update") {
-    const preview = updateHost(root, routeOf(flags), { ...options, yes: false, claude: options.claude });
+    const preview = updateHost(root, routeOf(flags), { ...options, yes: false });
     for (const warning of preview.warnings || []) console.error(`warning: ${warning}`);
     console.log(JSON.stringify(preview.review, null, 2));
     const chosen = await chooseSelection(preview.review, options, "update");
@@ -360,7 +328,7 @@ async function hostCommand(action, rest, flags, list) {
     }
     const yes = options.yes || await confirmWrite("Write this host update?");
     if (!yes) throw new AgsError("Pass --yes to write the host update", { exitCode: 2 });
-    const updated = updateHost(root, routeOf(flags), { ...options, yes: true, claude: options.claude });
+    const updated = updateHost(root, routeOf(flags), { ...options, yes: true });
     for (const warning of updated.warnings || []) console.error(`warning: ${warning}`);
     console.log(JSON.stringify(updated.review, null, 2));
     return;

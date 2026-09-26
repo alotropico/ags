@@ -27,7 +27,7 @@ function git(args, cwd) {
 
 function makeCanonical() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ags-canon-"));
-  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md"]) {
+  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md"]) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     fs.copyFileSync(path.join(REAL, rel), path.join(root, rel));
   }
@@ -215,12 +215,8 @@ test("repair one invalid setting while another selection stays invalid", () => {
   const cleaned = repairHost(root, host, { yes: true, setting: "skills.enabled", value: "plan-work" });
   assert.deepEqual(readSettings(host).skills.enabled, ["plan-work"]);
   assert.deepEqual(cleaned.remaining, []);
-  const yaml = readSettings(host);
-  delete yaml.adapters;
-  writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), yaml);
-  repairHost(root, host, { yes: true, setting: "adapters.claude", value: "skip" });
-  assert.equal(readSettings(host).adapters.claude, "skip");
-  assert.deepEqual(readSettings(host).skills.enabled, ["plan-work"]);
+  assert.equal(readSettings(host).adapters, undefined);
+  assert.throws(() => repairHost(root, host, { yes: true, setting: "adapters.claude", value: "skip" }), /Unsupported setting/);
 });
 
 test("installer help exits before install or retarget", () => {
@@ -427,19 +423,19 @@ test("remove-invalid quarantines an unexpected directory and rolls it back intac
   assert.equal(syncHosts(root, { route: host })[0].status, "clean");
 });
 
-test("reporting write canonicalizes a legacy Claude boolean", () => {
+test("reporting write drops a legacy adapters key", () => {
   const root = makeCanonical();
   const host = makeRepo("report-bool");
   installHost(root, host, { yes: true, id: "report-bool", name: "Report" });
   const settings = readSettings(host);
-  settings.adapters.claude = true;
+  settings.adapters = { claude: true };
   writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), settings);
   const entryBefore = fs.readFileSync(path.join(host, ".agents", "AGS.md"));
   const result = setReporting(root, { host: "report-bool", value: false });
   assert.deepEqual(result.failures, []);
   assert.deepEqual(result.changed, ["report-bool"]);
   assert.equal(readSettings(host).reporting, false);
-  assert.equal(readSettings(host).adapters.claude, "block");
+  assert.equal(readSettings(host).adapters, undefined);
   assert.ok(entryBefore.equals(fs.readFileSync(path.join(host, ".agents", "AGS.md"))));
 });
 

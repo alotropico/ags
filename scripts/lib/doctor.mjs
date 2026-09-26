@@ -18,7 +18,7 @@ export function doctor(root = CANONICAL_ROOT, route = null) {
   for (const name of LEGACY) {
     if (fs.existsSync(path.join(root, name))) failures.push(`unexpected legacy path: ${name}`);
   }
-  for (const name of ["AGENTS.md", "README.md", "package.json", "catalog.yaml", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md", "scripts/ags.mjs"]) {
+  for (const name of ["AGENTS.md", "README.md", "package.json", "catalog.yaml", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "scripts/ags.mjs"]) {
     if (!fs.existsSync(path.join(root, name))) failures.push(`missing ${name}`);
   }
   try {

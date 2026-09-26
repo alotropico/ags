@@ -10,7 +10,6 @@ import { emptyTreeId, writeDiff } from "../scripts/lib/diff.mjs";
 import { doctor } from "../scripts/lib/doctor.mjs";
 import { hostPlanPath, installHost, readSettings, repairHost, splitSetting, updateHost } from "../scripts/lib/host.mjs";
 import { finishInstall, parseInstallArgs } from "../scripts/install-global.mjs";
-import { claudeBlock, claudeOverrideText, planClaudeWrite } from "../scripts/lib/render.mjs";
 import { installSkill, reconcile } from "../scripts/lib/skills.mjs";
 import { isStandardSensitivePath, readStoredZip, writeSnapshot } from "../scripts/lib/snapshot.mjs";
 import { writeCanonicalSnapshot } from "../scripts/snapshot-canonical.mjs";
@@ -26,7 +25,7 @@ function git(args, cwd) {
 
 function makeCanonical() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ags-canon-"));
-  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md"]) {
+  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md"]) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     fs.copyFileSync(path.join(REAL, rel), path.join(root, rel));
   }
@@ -51,60 +50,17 @@ function makeRepo(name) {
   return root;
 }
 
-test("claude modes preserve unrelated content and malformed tails", () => {
+test("install and update leave an existing CLAUDE.md untouched", () => {
   const root = makeCanonical();
-  const block = claudeBlock(root);
-  const override = claudeOverrideText(root);
-  const tail = "<!-- AGS:BEGIN -->\nkeep this tail\n";
-  const planned = planClaudeWrite(tail, "block", { block, override });
-  assert.equal(planned.action, "leave");
-  assert.equal(planned.text, undefined);
-
-  const skipHost = makeRepo("claude-skip");
-  fs.writeFileSync(path.join(skipHost, "CLAUDE.md"), "# unrelated\n");
-  installHost(root, skipHost, { yes: true, id: "claude-skip", name: "Skip", claude: "skip" });
-  assert.equal(fs.readFileSync(path.join(skipHost, "CLAUDE.md"), "utf8"), "# unrelated\n");
-  assert.equal(readSettings(skipHost).adapters.claude, "skip");
-
-  const blockHost = makeRepo("claude-block");
-  const before = "before\n";
-  const after = "after\n";
-  fs.writeFileSync(path.join(blockHost, "CLAUDE.md"), `${before}${after}`);
-  installHost(root, blockHost, { yes: true, id: "claude-block", name: "Block", claude: "block" });
-  const blocked = fs.readFileSync(path.join(blockHost, "CLAUDE.md"), "utf8");
-  assert.ok(blocked.startsWith(before));
-  assert.ok(blocked.endsWith(`after\n\n${block}\n`) || blocked.includes("after\n"));
-  assert.ok(blocked.includes(before) && blocked.includes(after) && blocked.includes(block));
-
-  const bad = makeRepo("claude-bad");
-  fs.writeFileSync(path.join(bad, "CLAUDE.md"), tail);
-  installHost(root, bad, { yes: true, id: "claude-bad", name: "Bad", claude: "block" });
-  assert.equal(fs.readFileSync(path.join(bad, "CLAUDE.md"), "utf8"), tail);
-
-  const replaced = makeRepo("claude-override");
-  fs.writeFileSync(path.join(replaced, "CLAUDE.md"), "user owned\n");
-  installHost(root, replaced, { yes: true, id: "claude-override", name: "Override", claude: "override" });
-  assert.equal(fs.readFileSync(path.join(replaced, "CLAUDE.md"), "utf8"), override);
-  const quarantineRoot = path.join(replaced, ".tmp", "ags-quarantine");
-  const backups = fs.readdirSync(quarantineRoot, { recursive: true }).map(String);
-  assert.ok(backups.some((name) => name.endsWith("ags-CLAUDE.md")));
-  const backup = backups.find((name) => name.endsWith("ags-CLAUDE.md"));
-  assert.equal(fs.readFileSync(path.join(quarantineRoot, backup), "utf8"), "user owned\n");
-
-  updateHost(root, blockHost, { yes: true, claude: "skip" });
-  const skipped = fs.readFileSync(path.join(blockHost, "CLAUDE.md"), "utf8");
-  assert.equal(skipped.includes("AGS:BEGIN"), false);
-  assert.ok(skipped.includes("before"));
-  assert.ok(skipped.includes("after"));
-
-  const legacy = makeRepo("claude-legacy");
-  installHost(root, legacy, { yes: true, id: "claude-legacy", name: "Legacy", claude: true });
-  assert.equal(readSettings(legacy).adapters.claude, "block");
-  const yaml = fs.readFileSync(path.join(legacy, ".agents", "ags.yaml"), "utf8");
-  assert.match(yaml, /claude: block/);
-  fs.writeFileSync(path.join(legacy, ".agents", "ags.yaml"), yaml.replace("claude: block", "claude: false"));
-  updateHost(root, legacy, { yes: true });
-  assert.equal(readSettings(legacy).adapters.claude, "skip");
+  const host = makeRepo("claude-left");
+  const notes = "# Notes\n\nKeep me.\n";
+  fs.writeFileSync(path.join(host, "CLAUDE.md"), notes);
+  installHost(root, host, { yes: true, id: "claude-left", name: "Left" });
+  assert.equal(fs.readFileSync(path.join(host, "CLAUDE.md"), "utf8"), notes);
+  assert.equal(readSettings(host).adapters, undefined);
+  updateHost(root, host, { yes: true });
+  assert.equal(fs.readFileSync(path.join(host, "CLAUDE.md"), "utf8"), notes);
+  assert.equal(fs.existsSync(path.join(host, "AGENTS.md")), true);
 });
 
 test("canonical snapshot excludes sensitive paths unless asked", () => {
@@ -202,7 +158,7 @@ test("skill links, bundled references, and host-local fallback", async () => {
 test("repair restores missing files, removes invalid owned files, and rejects setting typos", () => {
   const root = makeCanonical();
   const host = makeRepo("repair-follow");
-  installHost(root, host, { yes: true, id: "repair-follow", name: "Repair", claude: "block", mainBranch: "trunk" });
+  installHost(root, host, { yes: true, id: "repair-follow", name: "Repair", mainBranch: "trunk" });
   fs.writeFileSync(path.join(host, ".agents", "local", "keep.md"), "mine\n");
   fs.mkdirSync(path.join(host, ".agents", "skills", "host-only"), { recursive: true });
   fs.writeFileSync(path.join(host, ".agents", "skills", "host-only", "SKILL.md"), "---\nname: host-only\ndescription: Local.\n---\n");
@@ -212,13 +168,13 @@ test("repair restores missing files, removes invalid owned files, and rejects se
   fs.writeFileSync(path.join(host, ".agents", "AGS.md"), "drifted entry\n");
   const dry = repairHost(root, host, { yes: false, removeInvalid: true });
   assert.ok(dry.targets.some((item) => item.action === "quarantine" && item.path.endsWith(`${path.sep}.agents${path.sep}AGS.md`)));
-  const tail = "<!-- AGS:BEGIN -->\nkeep this tail\n";
-  fs.writeFileSync(path.join(host, "CLAUDE.md"), tail);
+  const notes = "# Notes\n";
+  fs.writeFileSync(path.join(host, "CLAUDE.md"), notes);
   const marked = repairHost(root, host, { yes: false, removeInvalid: true });
-  assert.ok(marked.targets.some((item) => item.path.endsWith("CLAUDE.md") && item.action === "leave"));
+  assert.equal(marked.targets.some((item) => item.path.endsWith("CLAUDE.md")), false);
   repairHost(root, host, { yes: true, removeInvalid: true });
   assert.equal(fs.existsSync(path.join(host, ".agents", "AGS.md")), false);
-  assert.equal(fs.readFileSync(path.join(host, "CLAUDE.md"), "utf8"), tail);
+  assert.equal(fs.readFileSync(path.join(host, "CLAUDE.md"), "utf8"), notes);
   assert.equal(fs.readFileSync(path.join(host, ".agents", "local", "keep.md"), "utf8"), "mine\n");
   assert.equal(fs.readFileSync(path.join(host, ".agents", "skills", "host-only", "SKILL.md"), "utf8").includes("Local"), true);
 
@@ -237,11 +193,6 @@ test("repair restores missing files, removes invalid owned files, and rejects se
   restored.skills.localExceptions = [{ id: "host-only", path: ".agents/skills/host-only/SKILL.md", reason: "requires-host-location", source: "vendor/host-only" }];
   writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), restored);
 
-  settings.adapters.claude = "block";
-  writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), readSettings(host));
-  const blocked = readSettings(host);
-  blocked.adapters.claude = "block";
-  writeYamlAtomic(path.join(host, ".agents", "ags.yaml"), blocked);
   fs.rmSync(path.join(host, ".agents", "ags.yaml"));
   fs.rmSync(path.join(host, ".agents", "AGS.md"));
   fs.rmSync(path.join(host, "AGENTS.md"));

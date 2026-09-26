@@ -19,13 +19,7 @@ import { assertCheckScript, isPackageScriptKey, migrateChecks, readPackageScript
 import {
   agentsBlock,
   blockIntact,
-  claudeBlock,
-  claudeModeOf,
-  claudeOverrideText,
-  classifyClaude,
   planAgentsBlockRemoval,
-  planClaudeRemoval,
-  planClaudeWrite,
   renderHostEntry,
   upsertAgentsBlock,
 } from "./render.mjs";
@@ -55,13 +49,6 @@ export function splitSetting(setting, value) {
     return [setting.slice(0, index), setting.slice(index + 1)];
   }
   return [setting, value];
-}
-
-export function resolveClaudeOption(value, fallback = "skip") {
-  if (value == null) return fallback;
-  const mode = claudeModeOf(value);
-  if (!mode) throw new AgsError("Claude mode must be skip, block, or override");
-  return mode;
 }
 
 function localExceptionErrors(settings) {
@@ -123,7 +110,7 @@ export function missingMaterialWarnings(root, catalog, settings, hostRoot) {
 
 export function persistSettings(settings) {
   const next = structuredClone(settings);
-  if (next.adapters) next.adapters = { ...next.adapters, claude: claudeModeOf(next.adapters.claude) || next.adapters.claude };
+  delete next.adapters;
   if (Array.isArray(next.skills?.localExceptions) && next.skills.localExceptions.length === 0) {
     delete next.skills.localExceptions;
   }
@@ -294,7 +281,6 @@ export function validateSettings(settings, root) {
       errors.push(`settings ${group}.enabled and disabled are required`);
     }
   }
-  if (!claudeModeOf(settings?.adapters?.claude)) errors.push("settings adapters.claude must be skip, block, or override");
   errors.push(...localExceptionErrors(settings));
   if (settings?.git != null) {
     if (typeof settings.git !== "object" || Array.isArray(settings.git)) errors.push("settings git must be an object");
@@ -377,7 +363,7 @@ export function hostPlanPath(root, hostRoot, name) {
   return plan;
 }
 
-export function defaultSettings(root, id, selection, claude, operational = {}) {
+export function defaultSettings(root, id, selection, operational = {}) {
   const settings = {
     format: 1,
     host: id,
@@ -385,7 +371,6 @@ export function defaultSettings(root, id, selection, claude, operational = {}) {
     reporting: true,
     rules: selection.rules,
     skills: selection.skills,
-    adapters: { claude: claudeModeOf(claude) || "skip" },
   };
   if (operational.git) settings.git = operational.git;
   if (operational.checks) settings.checks = operational.checks;
@@ -415,7 +400,7 @@ function restoreAll(backups) {
   }
 }
 
-export function writeManaged(root, catalog, hostRoot, settings, { agentsExisting = null, parts = null, backups = null, warnings = null, install = false } = {}) {
+export function writeManaged(root, catalog, hostRoot, settings, { agentsExisting = null, parts = null, backups = null } = {}) {
   const written = [];
   const want = (name) => !parts || parts.includes(name);
   const agentsDir = path.join(hostRoot, ".agents");
@@ -442,37 +427,7 @@ export function writeManaged(root, catalog, hostRoot, settings, { agentsExisting
     writeAtomic(agentsFile, upsertAgentsBlock(prior, agentsBlock(root)));
     written.push(agentsFile);
   }
-  if (want("claude") && !(install && claudeModeOf(persisted.adapters?.claude) === "skip")) {
-    applyClaudePlan(root, hostRoot, persisted, { backups, written, warnings });
-  }
   return written;
-}
-
-function applyClaudePlan(root, hostRoot, settings, { backups, written, warnings }) {
-  const claudeFile = path.join(hostRoot, "CLAUDE.md");
-  const existing = fs.existsSync(claudeFile) ? fs.readFileSync(claudeFile, "utf8") : null;
-  const plan = planClaudeWrite(existing, claudeModeOf(settings.adapters.claude), {
-    block: claudeBlock(root),
-    override: claudeOverrideText(root),
-  });
-  if (plan.warning && warnings) warnings.push(plan.warning);
-  if (plan.action === "leave") return;
-  if (backups) remember(backups, claudeFile);
-  if (plan.action === "delete exact generated file") {
-    fs.rmSync(claudeFile, { force: true });
-    written.push(claudeFile);
-    return;
-  }
-  if (plan.action === "quarantine") {
-    quarantine(hostRoot, claudeFile, "ags-CLAUDE.md");
-    writeAtomic(claudeFile, plan.text);
-    written.push(claudeFile);
-    return;
-  }
-  if (plan.text != null && plan.text !== existing) {
-    writeAtomic(claudeFile, plan.text);
-    written.push(claudeFile);
-  }
 }
 
 export function installHost(root, route, options) {
@@ -510,12 +465,11 @@ export function installHost(root, route, options) {
   if (errors.length) throw new AgsError(errors.join("\n"));
   includedSkillIds(catalog, selection.skills.enabled);
   const operational = normalizeOperational(options, hostRoot);
-  const claude = resolveClaudeOption(options.claude, "skip");
-  const settings = defaultSettings(root, wantedId, selection, claude, operational);
+  const settings = defaultSettings(root, wantedId, selection, operational);
   const settingErrors = validateSettings(settings, root);
   if (settingErrors.length) throw new AgsError(settingErrors.join("\n"));
   const warnings = missingMaterialWarnings(root, catalog, settings, hostRoot);
-  const plan = describeSelection(catalog, evidence, selection, claude);
+  const plan = describeSelection(catalog, evidence, selection);
   plan.proposal = proposeOperationalSettings(hostRoot);
   plan.warnings = warnings;
   if (!options.yes) return { applied: false, plan, hostRoot, warnings };
@@ -523,7 +477,7 @@ export function installHost(root, route, options) {
   const written = [];
   try {
     ensureHostTmpIgnored(hostRoot);
-    written.push(...writeManaged(root, catalog, hostRoot, settings, { backups, warnings, install: true }));
+    written.push(...writeManaged(root, catalog, hostRoot, settings, { backups }));
     const next = {
       format: 1,
       hosts: registry.hosts.filter((host) => !samePath(host.path, hostRoot)),
@@ -635,8 +589,6 @@ export function updateHost(root, route, options) {
   if (errors.length) throw new AgsError(errors.join("\n"));
   const migrated = migrateChecks(settings.checks, hostRoot);
   const review = reviewUpdate(catalog, evidence, settings, selection);
-  const claude = options.claude == null ? claudeModeOf(settings.adapters.claude) : resolveClaudeOption(options.claude, null);
-  review.claude = claude;
   review.proposal = proposeOperationalSettings(hostRoot);
   review.localExceptions = (settings.skills?.localExceptions || []).map((item) => item.id);
   const warnings = [
@@ -657,7 +609,6 @@ export function updateHost(root, route, options) {
     rules: selection.rules,
     skills: nextSkills,
     checks: migrated.checks,
-    adapters: { claude },
   }, options, hostRoot);
   const settingErrors = validateSettings(next, root);
   if (settingErrors.length) throw new AgsError(settingErrors.join("\n"));
@@ -697,13 +648,12 @@ export function reviewUpdate(catalog, evidence, current, next) {
   };
 }
 
-function describeSelection(catalog, evidence, selection, claude) {
+function describeSelection(catalog, evidence, selection) {
   const offered = offeredEntries(catalog, evidence);
   const ids = (pred) => offered.filter(pred).map((entry) => entry.id);
   const plan = {
     rules: selection.rules,
     skills: selection.skills,
-    claude: claudeModeOf(claude) || "skip",
     offered: offered.map((entry) => entry.id),
     offeredRules: ids((entry) => entryGroup(catalog, entry.id) === "rules"),
     offeredCustom: ids((entry) => entry.kind === "custom"),
@@ -832,15 +782,6 @@ export function syncOne(root, hostRoot) {
   const agentsFile = path.join(hostRoot, "AGENTS.md");
   if (!fs.existsSync(agentsFile)) issues.push("missing AGENTS.md");
   else if (!blockIntact(fs.readFileSync(agentsFile, "utf8"), agentsBlock(root))) issues.push("AGENTS.md block differs");
-  const claudeFile = path.join(hostRoot, "CLAUDE.md");
-  const claudeText = fs.existsSync(claudeFile) ? fs.readFileSync(claudeFile, "utf8") : null;
-  const claudeState = classifyClaude(claudeText, {
-    mode: settings.adapters?.claude,
-    block: claudeBlock(root),
-    override: claudeOverrideText(root),
-  });
-  if (claudeState.issue) issues.push(claudeState.issue);
-  if (claudeState.warning) warnings.push(claudeState.warning);
   if (!fs.existsSync(path.join(hostRoot, ".agents", "local"))) issues.push("missing .agents/local");
   const agentsDir = path.join(hostRoot, ".agents");
   if (fs.existsSync(agentsDir)) {
@@ -861,7 +802,7 @@ export function syncOne(root, hostRoot) {
   let status = "clean";
   if (issues.length) status = "repairable";
   else if (warnings.length) status = "warning";
-  return { id: entry.id, path: hostRoot, status, issues: unique(issues), warnings: unique(warnings), repairs: repairHints(issues), claude: claudeState.state };
+  return { id: entry.id, path: hostRoot, status, issues: unique(issues), warnings: unique(warnings), repairs: repairHints(issues) };
 }
 
 function repairHints(issues) {
@@ -966,7 +907,6 @@ export function repairHost(root, route, options) {
 
 function dependentParts(key) {
   if (key === "reporting") return ["settings"];
-  if (key === "adapters.claude") return ["settings", "claude"];
   return ["settings", "entry"];
 }
 
@@ -995,22 +935,18 @@ function restoreRequired(root, catalog, target, backups = null) {
     written.push(...writeManaged(root, catalog, hostRoot, agentsSettings, { parts: ["agents"], backups }));
   }
   if (!fs.existsSync(path.join(hostRoot, ".agents", "local"))) fs.mkdirSync(path.join(hostRoot, ".agents", "local"), { recursive: true });
-  const mode = claudeModeOf(usable?.adapters?.claude);
-  if (usable && (mode === "block" || mode === "override") && !fs.existsSync(path.join(hostRoot, "CLAUDE.md"))) {
-    written.push(...writeManaged(root, catalog, hostRoot, usable, { parts: ["claude"], backups }));
-  }
   return written;
 }
 
 function repairedSettings(root, catalog, hostRoot, entry, settings) {
   const evidence = detectEvidence(hostRoot);
-  const base = settings && typeof settings === "object" ? structuredClone(settings) : defaultSettings(root, entry.id, applySelection(catalog, evidence), "skip");
+  const base = settings && typeof settings === "object" ? structuredClone(settings) : defaultSettings(root, entry.id, applySelection(catalog, evidence));
   const keptExceptions = Array.isArray(base.skills?.localExceptions) ? base.skills.localExceptions : [];
   base.format = 1;
   base.host = entry.id;
   base.canonicalRoot = displayPath(root);
   if (typeof base.reporting !== "boolean") base.reporting = true;
-  base.adapters = { claude: claudeModeOf(base.adapters?.claude) || "skip" };
+  delete base.adapters;
   for (const group of ["rules", "skills"]) {
     const enabled = Array.isArray(base[group]?.enabled) ? base[group].enabled : [];
     const disabled = Array.isArray(base[group]?.disabled) ? base[group].disabled : [];
@@ -1058,13 +994,7 @@ function applySetting(catalog, settings, key, value, hostRoot) {
       throw new AgsError("settings reporting must be boolean");
     }
     next.reporting = value === "true" || value === true;
-  } else if (key === "adapters.claude") {
-    const mode = claudeModeOf(value);
-    if (!mode || value === true || value === false) throw new AgsError("settings adapters.claude must be skip, block, or override");
-    if (!next.adapters || typeof next.adapters !== "object" || Array.isArray(next.adapters)) next.adapters = {};
-    next.adapters.claude = mode;
-  }
-  else if (/^(rules|skills)\.(enabled|disabled)$/.test(key)) {
+  } else if (/^(rules|skills)\.(enabled|disabled)$/.test(key)) {
     const [group, list] = key.split(".");
     const ids = String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
     if (next[group] == null) next[group] = { enabled: [], disabled: [] };
@@ -1090,21 +1020,17 @@ function applySetting(catalog, settings, key, value, hostRoot) {
 }
 
 function planRepair(root, catalog, target, options) {
-  const { hostRoot, settings } = target;
+  const { hostRoot } = target;
   const targets = [];
-  const claudeFile = path.join(hostRoot, "CLAUDE.md");
   const agentsFile = path.join(hostRoot, "AGENTS.md");
   const entryFile = path.join(hostRoot, ".agents", "AGS.md");
   const usable = usableSettings(root, catalog, target);
-  const mode = claudeModeOf(usable?.adapters?.claude || settings?.adapters?.claude);
   if (target.settingsError) targets.push({ action: "note", path: settingsPath(hostRoot), detail: target.settingsError });
   if (options.setting) targets.push({ action: "set", path: settingsPath(hostRoot), detail: `${options.setting}=${options.value}` });
   if (options.overwriteManaged || options.resetManaged) {
     targets.push({ action: "write", path: entryFile });
     targets.push({ action: "write", path: agentsFile });
     targets.push({ action: "write", path: settingsPath(hostRoot) });
-    if (mode === "block") targets.push({ action: "insert block", path: claudeFile });
-    if (mode === "override") targets.push({ action: "replace file", path: claudeFile });
   }
   if (options.restoreRequired) {
     if (!fs.existsSync(settingsPath(hostRoot))) targets.push({ action: "write", path: settingsPath(hostRoot) });
@@ -1112,9 +1038,6 @@ function planRepair(root, catalog, target, options) {
     if (!fs.existsSync(agentsFile)) targets.push({ action: "write", path: agentsFile });
     if (!fs.existsSync(path.join(hostRoot, ".agents", "local"))) {
       targets.push({ action: "mkdir", path: path.join(hostRoot, ".agents", "local") });
-    }
-    if (usable && (mode === "block" || mode === "override") && !fs.existsSync(claudeFile)) {
-      targets.push({ action: mode === "override" ? "replace file" : "insert block", path: claudeFile });
     }
   }
   if (options.removeInvalid || options.resetManaged) {
@@ -1140,17 +1063,6 @@ function planRepair(root, catalog, target, options) {
         const removal = planAgentsBlockRemoval(fs.readFileSync(agentsFile, "utf8"), agentsBlock(root));
         if (removal.action !== "leave" || removal.warning) {
           targets.push({ action: removal.action, path: agentsFile, text: removal.text, warning: removal.warning });
-        }
-      }
-      if (fs.existsSync(claudeFile) && mode) {
-        const removal = planClaudeRemoval(fs.readFileSync(claudeFile, "utf8"), mode, {
-          block: claudeBlock(root),
-          override: claudeOverrideText(root),
-        });
-        if (removal.action === "quarantine") {
-          targets.push({ action: "quarantine", path: claudeFile, backupName: "ags-CLAUDE.md", warning: removal.warning });
-        } else if (removal.action !== "leave" || removal.warning) {
-          targets.push({ action: removal.action, path: claudeFile, text: removal.text, warning: removal.warning });
         }
       }
     }

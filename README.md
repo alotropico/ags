@@ -55,8 +55,6 @@ Remove-Item -Recurse -Force $dir
 Selections, usage reporting, Git, and checks live in the host's `.agents/ags.yaml`. `hosts.yaml` stores only the host id, name, and path.
 
 ```yaml
-adapters:
-  claude: skip
 git:
   mainBranch: main
 checks:
@@ -64,8 +62,6 @@ checks:
   lint: lint
   prettier: prettier:check
 ```
-
-`claude` is `skip`, `block`, or `override`. `skip` is the default and leaves `CLAUDE.md` untouched. `block` inserts one managed block. `override` replaces the file with the AGS pointer after a quarantine backup. `--claude` and `--no-claude` remain as deprecated aliases.
 
 Check values are package script names. AGS detects `pnpm`, `yarn`, or `npm` from `packageManager`, otherwise from exactly one supported lockfile, and runs `<manager>.cmd run <script>`. It refuses an obvious Prettier write script. The installer shows the manager, script name, and script body before confirmation. A core update does not replace existing values. An old full command is migrated only when it is exactly that manager running one existing script.
 
@@ -98,7 +94,6 @@ Host:
 
 ```text
 AGENTS.md
-CLAUDE.md              optional; skip, block, or override
 .agents/AGS.md
 .agents/ags.yaml
 .agents/local/

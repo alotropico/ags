@@ -27,7 +27,7 @@ function git(args, cwd) {
 
 function makeCanonical() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ags-canon-"));
-  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md", "templates/claude-pointer.md"]) {
+  for (const rel of ["catalog.yaml", "AGENTS.md", "README.md", "package.json", "rules/core.md", "templates/host-ags.md", "templates/agents-block.md"]) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     fs.copyFileSync(path.join(REAL, rel), path.join(root, rel));
   }
