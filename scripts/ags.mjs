@@ -2,10 +2,11 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
+import { hostInstall } from "./lib/host.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { AgsError, AGS_ROOT } from "./lib/util.mjs";
 
-const VALUE_FLAGS = new Set(["route", "out", "plan", "decide", "decide-all", "set", "enable", "disable", "file", "to", "label", "only"]);
+const VALUE_FLAGS = new Set(["route", "host", "id", "name", "out", "plan", "decide", "decide-all", "set", "enable", "disable", "file", "to", "label", "only"]);
 const REPEATABLE = new Set(["set", "decide", "enable", "disable", "file"]);
 const BOOLEAN_FLAGS = new Set(["dry-run", "help", "include-nested"]);
 const OPERATION_FLAGS = ["dry-run", "plan", "decide", "decide-all"];
@@ -77,6 +78,28 @@ COMMANDS.set("host prepare", {
     const options = operationOptions(flags);
     const route = routeOf(flags);
     return hostPrepare({ agsRoot, route, includeNested: Boolean(flags["include-nested"]), rerunArgs: rerunArgs(command, flags, route), terminal, options });
+  },
+});
+
+COMMANDS.set("host install", {
+  usage: "[--route .] [--id <id>] [--name <name>] [--enable <ids>] [--disable <ids>] [--set key=value ...] [--include-nested] [--dry-run] [--plan <digest>]",
+  flags: ["route", "id", "name", "enable", "disable", "set", "include-nested", ...OPERATION_FLAGS],
+  run: ({ agsRoot, flags, terminal, command }) => {
+    const options = operationOptions(flags);
+    const route = routeOf(flags);
+    return hostInstall({
+      agsRoot,
+      route,
+      id: flags.id ?? null,
+      name: flags.name ?? null,
+      enable: csvList(flags.enable),
+      disable: csvList(flags.disable),
+      sets: flags.set || [],
+      includeNested: Boolean(flags["include-nested"]),
+      rerunArgs: rerunArgs(command, flags, route),
+      terminal,
+      options,
+    });
   },
 });
 

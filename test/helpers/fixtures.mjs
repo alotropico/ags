@@ -171,6 +171,32 @@ export function fakeTerminal(answers = []) {
   };
 }
 
+export function quietTerminal() {
+  const lines = [];
+  return {
+    interactive: false,
+    lines,
+    async question(prompt) {
+      throw new Error(`Unexpected prompt without a terminal: ${prompt}`);
+    },
+    log(line = "") {
+      lines.push(String(line));
+    },
+    warn(line = "") {
+      lines.push(String(line));
+    },
+    text() {
+      return lines.join("\n");
+    },
+  };
+}
+
+export function digestOf(text) {
+  const match = String(text).match(/Digest: ([0-9a-f]{12})/);
+  if (!match) throw new Error(`No digest in output:\n${text}`);
+  return match[1];
+}
+
 export function treeSnapshot(root, { exclude = [] } = {}) {
   const map = {};
   const skip = (rel) => rel === ".git" || rel.startsWith(".git/") || exclude.some((item) => rel === item || rel.startsWith(`${item.replace(/\/$/, "")}/`));

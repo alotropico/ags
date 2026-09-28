@@ -241,12 +241,13 @@ export function mergeConfig(doc, catalog, { skillIds = [], sets = new Map() } = 
   for (const entry of catalog.skills) {
     if (!skillIds.includes(entry.id)) continue;
     for (const key of entry.params || []) {
-      if (settingValue(data, key) !== undefined || sets.has(key) || added.has(key)) continue;
+      if (added.has(key)) continue;
       const setting = declared.get(key);
-      ensureSetting(doc, setting, Object.hasOwn(setting, "default") ? setting.default : "");
+      if (sets.has(key)) ensureSetting(doc, setting, sets.get(key));
+      else if (settingValue(data, key) === undefined) ensureSetting(doc, setting, Object.hasOwn(setting, "default") ? setting.default : "");
       added.add(key);
     }
   }
-  for (const [key, value] of sets) ensureSetting(doc, declared.get(key), value);
+  for (const [key, value] of sets) if (!added.has(key)) ensureSetting(doc, declared.get(key), value);
   return doc;
 }

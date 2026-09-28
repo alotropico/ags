@@ -34,7 +34,7 @@ function exists(file) {
   }
 }
 
-function hostConfigState(hostRoot) {
+export function hostConfigState(hostRoot) {
   const file = abs(hostRoot, ".agents/ags.yaml");
   if (!fs.existsSync(file)) return null;
   try {

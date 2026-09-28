@@ -79,6 +79,31 @@ export function tagSource(agsRoot, version) {
   };
 }
 
+export const VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
+
+export function compareVersions(left, right) {
+  const a = left.split(".").map(Number);
+  const b = right.split(".").map(Number);
+  for (let i = 0; i < 3; i += 1) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+}
+
+export function releaseVersions(agsRoot) {
+  const result = gitBuffer(agsRoot, ["for-each-ref", "--format=%(refname:short) %(objecttype)", "refs/tags/v*"]);
+  if (result.status !== 0) return [];
+  return result.stdout
+    .toString("utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(" "))
+    .filter(([name, type]) => type === "tag" && /^v\d+\.\d+\.\d+$/.test(name ?? ""))
+    .map(([name]) => name.slice(1))
+    .sort(compareVersions);
+}
+
+export function latestRelease(agsRoot) {
+  return releaseVersions(agsRoot).at(-1) ?? null;
+}
+
 export function textOf(buffer) {
   return buffer == null ? null : buffer.toString("utf8").replaceAll("\r\n", "\n");
 }
