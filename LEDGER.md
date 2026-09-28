@@ -70,3 +70,30 @@ Dispositions, exactly one per row:
 | 1 | Hosts keep their own skills; host changes can go to AGS | `.tmp/archive/2026-09/ags-raw-notes.md`, "We should after all let host projects have skills" | AGS | `docs/v2-spec.md` 10.2, 11.6, 16.8 | Host skills are host-owned; promotion moves host edits into AGS |
 | 2 | Global tools such as Graphify, installed by skills, outputs gitignored | `.tmp/archive/2026-09/ags-raw-notes.md`, "We want to allow global installs" | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" and "Tool management" | |
 | 3 | Default Graphify generation command | `.tmp/archive/2026-09/ags-raw-notes.md`, "The default graphiphy generation" | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | The entry defines the Graphify steps; the default command is settled when it is built |
+
+## Run 1: Phase A rewrites
+
+### v1-final:AGENTS.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | The root is the directory holding this file; files are live | `v1-final:AGENTS.md`, intro, "The canonical root is the directory" | Removed | None | Hosts hold installed copies; nothing reads AGS at runtime (spec 1, 6) |
+| 2 | No compile step and no copied runtime | `v1-final:AGENTS.md`, intro, "There is no compile step" | Removed | None | V2 copies released material into hosts (spec 3, 10) |
+| 3 | Host install records the AGS path | `v1-final:AGENTS.md`, intro, "Host install records that path" | Removed | None | The `canonicalRoot` setting and retargeting are removed (spec 25) |
+| 4 | Rerun the global install after moving the directory | `v1-final:AGENTS.md`, intro, "Run `node scripts/install-global.mjs` again" | AGS | `AGENTS.md`, Commands | |
+| 5 | Load order: host adapter and `.agents/AGS.md` first | `v1-final:AGENTS.md`, Load order, item 1 | Removed | None | `.agents/AGS.md` is removed; the AGS block holds the core and the rule index (spec 5, 16.11) |
+| 6 | Confirm the root is readable and writable | `v1-final:AGENTS.md`, Load order, item 2 | Removed | None | No runtime access to AGS (spec 6 invariant 2) |
+| 7 | Read this file and `rules/core.md` | `v1-final:AGENTS.md`, Load order, item 3 | Removed | None | The core is inlined in the host block (spec 11.2, Appendix A) |
+| 8 | Read selected optional rules listed by the host entry | `v1-final:AGENTS.md`, Load order, item 4 | AGS | `templates/agents-block.md` (rule index) | Soft rules are indexed in the block (spec 11.3) |
+| 9 | Read relevant host guidance under `.agents/local/` | `v1-final:AGENTS.md`, Load order, item 5 | AGS | `rules/core.md` (host notes line) | Host guidance structure of spec 11.6 |
+| 10 | Read a skill only when the request matches its description | `v1-final:AGENTS.md`, Load order, item 6 | AGS | `docs/v2-spec.md` 11.1, 11.4 | Harness-native skill discovery |
+| 11 | Do not read every selected skill on every task | `v1-final:AGENTS.md`, Load order, "Do not read every selected skill" | AGS | `docs/v2-spec.md` 3 principle 10, 11.1 | Always-loaded guidance stays thin |
+| 12 | Material kinds: core, rules, skills | `v1-final:AGENTS.md`, Material, first three bullets | AGS | `AGENTS.md`, Catalog and Writing material | Tiers of spec 11.1 |
+| 13 | Third-party skills live under `skills/` | `v1-final:AGENTS.md`, Material, "Canonical custom and third-party skills" | Backlog | `BACKLOG.md`, Third-party skills, "Import" | |
+| 14 | Host-local files under `.agents/local/` belong to the host | `v1-final:AGENTS.md`, Material, "Host-local" | AGS | `docs/v2-spec.md` 6 invariant 7, 11.6 | |
+| 15 | `requires-host-location` exceptions | `v1-final:AGENTS.md`, Material, "registered `requires-host-location` exception" | Removed | None | Every skill is host-located (spec 5, 25) |
+| 16 | Never copy AGS skills or rules into a host | `v1-final:AGENTS.md`, Material, "Do not copy a canonical skill" | Removed | None | Reversed: V2 installs copies (spec 1) |
+| 17 | AGS edits affect every host | `v1-final:AGENTS.md`, Changes, "Canonical edits affect every host" | Removed | None | Hosts change only on `ags host update` from a release tag (spec 15.2, 16.5) |
+| 18 | Report AGS edits with `ags report changes` | `v1-final:AGENTS.md`, Changes, command block | Removed | None | Changelog notes and promotion notes replace change reports (spec 15.3) |
+| 19 | Use `ags` for deterministic operations | `v1-final:AGENTS.md`, Deterministic commands | AGS | `AGENTS.md`, Commands | The V1 command list is replaced by the commands of spec 22.2 |
+| 20 | Never invoke files under `scripts/` by path | `v1-final:AGENTS.md`, Deterministic commands, last sentence | AGS | `AGENTS.md`, Commands | |
