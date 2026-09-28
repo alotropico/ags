@@ -350,8 +350,8 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 3 | Required body | "Body (required)" | AGS | `skills/commit-granular/SKILL.md`, "Body" | |
 | 4 | What never goes in | "What never goes in" | AGS | `skills/commit-granular/SKILL.md`, "Never in a message" | |
 | 5 | Scratch diffs under the clone's `tmp/` | "Scratch diffs" | Removed | None | Contradicts `tmp-conventions`; `write-commit-diff` writes under `.tmp/scratch/` (consolidation rule 1) |
-| 6 | Trunk `main` | "Trunk" | Host | Watcher `.agents/rules/git-conventions.md`; `git.mainBranch` in `.agents/ags.yaml` | |
-| 7 | Ship pointer with the GitLab merge request URL | "Ship" | Migrate later | Watcher `.agents/rules/git-conventions.md`, "Trunk and merge requests"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 6 | Trunk `main` | "Trunk" | Host | Watcher `git.mainBranch` in `.agents/ags.yaml` | The interim `git-conventions` rule is deleted at step 5.1 (P26) |
+| 7 | Ship pointer with the GitLab merge request URL | "Ship" | AGS | `skills/ship/SKILL.md`, "7. Push", "8. Merge request" | The provider comes from Watcher's remote |
 | 8 | Commit range diffs pointer | "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md` | Native skill discovery routes it |
 
 ### _agents/guidance/code-idioms.md
@@ -408,7 +408,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 13 | `plan-work`: naming `YYMMDD-snake_case` and `.cursor/plans/` drafts | same file, "Naming", "Location and lifecycle" | Removed | None | `tmp-conventions` sets `.tmp/plans/YYYY-MM-DD-kebab-slug.md` (consolidation rule 1) |
 | 14 | `plan-work`: promote durable notes when done (to `.agents/archive/`, now `documentation/`) | same file, "Location and lifecycle" 3 | Host | Watcher `.agents/local/plan-work.md` | The archive folder left with the old tree |
 | 15 | `plan-work`: the five-file threshold, when-to-plan list, review drafts in merge requests or tickets | same file, "Trigger", "When to plan", "Location and lifecycle" 1 | Migrate later | Watcher `.agents/local/plan-work.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 16 | `ship` Watcher variant | `skills/ship/SKILL.md` | Migrate later | Watcher `.agents/rules/git-conventions.md`, "Trunk and merge requests" (summary); consolidation, step 4 | Waits for the Run 2 consolidation; `ship` stays disabled until 2.1.0 |
+| 16 | `ship` Watcher variant | `skills/ship/SKILL.md` | AGS | `skills/ship/SKILL.md` | Every step is in the consolidated skill, with `main` from `git.mainBranch`; its "rebuild Graphify only on request" line is dropped because Graphify left Watcher |
 | 17 | `write-commit-diff`: last N and range modes, `.tmp` output, report the path not the content | `skills/write-commit-diff/SKILL.md` | AGS | `skills/write-commit-diff/SKILL.md`; `skills/write-commit-diff/scripts/write-commit-diff.mjs` (`commits`, `range`) | |
 | 18 | `write-commit-diff`: trigger phrases (generate, create, make a diff of commits, export a range, last N) | same file, "Trigger" | AGS | `skills/write-commit-diff/SKILL.md` | Promoted from Watcher in the Run 2 round-trip edit (2.0.1) |
 | 19 | `write-commit-diff`: script instead of pasted or hand-rolled diffs; ask once on an ambiguous range; file naming; reply with the commits; not for ordinary `git diff` | same file, "Procedure", "Do not" | Migrate later | Watcher `.agents/local/write-commit-diff.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
@@ -495,3 +495,45 @@ Sources: "start-ticket" is the same skill in three copies, `meta/templates/ags/s
 | 14 | Bare `CORE-<number>` branches exist; prefer the slug form for new work | D2 and HXP conventions, same sections | AGS | "Branch name" | |
 | 15 | Use the branch the user names; otherwise derive a kebab-case name, prefixed with the ticket when the work has one | Personal ship, "Procedure" 1 | AGS | "Branch name" | |
 | 16 | Stay on a suitable feature branch; otherwise `git checkout -b <branch>` from the current HEAD | Personal ship, "Procedure" 2 | AGS | `skills/ship/SKILL.md`, "3. Branch"; "Create the branch" 4 | Branching from the current commit is kept for work already committed there; new work starts from the updated main branch (start-ticket) |
+
+### ship
+
+Sources: "ship (Meta, D2, HXP)" is the same skill in three copies, `meta/templates/ags/shared/skills/ship/SKILL.md`, `designer2/.agents/skills/ship/SKILL.md` and `hxpoc/.agents/skills/ship/SKILL.md` (HXP lacks the Graphify line); "D2 conventions" and "HXP conventions" are `designer2/` and `hxpoc/.agents/guidance/git-conventions.md`; "Personal" is AGS `.tmp/records/2026-09-28-run2-layer0-before/ship-SKILL.md` ("Procedure" 1 and 2 are rowed under `start-branch`); "AGS 2.0.1" is `skills/ship/SKILL.md` at `v2.0.1` (only changed or dropped concepts). Destinations are in `skills/ship/SKILL.md` unless named otherwise.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Trigger: ship, publish or push a feature branch for review | ship (Meta, D2, HXP), "Trigger" | AGS | "Trigger" | |
+| 2 | Working tree clean enough to push, or remaining changes accepted | ship (Meta, D2, HXP), "Preconditions" 1 | AGS | "2. Ask once"; "5. Commit" | |
+| 3 | The branch is not the integration trunk | ship (Meta, D2, HXP), "Preconditions" 2 | AGS | "3. Branch"; "7. Push" | Ship now creates a branch instead of stopping |
+| 4 | Commit messages already follow the conventions file | ship (Meta, D2, HXP), "Preconditions" 3 | AGS | "5. Commit"; `skills/commit-granular/SKILL.md` | |
+| 5 | Confirm branch and commits: status, current branch, `git log` against the remote trunk | ship (Meta, D2, HXP), "Procedure" 1 | AGS | "1. Inspect"; "4. Target" | |
+| 6 | Push with upstream; never force-push trunk | ship (Meta, D2, HXP), "Procedure" 2 | AGS | "7. Push" | |
+| 7 | Prefer the create-MR URL the remote prints, or construct the GitLab URL with source and target | ship (Meta, D2, HXP), "Procedure" 3 | AGS | "8. Merge request", Link | GitHub form added from AGS 2.0.1 |
+| 8 | Merge request title from the conventions file, ticket from the branch name | ship (Meta, D2, HXP), "Procedure" 4 | AGS | "8. Merge request", Title | P26 |
+| 9 | Final response: pushed, upstream tracking, working tree status, MR link (not only the branch name) | ship (Meta, D2, HXP), "Procedure" 5 | AGS | "Final response" | |
+| 10 | Do not create commits unless the user also asked to commit | ship (Meta, D2, HXP), "Do not" 1 | Removed | None | Asking to ship is the explicit request to commit, so `ship` commits uncommitted work through `commit-granular` (spec 28.2 "commit with the host's subject and body conventions") |
+| 11 | Do not prompt to connect Jira or GitLab MCP; do not block on their auth prompts | ship (Meta, D2, HXP), "Do not" 2; HXP conventions, "Merge request title" | AGS | "Do not" | |
+| 12 | Do not skip the MR URL | ship (Meta, D2, HXP), "Do not" 3 | AGS | "8. Merge request", Link | |
+| 13 | Target `integration-2025Q1`, not `main` or `master` | ship (Meta), "Do not" 4 | Removed | None | Superseded by `git.mainBranch` and the target step; the D2 and HXP fact is row 14 |
+| 14 | Target and push trunk `integration-2025Q1` | ship (D2, HXP), "Do not" 4; D2 and HXP conventions, "Merge request title" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact (P23) |
+| 15 | Self-contained; no personal skills or external ship scripts | ship (Meta, D2, HXP), "Do not" 5 | AGS | "Do not" (conventions file); links only to `includes` companions | |
+| 16 | Regenerate `graphify-out/` only when asked | ship (D2), "Do not" 6 | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 tool fact (P23) |
+| 17 | Regenerate `graphify-out/` only when asked | ship (Meta), "Do not" 6 | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | With Meta's `graphify.mdc` |
+| 18 | End to end: branch, granular commits, push, merge request | Personal, description and intro | AGS | Description; steps 3 to 8 | |
+| 19 | `disable-model-invocation: true` | Personal, frontmatter | Removed | None | P18; the description says to use it only on an explicit request |
+| 20 | Commit through `commit-granular` | Personal, "Procedure" 3 | AGS | "5. Commit" | |
+| 21 | Bugbot self-review on branch changes; fix genuine bugs with commits; report dismissed false positives; skip on "ship without review" | Personal, "Procedure" 4 | AGS | "6. Optional review" | Widened to a comparable review where Bugbot is absent (spec 28.2) |
+| 22 | `git push -u origin <branch>` | Personal, "Procedure" 5 | AGS | "7. Push" | Remote read from Git |
+| 23 | No GitLab or Jira MCP; use the printed create-MR URL or build `…/merge_requests/new?merge_request[source_branch]=<branch>` | Personal, "Procedure" 6 | AGS | "8. Merge request", Link; "Do not" | |
+| 24 | Target the default integration branch unless told otherwise | Personal, "Procedure" 6 | AGS | "4. Target" | |
+| 25 | Title `{JIRA-ID}: {Scope, summary}`, ticket from the branch, main commit's subject without its kind; description a bullet list of commits, ticket in prose if useful | Personal, "Procedure" 7 | AGS | "8. Merge request" | |
+| 26 | Report the MR URL and a one-line review outcome | Personal, "Procedure" 8 | AGS | "Final response" | |
+| 27 | Never force-push | Personal, "Notes" 1 | AGS | "7. Push" | Plan 4.3: ship never force-pushes; a rejected push stops and is reported |
+| 28 | Mention pre-push hooks or CI that run after the push | Personal, "Notes" 2 | AGS | "7. Push" | |
+| 29 | Title `{JIRA-ID}: {Scope, summary}` with no `Type:` prefix | HXP conventions, "Merge request title" | AGS | "8. Merge request", Title | |
+| 30 | Ticket-prefixed title (`CORE-43738: PromptEditor, Add …`) | D2 conventions, "Merge request title" | AGS | "8. Merge request", Title | The capitalized change is `commit-granular` row 11 |
+| 31 | Jira story title `HXP: {short phrase}` and outcome-focused body | HXP conventions, "Jira stories (work repos)" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host format (P23) |
+| 32 | Defines no commit, branch-name or ticket format; follow host guidance | AGS 2.0.1, "Preconditions" 2 | Removed | None | P26: the formats now live in `commit-granular`, `start-branch` and `ship`; host guidance still overrides them (`rules/core.md`) |
+| 33 | Commit only when the user explicitly asks | AGS 2.0.1, "Preconditions" 2 | AGS | "5. Commit"; `skills/commit-granular/SKILL.md`, "When to commit" | |
+| 34 | The current branch is not the main branch | AGS 2.0.1, "Preconditions" 3 | AGS | "3. Branch" | Ship creates a branch through `start-branch` instead |
+| 35 | Force-push only when the user explicitly asks and names a branch that is not protected | ship (Meta, D2, HXP), "Procedure" 2; AGS 2.0.1, "Inspect Git" | Removed | None | Plan 4.3: ship never force-pushes; a force push stays a manual user action |

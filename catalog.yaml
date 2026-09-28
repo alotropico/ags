@@ -40,7 +40,8 @@ skills:
     keywords: [git, branches, cleanup]
   - id: ship
     install: opt-in
-    params: [git.mainBranch]
+    includes: [commit-granular, start-branch]
+    params: [git.mainBranch, git.ticketPrefix]
     keywords: [ship, push, publish, review]
   - id: check
     install: opt-in
