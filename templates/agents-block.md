@@ -1,3 +1,7 @@
-<!-- AGS:BEGIN -->
-Read `.agents/AGS.md` before substantive work in this repository.
-<!-- AGS:END -->
+## AGS
+
+{{strongRules}}
+
+Read a rule before work that matches its condition:
+
+{{ruleIndex}}
