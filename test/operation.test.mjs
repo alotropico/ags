@@ -6,7 +6,8 @@ import { backupFiles, backupName, createBackupFolder, readManifest, writeManifes
 import { AGENT_LINE, bindDecisions, faultPoints, formatPlan, normalizePlan, parseDecide, planDigest, planItem, runOperation, verifyWrites, writeFileAt } from "../scripts/lib/operation.mjs";
 import { agsLockPath, hostLockPath, operationLocks } from "../scripts/lib/reports.mjs";
 import { contentHash, readFileOrNull } from "../scripts/lib/util.mjs";
-import { fakeTerminal, makeHostRepo, tempDir, treeSnapshot } from "./helpers/fixtures.mjs";
+import { COMMANDS, main, parseArgs, rerunArgs } from "../scripts/ags.mjs";
+import { fakeTerminal, makeHostRepo, runAgs, tempDir, treeSnapshot, withCli } from "./helpers/fixtures.mjs";
 
 function recorder() {
   const out = [];
@@ -280,6 +281,41 @@ test("backup names follow Appendix E.4 and folders never collide", () => {
   assert.equal(manifest.files[0].sha256.length, 64);
   assert.equal(fs.readFileSync(path.join(first.abs, "AGENTS.md.bak"), "utf8"), "a\r\n");
   assert.equal(manifest.operation, "update");
+});
+
+test("the V2 parser: repeatable flags, missing values and unknown flags", () => {
+  const parsed = parseArgs(["host", "install", "--set", "a.b=1", "--set", "c.d=2", "--dry-run", "--route", "x"]);
+  assert.deepEqual(parsed.positionals, ["host", "install"]);
+  assert.deepEqual(parsed.flags, { set: ["a.b=1", "c.d=2"], "dry-run": true, route: "x" });
+  for (const argv of [["--out"], ["--route", "--dry-run"], ["--yes"], ["--route", "a", "--route", "b"], ["--out=x"]]) {
+    assert.throws(() => parseArgs(argv), (error) => error.exitCode === 2, argv.join(" "));
+  }
+  assert.deepEqual(
+    rerunArgs("host update", { set: ["a.b=1"], to: "1.2.0", plan: "abc", decide: ["x=restore"], "dry-run": true, route: "rel" }, "/abs/host"),
+    ["host", "update", "--route", "/abs/host", "--set", "a.b=1", "--to", "1.2.0"],
+  );
+});
+
+test("the CLI maps usage errors to exit 2 and dispatches only registered commands", async () => {
+  const term = fakeTerminal([]);
+  await assert.rejects(main(["host", "sync"], { terminal: term }), (error) => error.exitCode === 2 && /Unknown command: host sync/.test(error.message));
+  COMMANDS.set("test echo", { flags: ["route"], run: ({ rest, terminal }) => (terminal.log(rest.join(",")), 0) });
+  try {
+    assert.equal(await main(["test", "echo", "a", "b"], { terminal: term }), 0);
+    assert.equal(term.lines.at(-1), "a,b");
+    await assert.rejects(main(["test", "echo", "--to", "1.0.0"], { terminal: term }), (error) => error.exitCode === 2);
+  } finally {
+    COMMANDS.delete("test echo");
+  }
+
+  const scratch = withCli(tempDir("ags-cli-"));
+  for (const argv of [["host", "sync"], ["reporting", "status"], ["skills", "reconcile"], ["doctor", "--bogus"]]) {
+    const result = runAgs(scratch, argv);
+    assert.equal(result.code, 2, `${argv.join(" ")}: ${result.stderr}`);
+  }
+  const help = runAgs(scratch, []);
+  assert.equal(help.code, 0);
+  assert.match(help.stdout, /Usage: ags/);
 });
 
 test("the plan table is compact and shows short hashes", () => {
