@@ -29,14 +29,13 @@ Keep these separate. Do not average them into one "high confidence bug".
 | **Semantic** | Does an intermediate state violate intended product behavior? | Product intent is stated in code, tests or an explicit owner decision, not inferred from the mere presence of an effect. |
 | **Priority** | Is the change worth doing now? | There is a demonstrated cost (wrong media, lost draft, stuck URL, race, untestable ordering) or a cheap local fix with a clear invariant. |
 
-Unknown product intent is not a high-semantic-confidence correctness finding. Classify it as a decision or an ambiguity and list the evidence needed to resolve it.
+When product intent is unknown, list the evidence needed to resolve the decision or ambiguity.
 
 ### Observability
 
 - A value that is representable but never read is maintenance debt, not a user-facing defect, until a consumer is shown.
 - A loading, starting or waiting phase that is named and honored by the UI is often valid.
-- `useLayoutEffect` can hide a frame from paint and still leave two authorities and a load-bearing effect order.
-- Batching several setters in one event can be a sound transition. Keep those apart from "paint, then an effect repairs".
+- Keep batched setters in one event, which can be a sound transition, apart from "paint, then an effect repairs".
 
 ## Classification
 
@@ -58,7 +57,7 @@ Include an adjacent concern only when it materially changes the target model, th
 
 Reject or downgrade a finding that rests on any of these mistakes:
 
-- Treating every state setter inside an effect as a defect. External synchronization (DOM, media, IPC, subscriptions, timers, persistence, history, network, observers, background work) may update React state.
+- Treating every state setter inside an effect as a defect. Synchronization with the external systems named in the core model of `SKILL.md` may update React state.
 - Treating a legitimate loading or starting state as inherently invalid.
 - Calling persistence normalization an internal atomicity problem without showing that reads depend on the write-back.
 - Assuming a draft copied from props is broken without checking whether the form is unmounted or keyed on close, whether the prop can change while editing, and what product behavior is intended.
@@ -67,7 +66,6 @@ Reject or downgrade a finding that rests on any of these mistakes:
 - Deriving a safe public value while internal handlers still consume invalid raw state.
 - Using `flushSync` to conceal an internal invariant problem.
 - Adding a reducer, a state machine or a dependency only because the state is complicated. The target must make a demonstrated invariant clearer or impossible states unrepresentable.
-- Moving state upward by default.
 - Claiming that URL state and local state were made atomic because `navigate` and `setState` are called from the same function. Each store remains independently observable; name the authority and the valid local states during synchronization.
 
 ## Review report

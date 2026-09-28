@@ -33,7 +33,7 @@ In the initiating handler, write every internal field that must change together.
 
 Use it when the current split is "set partial state now, an effect fills in the rest". External I/O may still happen in an effect or an async function; the React representation after the handler, or after a single `dispatch`, should already be a valid phase.
 
-Several setters in one synchronous event are not automatically wrong. One `dispatch` is useful when fields are coupled, not because several `setState` calls exist.
+One `dispatch` is useful when fields are coupled, not because several `setState` calls exist.
 
 ### Reducer or discriminated union
 
@@ -93,7 +93,7 @@ During synchronization, each locally observable state should stay valid for its 
 
 Keep the effect. Its event callback should dispatch one coherent internal transition, including identity, cancellation and ignoring stale results. Cleanup must drop in-flight work.
 
-Use it for DOM and media APIs, IPC, subscriptions, timers, persistence hydration, history, network, observers and background processes.
+Use it for the external systems named in the core model of `SKILL.md`, including persistence hydration.
 
 A setter in that callback is not a defect. A second effect that exists only to make the first effect's state legal usually is.
 
@@ -109,7 +109,7 @@ A setter in that callback is not a defect. A second effect that exists only to m
 
 ## Implement mode
 
-When, and only when, the user explicitly asked to implement:
+In Implement mode, which the user must have authorized explicitly (see "Modes" in `SKILL.md`):
 
 1. Change one stage or invariant at a time.
 2. Preserve the listed edge cases.

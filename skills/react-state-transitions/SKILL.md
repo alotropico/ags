@@ -49,7 +49,7 @@ If the request mixes modes, do the authorized part and stop. Do not treat a plan
 4. For each candidate, keep three judgments apart: **mechanism confidence** (does the traced sequence happen?), **semantic confidence** (does an intermediate state violate intended product behavior?) and **priority** (the demonstrated consequence and the value of changing it).
 5. Classify each candidate as a finding, a product decision, an ambiguity, deferred structural work, or downgraded or rejected. Unknown product intent is a decision or an ambiguity, not a high-confidence correctness defect.
 6. Read [references/review-and-planning.md](references/review-and-planning.md) for the evidence rubric, the classification procedure, the report and plan contents, and the false-positive checks.
-7. Read [references/refactoring-patterns.md](references/refactoring-patterns.md) when proposing a target model. The patterns are decision tools, not mandatory recipes. Prefer the smallest change that makes the invariant hold.
+7. Read [references/refactoring-patterns.md](references/refactoring-patterns.md) when proposing a target model. Prefer the smallest change that makes the invariant hold.
 8. In Review, emit the report and stop. In Plan, emit an executable plan and stop. In Implement, change only the authorized surface, preserve behavior, and add tests that prove the invariant.
 
 ## Scope
