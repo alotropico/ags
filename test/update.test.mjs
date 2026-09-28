@@ -182,8 +182,12 @@ test("update: a whole deleted skill folder offers disable, except for a companio
   assert.match(row(first.text, ".agents/skills/css-clean/"), /skill folder\s+choose restore\/ignore\s*$/);
   const second = await update(ags, host, { plan: digestOf(first.text), decide: { ".agents/skills/css-rules/": "disable", ".agents/skills/css-clean/": "restore" } });
   assert.equal(second.code, 0, second.text);
+  assert.deepEqual(config(host).skills.enabled, []);
   assert.deepEqual(config(host).skills.disabled, ["css-rules"]);
   assert.equal(exists(host, ".agents/skills/css-clean/SKILL.md"), true);
+  const next = await update(ags, host);
+  assert.equal(next.code, 3, next.text);
+  assert.match(row(next.text, ".agents/skills/css-clean/SKILL.md"), /managed\s+delete/);
 });
 
 test("update: --enable and --disable are written to ags.yaml; unedited deselected files are deleted", async () => {

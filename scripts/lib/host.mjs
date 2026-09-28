@@ -764,8 +764,11 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       ctx.fault("after-exclude-block");
 
       for (const id of disables) {
-        const list = [...((state.doc.toJS() ?? {}).skills?.disabled || [])];
-        if (!list.includes(id)) writeSelection(state.doc, "skills", "disabled", [...list, id]);
+        const skills = (state.doc.toJS() ?? {}).skills ?? {};
+        const enabled = skills.enabled || [];
+        const disabled = skills.disabled || [];
+        if (enabled.includes(id)) writeSelection(state.doc, "skills", "enabled", enabled.filter((item) => item !== id));
+        if (!disabled.includes(id)) writeSelection(state.doc, "skills", "disabled", [...disabled, id]);
       }
       const configNext = configText(state.doc);
       const overwritten = [
