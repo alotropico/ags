@@ -2,11 +2,12 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
+import { hostPrepare } from "./lib/prepare.mjs";
 import { AgsError, AGS_ROOT } from "./lib/util.mjs";
 
 const VALUE_FLAGS = new Set(["route", "out", "plan", "decide", "decide-all", "set", "enable", "disable", "file", "to", "label", "only"]);
 const REPEATABLE = new Set(["set", "decide", "enable", "disable", "file"]);
-const BOOLEAN_FLAGS = new Set(["dry-run", "help"]);
+const BOOLEAN_FLAGS = new Set(["dry-run", "help", "include-nested"]);
 const OPERATION_FLAGS = ["dry-run", "plan", "decide", "decide-all"];
 
 export function usageError(message) {
@@ -68,6 +69,16 @@ export function rerunArgs(command, flags, route) {
 }
 
 export const COMMANDS = new Map();
+
+COMMANDS.set("host prepare", {
+  usage: "[--route .] [--include-nested] [--dry-run] [--plan <digest>]",
+  flags: ["route", "include-nested", ...OPERATION_FLAGS],
+  run: ({ agsRoot, flags, terminal, command }) => {
+    const options = operationOptions(flags);
+    const route = routeOf(flags);
+    return hostPrepare({ agsRoot, route, includeNested: Boolean(flags["include-nested"]), rerunArgs: rerunArgs(command, flags, route), terminal, options });
+  },
+});
 
 function helpText() {
   const names = [...COMMANDS.keys()].sort();
