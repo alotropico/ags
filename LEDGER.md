@@ -852,6 +852,62 @@ Sources below are relative to `.agents/skills/react-state-transitions/` in D2 (`
 | 26 | Anti-patterns in a target design | `references/refactoring-patterns.md`, "Anti-patterns (target design)" | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Anti-patterns in a target design" | |
 | 27 | Implementation mode steps, including tests, type check and lint | `references/refactoring-patterns.md`, "Implementation mode" | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Implement mode"; names the `check` skill conditionally | |
 
+## Run 2: D2 and HXP
+
+Sources are paths in `designer2/` (D2, `.agents/` untracked) and `hxpoc/` (HXP), read on 2026-09-28 (spec Appendix H, group 2). Their git conventions, the variants of consolidated skills and rules, the `write-last-n-diff.ps1` and `write-range-diff.ps1` files and `react-state-transitions/agents/openai.yaml` are rowed under `## Run 2: consolidation`; the useful diff-writer behavior is `AGS` there (`### write-commit-diff`).
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `smoke-save` skill | D2 `.agents/skills/smoke-save/SKILL.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 (P23) |
+| 2 | `smoke-branch-merge` skill | D2 `.agents/skills/smoke-branch-merge/SKILL.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 (P23) |
+| 3 | `windows-browser-use` skill: launch Chrome with a remote-debugging port | D2 and HXP `.agents/skills/windows-browser-use/SKILL.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Contradicts Layer 0's browser rules; reconciled with them at Phase E (spec Appendix H, "Known dispositions") |
+| 4 | Forms guidance | D2 and HXP `.agents/guidance/forms.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 and HXP (P23) |
+| 5 | Linting and formatting guidance | D2 `.agents/guidance/linting-and-formatting.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 (P23) |
+| 6 | The six state records | D2 `.agents/guidance/state/feature-flags.md`, `serialized-design.md`, `service-vs-zustand.md`; HXP `.agents/guidance/state/auth-token.md`, `permissions.md`, `selected-application.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Filled records are host material under `.agents/local/`, linked from a host rule (`rules/state-topology.md`, "Records") |
+| 7 | afterFileEdit hooks: ESLint fix (D2, HXP) and Prettier format (HXP), with their adapter copies | D2 `.agents/hooks/` (`hooks.json`, `lint-fix-eslint-ts.js`, `README.md`), `.cursor/hooks.json`, `.cursor/hooks/lint-fix-eslint-ts.js`; HXP `.agents/hooks/` (`hooks.json`, `lint-fix-eslint.js`, `format-with-prettier.js`, `README.md`), `.cursor/hooks.json`, `.cursor/hooks/` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 and HXP (P23) |
+| 8 | Repository profiles: fact block, verified premises, tooling pins; HXP federation import contract and runtime identity checkpoint; D2 owner layer | D2 and HXP `.agents/guidance/repository-profile.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts for their `AGENTS.md` at install, as Watcher's became (P23) |
+| 9 | Landmines, and D2's modern-versus-legacy note | D2 and HXP `.agents/guidance/repository-profile.md`, "Adapter landmines"; D2 `.cursor/rules/00-d2-generated.mdc`, "Modern vs legacy", "Landmines"; HXP `.cursor/rules/00-hxp-generated.mdc`, "Landmines" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23) |
+| 10 | Candidates for shared guidance | D2 and HXP `.agents/guidance/candidates.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host material; the candidates workflow itself is `Removed` (`## Run 2: Watcher backup`, `### _agents/guidance/candidates.md` row 2) |
+| 11 | Pilot observations log and steward handoff | D2 and HXP `.agents/stewardship/PILOT-OBSERVATIONS.md`, `STEWARD-HANDOFF.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Records, as Watcher's became (P13) |
+| 12 | Host archives: curated history and session material | D2 `.agents/archive/README.md` and `.cursor/plans/`, `records/`, `reviews/`, `reference/`, `history/`; HXP `.agents/archive/` (`README.md` and five records) | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Records; `.agents/` becomes AGS-owned at install |
+| 13 | Guidance indexes and tree maps | D2 and HXP `.agents/README.md`, `.agents/guidance/README.md` | Removed | None | The AGS layout and block replace them (spec 10; P23) |
+| 14 | Machine-local notes template | D2 and HXP `.agents/guidance/local.example.md` | Removed | None | `.agents/local/` replaces it (spec 11.6; P23) |
+| 15 | Adapter generator | D2 and HXP `.agents/scripts/generate-adapters.mjs` | Removed | None | The AGS block replaces generated adapters (P23) |
+| 16 | LLM snapshot script | D2 and HXP `.agents/scripts/snapshot-llm-system.mjs` | Removed | None | `ags snapshot` replaces it (P23) |
+| 17 | Leftover mover | D2 and HXP `.agents/scripts/migrate-local.mjs` | Removed | None | The AGS cutover (prepare) replaces it (P23) |
+| 18 | Scripts README and diff helper usage | D2 and HXP `.agents/scripts/README.md` | Removed | None | The scripts are gone; diff usage lives in `skills/write-commit-diff/SKILL.md` (P23) |
+| 19 | Meta discovery | D2 and HXP `.agents/stewardship/meta.md` | Removed | None | AGS replaces Meta discovery (P13) |
+| 20 | Generated pointer rule: canonical entry, AGS-owned layer, verified-facts and verification pointers, precedence | D2 `.cursor/rules/00-d2-generated.mdc`; HXP `.cursor/rules/00-hxp-generated.mdc` | Removed | None | The AGS block supersedes generated pointer rules (P23); their landmines are row 9 |
+| 21 | Profile verifier: layout checks | D2 and HXP `.agents/scripts/verify-profile.mjs` | Removed | None | Superseded by `ags doctor` (P12) |
+| 22 | Profile verifier: repository facts checked against the repository | D2 and HXP `.agents/scripts/verify-profile.mjs` | Backlog | `BACKLOG.md`, Guidance, "Host fact verification" | No AGS home yet (P12) |
+
+## Run 2: Meta
+
+Sources are paths in `meta/templates/` (Meta has no history), read on 2026-09-28 (spec Appendix H, group 3). Meta's versions of consolidated skills and rules, `plans.mdc`, and `ags/shared/scripts/write-last-n-diff.ps1` are rowed under `## Run 2: consolidation`; the useful diff-writer behavior is `AGS` there (`### write-commit-diff`).
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Shared module index and copy-then-point workflow | `ags/shared/README.md` | Removed | None | AGS V2's catalog and install supersede it |
+| 2 | Shared scripts README | `ags/shared/scripts/README.md` | Removed | None | The canonical `write-commit-diff` script and its skill supersede it |
+| 3 | Per-host adoption records | `ags/pins/README.md`, `ags/pins/*.yaml` | Removed | None | AGS V2's registry and each host's `.agents/ags.yaml` supersede them; used only as evidence for dispositions |
+| 4 | Designer2 consumer snapshot | `ags/consumers/designer2/` | Removed | None | Superseded by AGS V2's install; D2's own `.agents/` is the Phase E source (`## Run 2: D2 and HXP`) |
+| 5 | `smoke-save` and `smoke-branch-merge` skills | `ags/shared/skills/smoke-save/`, `ags/shared/skills/smoke-branch-merge/` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Used only by D2 (P23) |
+| 6 | `windows-browser-use` skill | `ags/shared/skills/windows-browser-use/` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | With the D2 and HXP copies and Layer 0's browser rules (spec Appendix H, "Known dispositions") |
+| 7 | Graphify rule | `rules/graphify.mdc` | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | Spec Appendix H, "Known dispositions" |
+| 8 | Commit, ship and rebase routing line | `rules/code-hygiene.mdc`, "Exploration" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Retired or reworded with the Layer 0 routing line (P21) |
+
+## Run 2: Layer 0
+
+Sources are the Layer 0 files before the Run 2 routing edit, in AGS `.tmp/records/2026-09-28-run2-layer0-before/` (`user-rules.md`, `00-layer0.mdc`), and `~/.cursor/rules/01-no-chrome-protocol.mdc` and `~/.cursor/skills/rebase-onto/SKILL.md` (spec Appendix H, group 4). The personal `commit-granular`, `ship` and `css-audit` skills are rowed under `## Run 2: consolidation`.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Routing line: `commit`, `ship`, `rebase onto` go to the named skills | `user-rules.md` and `00-layer0.mdc`, "Lean sessions" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Retired or reworded once D2 and HXP have the AGS skills (spec Appendix H, "Known dispositions") |
+| 2 | Standards line: project standards come from `AGENTS.md`, `.agents/`, then `.cursor/rules/` such as `code-standards.mdc` and `git.mdc` | `user-rules.md` and `00-layer0.mdc`, "Artifacts" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Same as row 1 |
+| 3 | Windows browser rules: no `chrome://` URLs or browser-use CDP probes unless remote debugging is active; prefer Playwright | `00-layer0.mdc`, "Windows browser automation"; `~/.cursor/rules/01-no-chrome-protocol.mdc` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Reconciled with `windows-browser-use` at Phase E (spec Appendix H, "Known dispositions") |
+| 4 | `rebase-onto` personal skill | `~/.cursor/skills/rebase-onto/SKILL.md` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Consolidate against the git skills or keep it personal, decided at Phase E (P21) |
+| 5 | Retiring the personal `commit-granular`, `ship`, `rebase-onto` and `css-audit` copies | `~/.cursor/skills/` | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | P21 |
+
 ## Run 2: AGS 2.0.x material
 
 AGS items with no variant in any other Run 2 source (spec Appendix H, group 5). Sources are AGS paths at `v2.0.1`; none changed in Run 2 step 4.
