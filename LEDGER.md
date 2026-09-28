@@ -432,7 +432,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 4 | Pilot observations log and its recording rules | `stewardship/PILOT-OBSERVATIONS.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
 | 5 | Steward handoff: why the guidance system exists | `stewardship/STEWARD-HANDOFF.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
 | 6 | Meta discovery (`isMeta`, `COSMOS_META`) | `stewardship/meta.md` | Removed | None | AGS replaces Meta discovery (P13) |
-| 7 | Machine-local notes: no browser-use CDP; Playwright with headless Chromium | `guidance/local.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/guidance/local.md` | Machine-local; the browser concept is `Backlog` with `windows-browser-use` (Phase E) |
+| 7 | Machine-local notes: no browser-use CDP; Playwright with headless Chromium | `guidance/local.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/guidance/local.md` | Machine-local; the browser concept is the Layer 0 row 3 (Windows browser rules) under "Run 2: Layer 0" |
 
 ### _agents/scripts/, _cursor/
 
@@ -454,7 +454,7 @@ Sources: "Personal" is the pre-routing-edit personal skill, AGS `.tmp/records/20
 
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Read the project's `.cursor/rules/git.mdc` first; it overrides the skill | Personal, "Procedure" 1 | AGS | Intro ("Host guidance wins on formats"); `rules/core.md` host-note line | Host guidance (`AGENTS.md`, host rules, `.agents/local/commit-granular.md`) replaces `git.mdc` (spec 11.6) |
+| 1 | Read the project's `.cursor/rules/git.mdc` first; it overrides the skill | Personal, "Procedure" 1 | AGS | `rules/core.md` bullet 2 ("Host guidance wins on facts and formats") and bullet 3 (host notes) | Host guidance (`AGENTS.md`, host rules, `.agents/local/commit-granular.md`) replaces `git.mdc` (spec 11.6) |
 | 2 | Read status, staged and unstaged diff, and `git log -8 --oneline` to match repository style | Personal, "Procedure" 2 | AGS | "Procedure" 1 | |
 | 3 | Group, present nothing, commit in dependency order, each commit buildable | Personal, "Procedure" 3 | AGS | "Procedure" 2 | |
 | 4 | Stage precisely by path; hunk-level only when one file mixes unrelated changes | Personal, "Procedure" 4 | AGS | "Procedure" 3 | |
@@ -492,7 +492,7 @@ Sources: "start-ticket" is the same skill in three copies, `meta/templates/ags/s
 | 5 | Confirm the ticket and a kebab slug of 1 to 3 words; a full branch name from the user is used as given | start-ticket (Meta, D2, HXP), "Procedure" 1 | AGS | "Branch name" | |
 | 6 | Fetch, update trunk with `--ff-only`, branch from it; never from an unrelated feature branch unless told | start-ticket (Meta, D2, HXP), "Procedure" 2 | AGS | "Create the branch" 3 | Trunk read from `git.mainBranch` |
 | 7 | Report the current branch and that HEAD matches the remote trunk | start-ticket (Meta, D2, HXP), "Procedure" 3 | AGS | "Create the branch" 5 | |
-| 8 | Do not invent a ticket id; ask | start-ticket (Meta, D2, HXP), "Do not" 1 | AGS | "Branch name"; "Do not" | |
+| 8 | Do not invent a ticket id; ask | start-ticket (Meta, D2, HXP), "Do not" 1 | AGS | "Branch name" | |
 | 9 | Do not commit, push or open a merge request; `ship` does | start-ticket (Meta, D2, HXP), "Do not" 2 | AGS | "Do not" | |
 | 10 | Trunk `integration-2025Q1` in the commands | start-ticket (Meta) | Removed | None | Superseded by `git.mainBranch`; the D2 and HXP fact is row 11 |
 | 11 | Trunk `integration-2025Q1` as the base of new branches | start-ticket (D2, HXP); D2 and HXP conventions, "Tickets and feature branches", "Feature branches" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact, their `git.mainBranch` or host note (P23) |
@@ -702,7 +702,7 @@ Sources: Meta `templates/ags/shared/skills/write-commit-diff/` (`SKILL.md`, `wri
 | 16 | Writers print the covered commits (`git log --oneline`) and, for a range, the commit count | Meta and D2 `write-last-n-diff.ps1`; Meta and D2, HXP `write-range-diff.ps1`; HXP `write-last-n-diff.ps1` | AGS | `skills/write-commit-diff/SKILL.md`, "Procedure" 4 | The agent lists the commits; printing them from the script is `BACKLOG.md`, Guidance, "`write-commit-diff` script output" |
 | 17 | Procedure: pick the mode from the ask; ask once when the range is ambiguous | Meta and D2, HXP `SKILL.md`, "Procedure" 1 | AGS | `skills/write-commit-diff/SKILL.md`, "Procedure" 1 | |
 | 18 | Procedure: name the file after the ticket id, branch slug or the user's name | Meta and D2, HXP `SKILL.md`, "Procedure" 2 | AGS | `skills/write-commit-diff/SKILL.md`, "Procedure" 2 | |
-| 19 | Reply with path, size and commit list; paste the diff body only when asked; never deliver the patch in chat | Meta and D2, HXP `SKILL.md`, "Procedure" 4 and 5, "Do not" 1; HXP `git-conventions.md`, "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md`, "Procedure" 5, "Output" | |
+| 19 | Reply with path, size and commit list; paste the diff body only when asked; never deliver the patch in chat | Meta and D2, HXP `SKILL.md`, "Procedure" 4 and 5, "Do not" 1; HXP `git-conventions.md`, "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md`, "Procedure" 5 | |
 | 20 | Not for ordinary `git diff` or `git status` while coding | Meta and D2, HXP `SKILL.md`, "Do not" 3 | AGS | `skills/write-commit-diff/SKILL.md`, introduction | |
 | 21 | Do not commit the `.diff`; `.tmp/` is gitignored | Meta and D2, HXP `SKILL.md`, "Do not" 4 | AGS | `rules/tmp-conventions.md`, "Ignoring and reading" | `.tmp/` is ignored through git in every host; the skill writes only there |
 | 22 | Two copies of the last-N writer (`.agents/scripts/` and the skill folder), prefer `.agents/scripts/` | Meta and D2 `SKILL.md`, "Which script" | Removed | None | One AGS script at `.agents/skills/write-commit-diff/scripts/`; duplicate host copies are superseded (P23) |
