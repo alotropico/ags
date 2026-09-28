@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { main } from "../scripts/ags.mjs";
 import { hostInstall } from "../scripts/lib/host.mjs";
+import { acquireLock, hostLockPath } from "../scripts/lib/reports.mjs";
 import { AgsError } from "../scripts/lib/util.mjs";
 import { commitAll, digestOf, git, makeAgsRepo, makeHostRepo, quietTerminal, REAL_ROOT, sampleCatalog, sampleMaterial } from "./helpers/fixtures.mjs";
 
@@ -83,6 +84,22 @@ test("usage: reporting false is a successful no-op", async () => {
   assert.equal(result.code, 0, result.text);
   assert.match(result.text, /nothing recorded/);
   assert.equal(fs.existsSync(path.join(host, ...USAGE)), false);
+});
+
+test("usage: recording takes the host lock and is blocked while another command holds it", async () => {
+  const { ags, host } = await installedHost();
+  const release = await acquireLock(hostLockPath(host), "host update");
+  try {
+    const blocked = await report(ags, ["--route", host, "--file", "AGENTS.md=2"]);
+    assert.equal(blocked.code, 1, blocked.text);
+    assert.match(blocked.text, /Lock held by host update/);
+    assert.deepEqual(records(host), []);
+  } finally {
+    release();
+  }
+  assert.equal((await report(ags, ["--route", host, "--file", "AGENTS.md=2"])).code, 0);
+  assert.equal(records(host).length, 1);
+  assert.equal(fs.existsSync(hostLockPath(host)), false);
 });
 
 test("usage: works in a linked worktree and records in that worktree", async () => {

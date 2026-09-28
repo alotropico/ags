@@ -140,6 +140,31 @@ test("install: the exclude block only when .tmp/ is not ignored", async () => {
   assert.equal(exists(host, ".git/info/exclude") && read(host, ".git/info/exclude").includes("AGS:BEGIN"), false);
 });
 
+test("install: the exclude block comes before any other write under .tmp/, and prepare's moves before ags.yaml", async () => {
+  const ags = agsFixture();
+  const setup = { "AGENTS.md": "# Old facts\n", ".agents/guidance/a.md": "a\n", ".agents/ags.yaml": "format: 1\n" };
+  const filesUnder = (host, rel) => (exists(host, rel) ? Object.keys(treeSnapshot(path.join(host, ...rel.split("/")))) : []);
+  const stopAt = async (point) => {
+    const host = makeHostRepo({ files: setup });
+    const first = await install(ags, host);
+    const broken = await install(ags, host, { plan: digestOf(first.terminal.text()), env: { AGS_TEST_FAULT: `install:${point}` } });
+    assert.equal(broken.code, 1, broken.terminal.text());
+    return host;
+  };
+
+  const locked = await stopAt("after-host-lock");
+  assert.deepEqual(filesUnder(locked, ".tmp"), []);
+  assert.equal(exists(locked, ".git/info/exclude") && read(locked, ".git/info/exclude").includes("AGS:BEGIN"), false);
+
+  const excluded = await stopAt("after-exclude-block");
+  assert.match(read(excluded, ".git/info/exclude"), /AGS:BEGIN/);
+  assert.deepEqual(filesUnder(excluded, ".tmp"), []);
+
+  const moved = await stopAt("after-move-last");
+  assert.equal(exists(moved, ".agents/ags.yaml"), false);
+  assert.equal(exists(moved, "AGENTS.md"), false);
+});
+
 test("install: agsVersion is written last; interrupted before it, the install resumes", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "yaml";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "../scripts/lib/host.mjs";
-import { commitAll, digestOf, git, makeAgsRepo, makeHostRepo, quietTerminal, REAL_ROOT, runAgs, sampleCatalog, sampleMaterial, skillFile, tag, withCli, writeFiles } from "./helpers/fixtures.mjs";
+import { commitAll, digestOf, fakeTerminal, git, makeAgsRepo, makeHostRepo, quietTerminal, REAL_ROOT, runAgs, sampleCatalog, sampleMaterial, skillFile, tag, treeSnapshot, withCli, writeFiles } from "./helpers/fixtures.mjs";
 
 const CONFIG_TEMPLATE = fs.readFileSync(path.join(REAL_ROOT, "templates", "ags.yaml"), "utf8").replaceAll("\r\n", "\n");
 const REFS = ["a", "b", "c", "d", "e", "f", "g"];
@@ -390,6 +390,100 @@ test("update: an interruption after a promotion records it on rerun without aski
   await decided(ags, host);
   assert.equal(read(ags, "CHANGELOG.md").match(/Promoted from watcher/g).length, 1);
   assert.equal(registry(ags).hosts[0].promoted.length, 1);
+});
+
+test("update: CRLF host copies show no change; AGS renames a file and changes a binary; an edited binary is asked", async () => {
+  const BIN = "skills/plan-work/assets/logo.bin";
+  const HOST_BIN = `.agents/${BIN}`;
+  const ags = agsFixture({ files: material({ [BIN]: Buffer.from([0, 1, 2, 3]) }) });
+  const host = makeHostRepo();
+  await install(ags, host);
+  assert.deepEqual(fs.readFileSync(path.join(host, ...HOST_BIN.split("/"))), Buffer.from([0, 1, 2, 3]));
+  for (const name of REFS) edit(host, `${REF}/${name}.md`, `# ${name}\r\n`);
+  const clean = await update(ags, host);
+  assert.equal(clean.code, 0, clean.text);
+  assert.match(clean.text, /Nothing to do/);
+
+  release(ags, "2.0.1", { files: { "skills/plan-work/references/b-renamed.md": "# b\n", [BIN]: Buffer.from([0, 9, 9]) }, remove: ["skills/plan-work/references/b.md"] });
+  const first = await update(ags, host);
+  assert.equal(first.code, 3, first.text);
+  assert.match(row(first.text, `${REF}/b.md`), /managed\s+delete/);
+  assert.match(row(first.text, `${REF}/b-renamed.md`), /managed\s+add/);
+  assert.match(row(first.text, HOST_BIN), /managed\s+update/);
+  assert.doesNotMatch(first.text, /choose/);
+  await update(ags, host, { plan: digestOf(first.text) });
+  assert.equal(exists(host, `${REF}/b.md`), false);
+  assert.equal(read(host, `${REF}/b-renamed.md`), "# b\n");
+  assert.deepEqual(fs.readFileSync(path.join(host, ...HOST_BIN.split("/"))), Buffer.from([0, 9, 9]));
+
+  edit(host, HOST_BIN, Buffer.from([0, 7]));
+  const asked = await update(ags, host);
+  assert.equal(asked.code, 3, asked.text);
+  assert.match(row(asked.text, HOST_BIN), /choose promote\/restore\/ignore/);
+});
+
+test("update: --decide-all answers every open item, and a terminal answers same for all remaining", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  edit(host, `${REF}/c.md`, "# c host\n");
+  edit(host, `${REF}/d.md`, "# d host\n");
+  const first = await update(ags, host);
+  assert.equal(first.code, 3, first.text);
+  const second = await update(ags, host, { plan: digestOf(first.text), decideAll: "restore" });
+  assert.equal(second.code, 0, second.text);
+  assert.equal(read(host, `${REF}/c.md`), "# c\n");
+  assert.equal(read(host, `${REF}/d.md`), "# d\n");
+
+  edit(host, `${REF}/c.md`, "# c host\n");
+  edit(host, `${REF}/d.md`, "# d host\n");
+  const terminal = fakeTerminal(["restore all", "yes"]);
+  const code = await hostUpdate({ agsRoot: ags, route: host, rerunArgs: ["host", "update", "--route", host], terminal, options: options() });
+  assert.equal(code, 0, terminal.lines.join("\n"));
+  assert.equal(terminal.remaining(), 0);
+  assert.equal(read(host, `${REF}/c.md`), "# c\n");
+  assert.equal(read(host, `${REF}/d.md`), "# d\n");
+});
+
+test("update: a collision with an id new at T stops in a terminal too; the rerun after the rename proceeds", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  const catalog = sampleCatalog();
+  catalog.skills.push({ id: "extra", install: "always" });
+  release(ags, "2.0.1", { catalog, files: { "skills/extra/SKILL.md": skillFile("extra", "Extra.") } });
+  edit(host, ".agents/skills/extra/SKILL.md", skillFile("extra", "Mine."));
+  const terminal = fakeTerminal([]);
+  await assert.rejects(hostUpdate({ agsRoot: ags, route: host, rerunArgs: ["host", "update", "--route", host], terminal, options: options() }), (error) => {
+    assert.match(error.message, /Nothing was written/);
+    assert.ok(error.message.includes("- rename .agents/skills/extra/ to .agents/skills/host-extra/"));
+    return true;
+  });
+  assert.equal(terminal.prompts.length, 0);
+  fs.renameSync(path.join(host, ".agents", "skills", "extra"), path.join(host, ".agents", "skills", "host-extra"));
+  edit(host, ".agents/skills/host-extra/SKILL.md", skillFile("host-extra", "Mine."));
+  await decided(ags, host);
+  assert.equal(read(host, ".agents/skills/extra/SKILL.md"), skillFile("extra", "Extra."));
+  assert.equal(read(host, ".agents/skills/host-extra/SKILL.md"), skillFile("host-extra", "Mine."));
+  assert.equal(config(host).agsVersion, "2.0.1");
+});
+
+test("update: stopping at an edited or missing AGS block writes nothing and does not advance the version", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  release(ags, "2.0.1", { files: { "skills/plan-work/references/a.md": "# a2\n" } });
+  for (const agents of [read(host, "AGENTS.md").replace("## AGS", "## AGS edited"), "# Facts only\n"]) {
+    edit(host, "AGENTS.md", agents);
+    const before = treeSnapshot(host);
+    const terminal = fakeTerminal(["stop"]);
+    const code = await hostUpdate({ agsRoot: ags, route: host, rerunArgs: ["host", "update", "--route", host], terminal, options: options() });
+    assert.equal(code, 0, terminal.lines.join("\n"));
+    assert.equal(terminal.remaining(), 0);
+    assert.deepEqual(treeSnapshot(host), before);
+    assert.equal(config(host).agsVersion, "2.0.0");
+    assert.equal(read(host, `${REF}/a.md`), "# a\n");
+  }
 });
 
 // status, list and unregister
