@@ -128,6 +128,8 @@ test("install: refused while git ignores AGENTS.md, .agents/ or a file under it"
     await assert.rejects(install(ags, host), /Git ignores host guidance paths/, rule);
     assert.equal(exists(host, ".agents"), false);
   }
+  const resumed = makeHostRepo({ files: { ".agents/ags.yaml": "format: 2\nhost: h\n", ".agents/local/notes.md": "mine\n" }, gitignore: "notes.md\n" });
+  await assert.rejects(install(ags, resumed), /- \.agents\/local\/notes\.md/);
 });
 
 test("install: refused before any write when a managed path runs through a link out of the host", async () => {

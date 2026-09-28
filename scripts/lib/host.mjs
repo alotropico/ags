@@ -266,7 +266,7 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
       const found = collisions(hostRoot, source, catalog, hostId, { gone });
       if (found.length) throw new AgsError(collisionMessage(found));
       const material = targetMaterial(source, catalog, selection);
-      refuseIgnored(hostRoot, [BLOCK_KEY, ".agents/", CONFIG_REL, ...material.keys()]);
+      refuseIgnored(hostRoot, [BLOCK_KEY, ".agents/", CONFIG_REL, ...material.keys(), ...listFiles(hostRoot, ".agents").filter((rel) => !gone.has(rel))]);
 
       const managed = [];
       for (const [rel, buffer] of material) {
@@ -676,7 +676,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       const reg = registryState(agsRoot, hostRoot, id);
       const classified = classifyUpdate({ hostRoot, agsRoot, from, to: version, catalogI, sourceI, catalogT: catalog, sourceT: source, selectionI, selectionT: selection, entry: reg.entry });
       const material = targetMaterial(source, catalog, selection);
-      refuseIgnored(hostRoot, [BLOCK_KEY, ".agents/", CONFIG_REL, ...material.keys()]);
+      refuseIgnored(hostRoot, [BLOCK_KEY, ".agents/", CONFIG_REL, ...material.keys(), ...listFiles(hostRoot, ".agents")]);
 
       const gone = new Set(classified.entries.filter((item) => String(item.action).startsWith("delete")).map((item) => item.rel));
       const rendered = renderHostBlock({ hostRoot, source, catalog, selection, version, gone });

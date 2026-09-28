@@ -547,3 +547,14 @@ test("CLI: host status, list, update --host and unregister are dispatched", asyn
   assert.equal(runAgs(ags, ["host", "update", "--host", "host", "--route", host]).code, 2);
   assert.equal(runAgs(ags, ["host", "unregister"]).code, 2);
 });
+
+test("update: refused while git ignores any file under .agents/", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  edit(host, ".agents/local/notes.md", "mine\n");
+  fs.writeFileSync(path.join(host, ".gitignore"), "notes.md\n");
+  const before = read(host, ".agents/ags.yaml");
+  await assert.rejects(update(ags, host), /Git ignores host guidance paths[\s\S]*- \.agents\/local\/notes\.md/);
+  assert.equal(read(host, ".agents/ags.yaml"), before);
+});
