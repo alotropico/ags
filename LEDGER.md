@@ -137,3 +137,13 @@ Dispositions, exactly one per row:
 | 7 | Host operational settings; do not invent a missing value | `v1-final:templates/host-ags.md`, "Host operational settings" | AGS | `rules/core.md` bullet 1; `.agents/ags.yaml` settings (spec 13) | |
 | 8 | Use `ags` for deterministic operations; levels 0-8 in the core, level 9 for change reports | `v1-final:templates/host-ags.md`, last paragraph | Removed | None | Levels move to `skills/report-usage/SKILL.md`; level 9 and change reports are removed (spec 15.3) |
 | 9 | Example usage and change report commands | `v1-final:templates/host-ags.md`, powershell block | Removed | None | See `v1-final:rules/core.md` row 12 |
+
+### v1-final: V1-specific lines of the rewritten skills
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Plans under the verified host's `.tmp` directory | `v1-final:skills/plan-work/SKILL.md`, description and "Resolve the host first" | AGS | `skills/plan-work/SKILL.md`, "Where plans go" (`.tmp/plans/` with `tmp-conventions` names) | Spec 17.2-17.3 |
+| 2 | Never write host plans under the canonical AGS `.tmp` | `v1-final:skills/plan-work/SKILL.md`, "Do not write a host plan under the canonical AGS `.tmp`" | Removed | None | No canonical root; skills run in the host only (spec 6 invariant 2) |
+| 3 | Durable plan location only from the user or `.agents/local/` guidance; no plan stores under `.agents` or `.cursor` | `v1-final:skills/plan-work/SKILL.md`, "The durable copy of a plan" | AGS | `skills/plan-work/SKILL.md`, "Where plans go" | Host guidance refines the skill through the core line (spec 11.6) |
+| 4 | Add `/.tmp/` to the git exclude file before writing | `v1-final:skills/plan-work/SKILL.md`, "Keep host `.tmp` ignored" | AGS | `scripts/lib/render.mjs` (exclude block written by install and update) | Checkable mechanically; belongs in code (spec 11.5, 16.12) |
+| 5 | Verification through the host `check` skill | `v1-final:skills/plan-work/SKILL.md`, "Done when", second bullet | AGS | `skills/plan-work/SKILL.md`, "Done when" | Reworded: "use the `check` skill when it is installed" |
