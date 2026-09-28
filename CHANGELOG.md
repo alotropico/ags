@@ -1,4 +1,6 @@
 ## Unreleased
+
+## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`
 
 ## 2.0.0 - 2026-09-28
