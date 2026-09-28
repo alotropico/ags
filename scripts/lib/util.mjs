@@ -98,6 +98,27 @@ export function gitRoot(start) {
   return path.resolve(result.stdout.trim());
 }
 
+export function worktreeInfo(start) {
+  const root = gitRoot(start);
+  const [gitDir, commonDir] = git(["rev-parse", "--git-dir", "--git-common-dir"], root).stdout.trim().split(/\r?\n/);
+  const absGitDir = path.resolve(root, gitDir);
+  const dotGit = path.join(root, ".git");
+  const main = samePath(absGitDir, dotGit) && fs.existsSync(dotGit) && fs.statSync(dotGit).isDirectory();
+  let mainWorktree = null;
+  if (!main) {
+    const listed = git(["worktree", "list", "--porcelain"], root, { allow: [0, 128] }).stdout || "";
+    const first = listed.split(/\r?\n/).find((line) => line.startsWith("worktree "));
+    const candidate = first ? path.resolve(first.slice("worktree ".length)) : null;
+    if (candidate && !samePath(candidate, root)) mainWorktree = candidate;
+  }
+  return { root, main, gitDir: absGitDir, commonDir: path.resolve(root, commonDir), mainWorktree };
+}
+
+export function assertMainWorktree(info, command) {
+  if (info.main) return;
+  const where = info.mainWorktree ? ` The main worktree is ${displayPath(info.mainWorktree)}; run it there.` : "";
+  throw new AgsError(`${command} needs a repository's main worktree, with its git directory at .git in the root. ${displayPath(info.root)} is a linked worktree, a submodule, or uses a separate git directory.${where}`);
+}
 
 export function normalizeText(text) {
   return String(text).replaceAll("\r\n", "\n");

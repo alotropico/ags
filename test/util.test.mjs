@@ -3,8 +3,8 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as util from "../scripts/lib/util.mjs";
-import { assertSlug, contentHash, gitRoot, isBinary, normalizeIdentity, relativeInside, sameContent, samePath, sha256, shortHash } from "../scripts/lib/util.mjs";
-import { REAL_ROOT, makeHostRepo, tempDir } from "./helpers/fixtures.mjs";
+import { assertMainWorktree, assertSlug, contentHash, gitRoot, isBinary, normalizeIdentity, relativeInside, sameContent, samePath, sha256, shortHash, worktreeInfo } from "../scripts/lib/util.mjs";
+import { REAL_ROOT, git, makeHostRepo, tempDir } from "./helpers/fixtures.mjs";
 
 test("the AGS root is exported as AGS_ROOT", () => {
   assert.equal(normalizeIdentity(util.AGS_ROOT), normalizeIdentity(REAL_ROOT));
@@ -31,6 +31,23 @@ test("text hashes normalize CRLF to LF; binaries compare byte for byte", () => {
   assert.equal(sameContent(lf, null), false);
 });
 
+test("main worktree detection names the main worktree from a linked one", () => {
+  const repo = makeHostRepo({ name: "main-host" });
+  const info = worktreeInfo(path.join(repo));
+  assert.equal(info.main, true);
+  assertMainWorktree(info, "host install");
+  const linked = path.join(tempDir("ags-wt-"), "linked");
+  git(repo, ["worktree", "add", "-q", linked]);
+  const other = worktreeInfo(linked);
+  assert.equal(other.main, false);
+  assert.equal(normalizeIdentity(other.mainWorktree), normalizeIdentity(repo));
+  assert.throws(() => assertMainWorktree(other, "host install"), /linked worktree.*main worktree is/s);
+  const separate = path.join(tempDir("ags-sep-"), "work");
+  const gitDir = path.join(tempDir("ags-sepgit-"), "repo.git");
+  fs.mkdirSync(separate);
+  git(separate, ["init", "-q", `--separate-git-dir=${gitDir}`]);
+  assert.equal(worktreeInfo(separate).main, false);
+});
 
 test("path identity, containment, and route resolution", () => {
   assert.equal(samePath("C:/Cosmos/projects/ags", "c:/cosmos/projects/ags"), process.platform === "win32");
