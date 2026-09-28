@@ -334,6 +334,19 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
       ctx.fault("after-host-lock");
       applyExclude(ctx, state, { backupExclude: backupExcludeInto(hostRoot, "install") });
       ctx.fault("after-exclude-block");
+      const blockWrite = Boolean(state.block.action) || ctx.decisions.get(BLOCK_KEY) === "restore";
+      const overwritten = [
+        ...(state.configCurrent != null ? [CONFIG_REL] : []),
+        ...state.managed.filter((item) => item.current != null).map((item) => item.rel),
+        ...(blockWrite && state.block.current != null ? [BLOCK_KEY] : []),
+      ];
+      let backupFolder = null;
+      if (overwritten.length) {
+        backupFolder = createBackupFolder(hostRoot, "install");
+        const tracked = trackedPaths(hostRoot, overwritten);
+        const files = overwritten.map((rel) => backupFile(hostRoot, backupFolder, rel, { tracked: tracked.has(rel) }));
+        writeManifest(backupFolder, { operation: "install", from: null, to: state.version, digest: ctx.digest, files });
+      }
       let folder = null;
       if (state.setup && (state.setup.moves.length || state.setup.continuing)) {
         folder = applyMoves(ctx, state.setup, { operation: "install", digest: ctx.digest, to: state.version });
@@ -350,7 +363,7 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
         expected.push({ path: item.rel, content: item.buffer });
         ctx.faultEach("after-managed-write", index, state.managed.length);
       });
-      if (state.block.action || ctx.decisions.get(BLOCK_KEY) === "restore") {
+      if (blockWrite) {
         writeAtomic(abs(hostRoot, BLOCK_KEY), state.block.next);
         ctx.done(BLOCK_KEY);
         expected.push({ path: BLOCK_KEY, content: state.block.next });
@@ -371,6 +384,7 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
         `Installed AGS ${state.version} into ${displayPath(hostRoot)} as host ${state.hostId}: ${state.managed.length} managed file${state.managed.length === 1 ? "" : "s"} written.`,
         "AGS never commits. Review and commit AGENTS.md and .agents/ in the host.",
       ];
+      if (backupFolder) summary.push(`Backups: ${backupFolder.rel}`);
       if (folder && state.setup.moves.length) summary.push("", cleanupPrompt(folder.rel));
       return summary;
     },

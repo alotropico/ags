@@ -216,6 +216,24 @@ test("install: a resumed host indexes its host rules after the AGS rules", async
   assert.match(read(host, "AGENTS.md"), /tmp-conventions\.md`: Creating, moving, or archiving files under \.tmp\/\.\n- `\.agents\/rules\/server\.md`: Editing server code\.\n<!-- AGS:END -->/);
 });
 
+test("install: a resume backs up every host file it overwrites, ags.yaml and AGENTS.md included", async () => {
+  const ags = agsFixture();
+  const config = "format: 2\nhost: h\n";
+  const host = makeHostRepo({ files: { ".agents/ags.yaml": config, "AGENTS.md": "# Host facts\n" } });
+  const first = await install(ags, host);
+  assert.equal(first.code, 3, first.terminal.text());
+  const done = await install(ags, host, { plan: digestOf(first.terminal.text()) });
+  assert.equal(done.code, 0, done.terminal.text());
+  const folder = fs.readdirSync(path.join(host, ".tmp", "ags", "backups")).find((name) => name.endsWith("-install"));
+  assert.ok(folder, done.terminal.text());
+  const manifest = JSON.parse(read(host, `.tmp/ags/backups/${folder}/manifest.json`));
+  assert.equal(manifest.operation, "install");
+  assert.deepEqual(manifest.files.map((file) => file.original).sort(), [".agents/ags.yaml", "AGENTS.md"]);
+  assert.equal(read(host, `.tmp/ags/backups/${folder}/_agents/ags.yaml`), config);
+  assert.equal(read(host, `.tmp/ags/backups/${folder}/AGENTS.md.bak`), "# Host facts\n");
+  assert.match(done.terminal.text(), new RegExp(`Backups: \\.tmp/ags/backups/${folder}`));
+});
+
 test("install: a required setting is asked for or exits 3; --set supplies it with its description comment", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();
