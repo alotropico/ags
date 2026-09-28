@@ -33,13 +33,15 @@
 - **Automatic renaming of colliding host items.** In V2, a collision between a new AGS id and a host rule or host skill stops install or update before any write and prints the exact rename to `<host id>-<id>`; the user renames by hand and reruns. A later version could offer the rename as a confirmed plan item that moves the file or folder, updates the skill's `name`, and backs up the original.
 - **Rendering setting values into copied files.** Rejected for V2, because AGS generates per-host content only in `AGENTS.md` and `.agents/ags.yaml`. Revisit only if agents misread settings.
 - **`string-list` settings,** with a defined CLI syntax, when a setting needs a list.
+- **Linked setup entries.** Prepare reports a setup file or folder that is a link or junction and leaves it in place. A later version could move the link itself into the backup, with a manifest entry that records its target.
+- **Backup renaming wording.** Spec Appendix E.4 says a segment starting with `.` "gets a leading `_`", while its examples replace the dot (`.agents` becomes `_agents`). The code follows the examples; the Appendix F cleanup prompt, printed verbatim, repeats the text's wording. Align both texts with the examples in the Run 2 prose pass.
 
 ## Reporting
 
 - **Usage collection** (`ags report collect`, and during update). Rename the host spool into a batch, append its records to `reports/usage/YYYY-MM.jsonl` in AGS with id deduplication, then delete the batch. Add the host name from the registry, and map host paths to source paths. Test concurrent writes.
+- **Usage analysis.** Once records are collected: concise structured events, clearer semantics for the usage levels, compact per-run summaries, and cross-run analysis. No telemetry runtime or reporting-level framework.
 
 ## Snapshots
-- **Usage analysis.** Once records are collected: concise structured events, clearer semantics for the usage levels, compact per-run summaries, and cross-run analysis. No telemetry runtime or reporting-level framework.
 
 - **`ags snapshot source [--out <zip>]`.** Archive the AGS source material for review; it replaces V1's `snapshot canonical`.
 - **ZIP64.** Unnecessary for guidance-sized snapshots. If a snapshot approaches ZIP limits, first fail visibly rather than write an invalid archive; implement ZIP64 only for a real case.
