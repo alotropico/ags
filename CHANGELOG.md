@@ -1,5 +1,6 @@
 ## Unreleased
 - New opt-in skill commit-granular: split work into small, well-scoped commits with the shared subject and body format.
+- New opt-in skill start-branch: create a feature branch from git.mainBranch, named with git.ticketPrefix when set.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`

@@ -49,6 +49,10 @@ skills:
   - id: commit-granular
     install: opt-in
     keywords: [commit, commits, git]
+  - id: start-branch
+    install: opt-in
+    params: [git.mainBranch, git.ticketPrefix]
+    keywords: [branch, ticket, git]
 
 settings:
   - key: git.mainBranch

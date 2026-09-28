@@ -30,6 +30,7 @@ test("material: the working-tree catalog is format 2 and all material passes val
     "ship",
     "check",
     "commit-granular",
+    "start-branch",
   ]);
   assert.deepEqual(catalog.settings.map((setting) => setting.key), ["git.mainBranch", "git.ticketPrefix", "checks.type", "checks.lint", "checks.prettier"]);
 });

@@ -472,3 +472,26 @@ Sources: "Personal" is the pre-routing-edit personal skill, AGS `.tmp/records/20
 | 22 | Never mix formatting-only and behavioral changes | Personal, "Split strategy" | AGS | "Dividing commits" | |
 | 23 | Required conceptual body of 2 to 4 short sentences on why, no file narration | HXP, "Commit body" | AGS | "Body" | HXP and Watcher require it; D2 and the personal skill are silent (rule 4) |
 | 24 | No "This commit…", no AI attribution, no emoji | HXP, "Commit body" | AGS | "Never in a message" | |
+
+### start-branch
+
+Sources: "start-ticket" is the same skill in three copies, `meta/templates/ags/shared/skills/start-ticket/SKILL.md` (Meta), `designer2/.agents/skills/start-ticket/SKILL.md` (D2) and `hxpoc/.agents/skills/start-ticket/SKILL.md` (HXP), which differ only in naming the section of their conventions file; "D2 conventions" and "HXP conventions" are `designer2/` and `hxpoc/.agents/guidance/git-conventions.md`; "Personal ship" is AGS `.tmp/records/2026-09-28-run2-layer0-before/ship-SKILL.md`. Destinations are in `skills/start-branch/SKILL.md` unless named otherwise.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Trigger: start ticket work, create a feature branch for a Jira id, check out new work from a ticket | start-ticket (Meta, D2, HXP), "Trigger" | AGS | "Trigger" | Widened to work without a ticket and to `ship`'s request |
+| 2 | Naming, commit, merge request and ticket formats live only in `git-conventions.md`; do not restate or copy templates | start-ticket (Meta, D2, HXP), intro and "Do not" 3 | Removed | None | P26: branch naming lives in `start-branch`, the commit format in `commit-granular`, the merge request title in `ship` |
+| 3 | Precondition: a ticket id or an explicit branch name | start-ticket (Meta, D2, HXP), "Preconditions" 1 | AGS | "Branch name" | A slug without a ticket is allowed when the prefix is empty or the user says there is none (Appendix D) |
+| 4 | Working tree clean enough to switch branches, or uncommitted state accepted | start-ticket (Meta, D2, HXP), "Preconditions" 2 | AGS | "Create the branch" 1 | |
+| 5 | Confirm the ticket and a kebab slug of 1 to 3 words; a full branch name from the user is used as given | start-ticket (Meta, D2, HXP), "Procedure" 1 | AGS | "Branch name" | |
+| 6 | Fetch, update trunk with `--ff-only`, branch from it; never from an unrelated feature branch unless told | start-ticket (Meta, D2, HXP), "Procedure" 2 | AGS | "Create the branch" 3 | Trunk read from `git.mainBranch` |
+| 7 | Report the current branch and that HEAD matches the remote trunk | start-ticket (Meta, D2, HXP), "Procedure" 3 | AGS | "Create the branch" 5 | |
+| 8 | Do not invent a ticket id; ask | start-ticket (Meta, D2, HXP), "Do not" 1 | AGS | "Branch name"; "Do not" | |
+| 9 | Do not commit, push or open a merge request; `ship` does | start-ticket (Meta, D2, HXP), "Do not" 2 | AGS | "Do not" | |
+| 10 | Trunk `integration-2025Q1` in the commands | start-ticket (Meta) | Removed | None | Superseded by `git.mainBranch`; the D2 and HXP fact is row 11 |
+| 11 | Trunk `integration-2025Q1` as the base of new branches | start-ticket (D2, HXP); D2 and HXP conventions, "Tickets and feature branches", "Feature branches" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact, their `git.mainBranch` or host note (P23) |
+| 12 | Tickets look like `CORE-<number>` | D2 and HXP conventions, "Tickets and feature branches", "Feature branches" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host value of `git.ticketPrefix` (P23) |
+| 13 | Branch is the ticket plus a kebab slug of 1 to 3 words, with examples | D2 and HXP conventions, same sections | AGS | "Host settings" (Appendix D); "Branch name" | |
+| 14 | Bare `CORE-<number>` branches exist; prefer the slug form for new work | D2 and HXP conventions, same sections | AGS | "Branch name" | |
+| 15 | Use the branch the user names; otherwise derive a kebab-case name, prefixed with the ticket when the work has one | Personal ship, "Procedure" 1 | AGS | "Branch name" | |
+| 16 | Stay on a suitable feature branch; otherwise `git checkout -b <branch>` from the current HEAD | Personal ship, "Procedure" 2 | AGS | `skills/ship/SKILL.md`, "3. Branch"; "Create the branch" 4 | Branching from the current commit is kept for work already committed there; new work starts from the updated main branch (start-ticket) |
