@@ -6,7 +6,7 @@ import { findings, toolConfigs, walkSetup } from "./discovery.mjs";
 import { planItem, runOperation } from "./operation.mjs";
 import { EXCLUDE_KEY, inspectExclude } from "./render.mjs";
 import { hostLockPath } from "./reports.mjs";
-import { AgsError, assertMainWorktree, contentHash, displayPath, posix, samePath, sha256, worktreeInfo, writeAtomic } from "./util.mjs";
+import { AgsError, assertMainWorktree, contentHash, displayPath, insidePath, posix, samePath, sha256, worktreeInfo, writeAtomic } from "./util.mjs";
 
 export const CLEANUP_PROMPT = `AGS moved this repository's previous agent setup to <backup path>. manifest.json there lists every file; file and folder names were changed so no agent tool loads them.
 
@@ -22,7 +22,7 @@ export function cleanupPrompt(backupRel) {
 }
 
 function abs(root, rel) {
-  return path.join(root, ...posix(rel).split("/"));
+  return insidePath(root, rel);
 }
 
 function exists(file) {

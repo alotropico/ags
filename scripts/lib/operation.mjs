@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { acquireLocks } from "./reports.mjs";
-import { AgsError, contentHash, posix, readFileOrNull, sha256, shortHash, writeAtomic } from "./util.mjs";
+import { AgsError, contentHash, insidePath, posix, readFileOrNull, sha256, shortHash, writeAtomic } from "./util.mjs";
 
 export const CHOICES = ["promote", "restore", "ignore", "disable"];
 export const HASH_KEYS = ["B", "H", "Tc", "S"];
@@ -309,11 +309,11 @@ export async function runOperation(op, { terminal = realTerminal(), dryRun = fal
 }
 
 export function writeFileAt(root, rel, content) {
-  writeAtomic(path.join(root, ...posix(rel).split("/")), content);
+  writeAtomic(insidePath(root, rel), content);
 }
 
 export function removeFileAt(root, rel) {
-  const abs = path.join(root, ...posix(rel).split("/"));
+  const abs = insidePath(root, rel);
   fs.rmSync(abs, { force: true });
   let dir = path.dirname(abs);
   while (path.resolve(dir) !== path.resolve(root)) {
@@ -330,7 +330,7 @@ export function removeFileAt(root, rel) {
 export function verifyWrites(root, expected) {
   const wrong = [];
   for (const { path: rel, content } of expected) {
-    const actual = readFileOrNull(path.join(root, ...posix(rel).split("/")));
+    const actual = readFileOrNull(insidePath(root, rel));
     const want = content == null ? null : contentHash(Buffer.isBuffer(content) ? content : Buffer.from(content));
     if (contentHash(actual) !== want) wrong.push(rel);
   }

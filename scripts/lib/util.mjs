@@ -239,6 +239,12 @@ export function assertNoLinkEscape(root, target) {
   return path.resolve(target);
 }
 
+export function insidePath(root, rel) {
+  const target = path.resolve(root, ...posix(rel).split("/"));
+  assertInside(root, target);
+  return assertNoLinkEscape(root, target);
+}
+
 export function validBranchName(name) {
   if (typeof name !== "string" || !name || name !== name.trim()) return false;
   if (name.startsWith("refs/") || name.includes("..") || name.includes("@{") || /[\u0000-\u001f\u007f\s]/.test(name)) return false;

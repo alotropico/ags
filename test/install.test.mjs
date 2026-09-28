@@ -130,6 +130,20 @@ test("install: refused while git ignores AGENTS.md, .agents/ or a file under it"
   }
 });
 
+test("install: refused before any write when a managed path runs through a link out of the host", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo({ files: { ".agents/ags.yaml": "format: 2\nhost: h\n" } });
+  const outside = fs.mkdtempSync(path.join(path.dirname(host), "ags-outside-"));
+  try {
+    fs.symlinkSync(outside, path.join(host, ".agents", "rules"), "junction");
+  } catch (error) {
+    if (error.code === "EPERM" || error.code === "EACCES") return;
+    throw error;
+  }
+  await assert.rejects(install(ags, host), /escapes root through a link/);
+  assert.deepEqual(fs.readdirSync(outside), []);
+});
+
 test("install: the exclude block only when .tmp/ is not ignored", async () => {
   const ags = agsFixture();
   const host = makeHostRepo({ gitignore: ".tmp/\n" });

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { AgsError, git, posix, sha256, writeAtomic } from "./util.mjs";
+import { AgsError, git, insidePath, posix, sha256, writeAtomic } from "./util.mjs";
 
 export const BACKUPS_REL = ".tmp/ags/backups";
 export const ENTRY_FILES = ["AGENTS.md", "AGENTS.override.md", "CLAUDE.md", "CLAUDE.local.md", "GEMINI.md"];
@@ -26,7 +26,7 @@ export function backupStamp(now = new Date()) {
 }
 
 export function createBackupFolder(hostRoot, operation, now = new Date()) {
-  const parent = path.join(hostRoot, ...BACKUPS_REL.split("/"));
+  const parent = insidePath(hostRoot, BACKUPS_REL);
   fs.mkdirSync(parent, { recursive: true });
   const base = `${backupStamp(now)}-${operation}`;
   for (let n = 1; ; n += 1) {
@@ -48,10 +48,10 @@ export function trackedPaths(hostRoot, rels) {
 }
 
 export function backupFile(hostRoot, folder, rel, { tracked = false } = {}) {
-  const source = path.join(hostRoot, ...posix(rel).split("/"));
+  const source = insidePath(hostRoot, rel);
   const bytes = fs.readFileSync(source);
   const backupRel = backupName(rel);
-  const dest = path.join(folder.abs, ...backupRel.split("/"));
+  const dest = insidePath(hostRoot, `${folder.rel}/${backupRel}`);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, bytes);
   return { original: posix(rel), backup: backupRel, tracked, bytes: bytes.length, sha256: sha256(bytes) };

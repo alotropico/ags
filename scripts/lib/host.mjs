@@ -29,13 +29,13 @@ import { applyExclude, applyMoves, backupExcludeInto, cleanupPrompt, hostConfigS
 import { analyzeBlock, BLOCK_KEY, buildIndex, EXCLUDE_KEY, inspectExclude, placeBlock, renderAgsBlock } from "./render.mjs";
 import { findHost, loadRegistry, saveRegistry } from "./registry.mjs";
 import { operationLocks } from "./reports.mjs";
-import { AgsError, AGS_ROOT, contentHash, displayPath, git, posix, readFileOrNull, samePath, slug, slugError, writeAtomic } from "./util.mjs";
+import { AgsError, AGS_ROOT, contentHash, displayPath, git, insidePath, posix, readFileOrNull, samePath, slug, slugError, writeAtomic } from "./util.mjs";
 
 export const REGISTRY_KEY = "hosts.yaml";
 export const VERSION_KEY = "agsVersion";
 
 function abs(root, rel) {
-  return path.join(root, ...posix(rel).split("/"));
+  return insidePath(root, rel);
 }
 
 function listFiles(root, rel) {
@@ -541,7 +541,7 @@ export function classifyUpdate({ hostRoot, agsRoot, from, to, catalogI, sourceI,
     const selected = selectedT.has(id);
     const Tc = selected ? target.get(rel) ?? null : null;
     const sourceRel = sourcePathOf(rel);
-    const S = readFileOrNull(path.join(agsRoot, ...sourceRel.split("/")));
+    const S = readFileOrNull(insidePath(agsRoot, sourceRel));
     const h = { B: bufferHash(B), H: bufferHash(H), Tc: bufferHash(Tc), S: bufferHash(S) };
     const hashes = Object.fromEntries(Object.entries(h).filter(([, value]) => value != null));
     const add = (fields) => entries.push({ rel, id, kind, sourceRel, H, Tc, h, hashes, ...fields });
@@ -806,7 +806,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
 
       promotions.forEach((item, index) => {
         const content = lfBuffer(item.H);
-        writeAtomic(path.join(agsRoot, ...item.sourceRel.split("/")), content);
+        writeAtomic(insidePath(agsRoot, item.sourceRel), content);
         ctx.done(`AGS ${item.sourceRel}`);
         recorded.push({ item, agsHash: contentHash(content) });
         ctx.faultEach("after-promotion", index, promotions.length);

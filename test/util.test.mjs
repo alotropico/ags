@@ -79,4 +79,7 @@ test("junction escape is rejected when the account allows it", () => {
     throw error;
   }
   assert.throws(() => relativeInside(root, path.join(link, "SKILL.md")));
+  assert.throws(() => util.insidePath(root, "skills/linked/new.md"), /escapes root through a link/);
+  assert.throws(() => util.insidePath(root, "../outside.md"), /escapes root/);
+  assert.equal(util.insidePath(root, "skills/other/new.md"), path.join(root, "skills", "other", "new.md"));
 });
