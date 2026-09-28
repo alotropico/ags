@@ -33,6 +33,7 @@ test("material: the working-tree catalog is format 2 and all material passes val
     "check",
     "commit-granular",
     "start-branch",
+    "react-state-transitions",
   ]);
   assert.deepEqual(catalog.settings.map((setting) => setting.key), ["git.mainBranch", "git.ticketPrefix", "checks.type", "checks.lint", "checks.prettier"]);
 });

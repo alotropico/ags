@@ -60,6 +60,9 @@ skills:
     install: opt-in
     params: [git.mainBranch, git.ticketPrefix]
     keywords: [branch, ticket, git]
+  - id: react-state-transitions
+    install: opt-in
+    keywords: [react, state, effects, transitions, refactor]
 
 settings:
   - key: git.mainBranch

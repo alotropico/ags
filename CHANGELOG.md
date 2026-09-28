@@ -10,6 +10,7 @@
 - write-commit-diff consolidates the host variants; the PowerShell writers are replaced by the script's modes.
 - New opt-in soft rule state-topology: fill a state record before changing shared client state.
 - New opt-in soft rule code-idioms: shared TypeScript and React idioms.
+- New opt-in skill react-state-transitions: audit React state ownership and transitions.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`
