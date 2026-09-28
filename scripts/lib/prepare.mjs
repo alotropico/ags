@@ -136,8 +136,10 @@ export function manifestItemPath(state, operation) {
 }
 
 export function prepareItems(state, { operation }) {
-  if (!state.moves.length && !state.continuing) return [];
-  const items = [planItem({ path: manifestItemPath(state, operation), kind: "backup", action: state.continuing ? (state.moves.length ? "continue" : "mark complete") : "create" })];
+  const items = [];
+  if (state.moves.length || state.continuing) {
+    items.push(planItem({ path: manifestItemPath(state, operation), kind: "backup", action: state.continuing ? (state.moves.length ? "continue" : "mark complete") : "create" }));
+  }
   for (const move of state.moves) {
     items.push(planItem({ path: move.rel, kind: "setup", action: `move to ${backupName(move.rel)}`, hashes: { H: move.hash } }));
   }
@@ -268,6 +270,7 @@ export function prepareOperation({ agsRoot, route, includeNested = false, rerunA
       ctx.fault("after-host-lock");
       applyExclude(ctx, state, { backupExclude: backupExcludeInto(hostRoot, "prepare") });
       ctx.fault("after-exclude-block");
+      if (!state.moves.length && !state.continuing) return ["Wrote /.tmp/ into the git exclude block. No setup to move."];
       const folder = applyMoves(ctx, state, { operation: "prepare", digest: ctx.digest });
       return [`Moved ${state.moves.length} file${state.moves.length === 1 ? "" : "s"} to ${folder.rel}.`, "", cleanupPrompt(folder.rel)];
     },

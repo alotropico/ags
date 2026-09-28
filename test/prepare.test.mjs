@@ -78,13 +78,27 @@ function manifestOf(host, name) {
   return JSON.parse(fs.readFileSync(path.join(host, ".tmp", "ags", "backups", name, "manifest.json"), "utf8"));
 }
 
-test("prepare: nothing found exits 0 and writes nothing", async () => {
-  const host = makeHostRepo({ files: { "src/a.js": "a\n", ".cursor/plans/p.md": "p\n" } });
+test("prepare: nothing found and .tmp/ already ignored exits 0 and writes nothing", async () => {
+  const host = makeHostRepo({ files: { "src/a.js": "a\n", ".cursor/plans/p.md": "p\n" }, gitignore: ".tmp/\n" });
   const { code, terminal } = await prepare(host);
   assert.equal(code, 0);
   assert.match(terminal.text(), /Nothing to do\./);
   assert.equal(fs.existsSync(path.join(host, ".tmp")), false);
   assert.equal(fs.existsSync(path.join(host, ".git", "info", "exclude")) && fs.readFileSync(path.join(host, ".git", "info", "exclude"), "utf8").includes("AGS:BEGIN"), false);
+});
+
+test("prepare: nothing to move but .tmp/ not ignored plans only the exclude block", async () => {
+  const host = makeHostRepo({ files: { "src/a.js": "a\n" } });
+  const first = await prepare(host);
+  assert.equal(first.code, 3, first.terminal.text());
+  assert.match(first.terminal.text(), /\.git\/info\/exclude\s+exclude block\s+add \/\.tmp\//);
+  assert.doesNotMatch(first.terminal.text(), /manifest\.json/);
+  const second = await prepare(host, { plan: digestOf(first.terminal.text()) });
+  assert.equal(second.code, 0, second.terminal.text());
+  assert.match(fs.readFileSync(path.join(host, ".git", "info", "exclude"), "utf8"), /# AGS:BEGIN\n\/\.tmp\/\n# AGS:END\n$/);
+  assert.deepEqual(backupFolders(host), []);
+  assert.doesNotMatch(second.terminal.text(), /AGS moved this repository/);
+  assert.match((await prepare(host)).terminal.text(), /Nothing to do\./);
 });
 
 test("prepare: without a terminal exits 3 with the plan, digest, rerun command and agent line", async () => {
