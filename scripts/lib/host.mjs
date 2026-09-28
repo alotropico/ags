@@ -596,6 +596,16 @@ export function classifyUpdate({ hostRoot, agsRoot, from, to, catalogI, sourceI,
   return { entries: [...entries.filter((item) => !folded.has(item)), ...grouped], keptPromoted, keptIgnored, pending, skipped, inProgress };
 }
 
+function withoutEnabled(data, ids) {
+  // An interrupted run may already have written its --enable ids to ags.yaml; they count as installed at I only through host files.
+  const fresh = new Set(ids);
+  const next = { ...data };
+  for (const group of ["rules", "skills"]) {
+    if (Array.isArray(data?.[group]?.enabled)) next[group] = { ...data[group], enabled: data[group].enabled.filter((id) => !fresh.has(id)) };
+  }
+  return next;
+}
+
 function entryItem(item) {
   return planItem({ path: item.rel, kind: item.kind === "skill folder" ? "skill folder" : "managed", action: item.action, choices: item.choices, hashes: item.hashes, detail: item.detail });
 }
@@ -629,7 +639,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       const { catalog, source } = releaseInputs(agsRoot, version);
       const setMap = parseSets(op.sets, catalog);
       const evidence = detectEvidence(hostRoot);
-      const selectionI = resolveSelection(catalogI, config.data, evidence);
+      const selectionI = resolveSelection(catalogI, withoutEnabled(config.data, enable), evidence);
 
       const flagged = applySelectionFlags(catalog, doc.toJS() ?? {}, { enable, disable });
       for (const group of flagged.changed) {
