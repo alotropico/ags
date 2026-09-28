@@ -15,7 +15,7 @@ AGS is the source repository for reusable agent guidance: rules, skills, setting
 - `docs/`: design records (`v2-spec.md`, `v2-meta-inventory.md`, `v3-proto-rules.md`).
 - `package.json`: version, bin `ags`, engines, dependencies. `catalog.yaml`: rules, skills, settings.
 - `rules/<id>.md`: strong and soft rules. `skills/<id>/`: `SKILL.md`, optional `scripts/`, `references/`, `assets/`.
-- `templates/`: `agents-block.md`, `ags.yaml`. `scripts/`: `ags.mjs` and `lib/`. `test/`: `node --test` suites.
+- `templates/`: `agents-block.md`, `ags.yaml`. `scripts/`: `ags.mjs`, `install-global.mjs` and `lib/`. `test/`: `node --test` suites.
 - Machine-local and gitignored: `hosts.yaml` (registry), `reports/runs/` (run log), `.tmp/` (`.tmp/ags/locks/` holds the AGS locks).
 
 ## Catalog
@@ -61,7 +61,7 @@ Every rewrite, removal or migration of guidance adds rows to `LEDGER.md` in the 
 
 ## Commands
 
-- Use `ags` for deterministic operations. Never invoke files under `scripts/` by path.
+- Use `ags` for deterministic operations. Never invoke files under `scripts/` by path, except the installer below.
 - The global `ags` runs this working tree through shims. After moving this directory, rerun `node scripts/install-global.mjs`.
 
 ## Plan of record

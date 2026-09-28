@@ -127,7 +127,7 @@ Run `ags <command> --help` for its flags.
 ```yaml
 format: 2
 host: my-app
-agsVersion: 2.0.0
+agsVersion: 2.1.0
 reporting: true
 skills:
   enabled: []
