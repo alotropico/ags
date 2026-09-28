@@ -35,7 +35,7 @@
 - **Rendering setting values into copied files.** Rejected for V2, because AGS generates per-host content only in `AGENTS.md` and `.agents/ags.yaml`. Revisit only if agents misread settings.
 - **`string-list` settings,** with a defined CLI syntax, when a setting needs a list.
 - **Linked setup entries.** Prepare reports a setup file or folder that is a link or junction and leaves it in place. A later version could move the link itself into the backup, with a manifest entry that records its target.
-- **Backup renaming wording.** Spec Appendix E.4 says a segment starting with `.` "gets a leading `_`", while its examples replace the dot (`.agents` becomes `_agents`). The code follows the examples; the Appendix F cleanup prompt, printed verbatim, repeats the text's wording. Align both texts with the examples in the Run 2 prose pass.
+- **Backup renaming wording.** Spec Appendix E.4 says a segment starting with `.` "gets a leading `_`", while its examples replace the dot (`.agents` becomes `_agents`). The code follows the examples; the Appendix F cleanup prompt, printed verbatim, repeats the text's wording. Align both texts with the examples in a later release.
 
 ## Reporting
 
