@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -13,6 +14,7 @@ import * as packagesLib from "../scripts/lib/packages.mjs";
 import * as reportsLib from "../scripts/lib/reports.mjs";
 import * as utilLib from "../scripts/lib/util.mjs";
 import { COMMANDS, main, parseArgs, rerunArgs } from "../scripts/ags.mjs";
+import * as installer from "../scripts/install-global.mjs";
 import { fakeTerminal, makeHostRepo, REAL_ROOT, runAgs, tempDir, treeSnapshot, withCli } from "./helpers/fixtures.mjs";
 
 function recorder() {
@@ -340,6 +342,49 @@ test("V1 machinery is gone: no module keeps a V1 helper, and the V1 modules and 
   }
   assert.deepEqual(fs.readdirSync(path.join(REAL_ROOT, "scripts")).sort(), ["ags.mjs", "install-global.mjs", "lib"]);
   assert.deepEqual(fs.readdirSync(path.join(REAL_ROOT, "templates")).sort(), ["agents-block.md", "ags.yaml"]);
+});
+
+test("global install keeps only the shim installation", () => {
+  assert.deepEqual(Object.keys(installer).sort(), ["assertSupportedPlatform", "assertWindowsDir", "installGlobal", "installerHelp", "parseInstallArgs", "pathIncludes", "pathWarning", "persistedUserPath", "resolveInstallBin", "shimFiles"]);
+  assert.throws(() => installer.assertSupportedPlatform("linux"), /^Error: AGS supports Windows only\.$/);
+  const script = path.join(REAL_ROOT, "scripts", "ags.mjs");
+  const bin = tempDir("ags-bin-");
+  const result = installer.installGlobal({ binDir: bin, scriptPath: script, platform: "win32" });
+  assert.deepEqual(result.written.map((file) => path.basename(file)).sort(), ["ags", "ags.CMD", "ags.ps1"]);
+  assert.match(fs.readFileSync(path.join(bin, "ags.CMD"), "utf8"), /scripts\\ags\.mjs/);
+  assert.match(installer.shimFiles(script).ags, /scripts\/ags\.mjs/);
+  const home = tempDir("ags-pnpm-");
+  const resolve = (options) => path.resolve(installer.resolveInstallBin({ platform: "win32", skipCommand: true, ...options }));
+  assert.equal(resolve({ env: { PNPM_HOME: home, LOCALAPPDATA: path.join(home, "local") } }), path.resolve(home));
+  assert.equal(resolve({ env: {}, pnpmGlobalBin: home }), path.resolve(home));
+  assert.equal(resolve({ env: { LOCALAPPDATA: home } }), path.resolve(home, "pnpm"));
+  assert.equal(resolve({ bin, env: { PNPM_HOME: home } }), path.resolve(bin));
+  assert.throws(() => resolve({ env: {} }), /Could not determine/);
+  const other = tempDir("ags-bin-");
+  fs.writeFileSync(path.join(other, "ags.CMD"), "@ECHO off\r\nnode \"C:\\elsewhere\\ags.mjs\" %*\r\n");
+  assert.throws(() => installer.installGlobal({ binDir: other, scriptPath: script, platform: "win32" }), /--replace/);
+  assert.match(fs.readFileSync(path.join(other, "ags.CMD"), "utf8"), /elsewhere/);
+  installer.installGlobal({ binDir: other, scriptPath: script, replace: true, platform: "win32" });
+  assert.match(fs.readFileSync(path.join(other, "ags.CMD"), "utf8"), /scripts\\ags\.mjs/);
+  const empty = tempDir("ags-empty-");
+  assert.throws(() => installer.installGlobal({ binDir: empty, scriptPath: script, platform: "linux" }), /Windows only/);
+  assert.deepEqual(fs.readdirSync(empty), []);
+  assert.deepEqual(installer.parseInstallArgs(["--bin", bin, "--script", script, "--replace", "--help"]), { bin, script, replace: true, help: true });
+  assert.throws(() => installer.parseInstallArgs(["--bin"]), /Missing value for --bin/);
+  assert.throws(() => installer.parseInstallArgs(["--nope"]), /Unknown installer flag: --nope/);
+  assert.equal(installer.installerHelp().includes("--script"), false);
+  assert.equal(installer.pathIncludes(`${other};${bin}`, bin), true);
+  assert.equal(installer.pathWarning(bin, { processPath: "", persistedPath: bin }), "restart");
+  assert.equal(installer.pathWarning(bin, { processPath: "", persistedPath: "" }), "missing");
+});
+
+test("installer help writes nothing", () => {
+  const scratch = withCli(tempDir("ags-installer-"));
+  const bin = tempDir("ags-help-bin-");
+  const result = spawnSync(process.execPath, [path.join(scratch, "scripts", "install-global.mjs"), "--help"], { encoding: "utf8", windowsHide: true, env: { ...process.env, PNPM_HOME: bin } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /install-global\.mjs \[--bin <absolute-directory>\] \[--replace\]/);
+  assert.deepEqual(fs.readdirSync(bin), []);
 });
 
 test("the plan table is compact and shows short hashes", () => {

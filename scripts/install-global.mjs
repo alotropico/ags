@@ -10,7 +10,7 @@ const SHIM_NAMES = ["ags.CMD", "ags.ps1", "ags"];
 
 export function assertSupportedPlatform(platform = process.platform) {
   if (platform !== "win32") {
-    throw new Error("AGS V1 supports Windows only.");
+    throw new Error("AGS supports Windows only.");
   }
 }
 
