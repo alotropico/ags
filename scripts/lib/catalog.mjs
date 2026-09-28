@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { hostLinkTargets } from "./links.mjs";
-import { LOCK_FILES } from "./packages.mjs";
+import { LOCK_FILES, whenMatches } from "./packages.mjs";
 import { BLOCK_BUDGET, blockLineCount, indexLine, renderBlockBody } from "./render.mjs";
 import { AgsError, walkFiles } from "./util.mjs";
 
@@ -390,6 +390,83 @@ export function includedSkillIds(catalog, rootIds) {
   };
   for (const id of rootIds) walk(id);
   return out;
+}
+
+function selectionList(config, group, list) {
+  const value = config?.[group]?.[list];
+  return Array.isArray(value) ? value : [];
+}
+
+export function resolveSelection(catalog, config, evidence) {
+  const errors = [];
+  const result = { rules: [], skills: [], direct: [], companions: [], errors };
+  const picked = { rules: new Set(), skills: new Set() };
+  for (const group of ["rules", "skills"]) {
+    const enabled = new Set(selectionList(config, group, "enabled"));
+    const disabled = new Set(selectionList(config, group, "disabled"));
+    for (const entry of catalog[group]) {
+      const base = entry.install === "always" || (entry.install === "detected" && whenMatches(entry.when, evidence)) || enabled.has(entry.id);
+      if (!base) continue;
+      if (disabled.has(entry.id) && !(group === "rules" && entry.tier === "strong")) continue;
+      picked[group].add(entry.id);
+    }
+  }
+  const direct = catalog.skills.filter((entry) => picked.skills.has(entry.id)).map((entry) => entry.id);
+  const disabledSkills = new Set(selectionList(config, "skills", "disabled"));
+  const byId = new Map(catalog.skills.map((entry) => [entry.id, entry]));
+  const walk = (id) => {
+    for (const child of byId.get(id)?.includes || []) {
+      if (disabledSkills.has(child)) {
+        errors.push(`${child} is a companion of ${id} and cannot be disabled while ${id} is selected; drop ${id} to drop it`);
+        continue;
+      }
+      if (picked.skills.has(child)) continue;
+      picked.skills.add(child);
+      walk(child);
+    }
+  };
+  for (const id of direct) walk(id);
+  result.rules = catalog.rules.filter((entry) => picked.rules.has(entry.id)).map((entry) => entry.id);
+  result.skills = catalog.skills.filter((entry) => picked.skills.has(entry.id)).map((entry) => entry.id);
+  result.direct = direct;
+  result.companions = result.skills.filter((id) => !direct.includes(id));
+  return result;
+}
+
+export function companionParents(catalog, selectedSkills, id) {
+  return catalog.skills.filter((entry) => selectedSkills.includes(entry.id) && (entry.includes || []).includes(id)).map((entry) => entry.id);
+}
+
+export function routeIds(catalog, ids, flag) {
+  const out = { rules: [], skills: [] };
+  for (const id of ids) {
+    const group = entryGroup(catalog, id);
+    if (!group) throw new AgsError(`${flag}: unknown id ${id}`, { exitCode: 2 });
+    if (!out[group].includes(id)) out[group].push(id);
+  }
+  return out;
+}
+
+export function applySelectionFlags(catalog, config, { enable = [], disable = [] } = {}) {
+  const on = routeIds(catalog, enable, "--enable");
+  const off = routeIds(catalog, disable, "--disable");
+  const next = {};
+  for (const group of ["rules", "skills"]) {
+    const enabled = selectionList(config, group, "enabled").filter((id) => !off[group].includes(id));
+    const disabled = selectionList(config, group, "disabled").filter((id) => !on[group].includes(id));
+    for (const id of on[group]) if (!enabled.includes(id)) enabled.push(id);
+    for (const id of off[group]) if (!disabled.includes(id)) disabled.push(id);
+    next[group] = { enabled, disabled };
+  }
+  const changed = ["rules", "skills"].filter((group) => ["enabled", "disabled"].some((list) => {
+    const before = selectionList(config, group, list);
+    return before.length !== next[group][list].length || before.some((id, index) => id !== next[group][list][index]);
+  }));
+  return { selection: next, changed };
+}
+
+export function optInItems(catalog) {
+  return [...catalog.rules, ...catalog.skills].filter((entry) => entry.install === "opt-in").map((entry) => entry.id);
 }
 
 export function settingByKey(catalog) {
