@@ -180,6 +180,7 @@ test("update: a whole deleted skill folder offers disable, except for a companio
   assert.equal(first.code, 3, first.text);
   assert.match(row(first.text, ".agents/skills/css-rules/"), /skill folder\s+choose restore\/ignore\/disable/);
   assert.match(row(first.text, ".agents/skills/css-clean/"), /skill folder\s+choose restore\/ignore\s*$/);
+  assert.match(row(first.text, ".agents/ags.yaml"), /settings\s+skills\.disabled if disable is chosen/);
   const second = await update(ags, host, { plan: digestOf(first.text), decide: { ".agents/skills/css-rules/": "disable", ".agents/skills/css-clean/": "restore" } });
   assert.equal(second.code, 0, second.text);
   assert.deepEqual(config(host).skills.enabled, []);

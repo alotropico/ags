@@ -712,8 +712,12 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       const items = [];
       const exclude = excludeItem(state.exclude);
       if (exclude) items.push(exclude);
+      const disableOffered = state.classified.entries.some((item) => item.choices?.includes("disable"));
       if (state.configCurrent !== state.configNext || state.from !== state.version) {
-        items.push(planItem({ path: CONFIG_REL, kind: "settings", action: state.configCurrent === state.configNext ? "set agsVersion" : "update", hashes: { S: contentHash(Buffer.from(state.configNext)) } }));
+        const action = state.configCurrent === state.configNext ? "set agsVersion" : "update";
+        items.push(planItem({ path: CONFIG_REL, kind: "settings", action: disableOffered ? `${action}; skills.disabled if disable is chosen` : action, hashes: { S: contentHash(Buffer.from(state.configNext)) } }));
+      } else if (disableOffered) {
+        items.push(planItem({ path: CONFIG_REL, kind: "settings", action: "skills.disabled if disable is chosen", hashes: { S: contentHash(Buffer.from(state.configNext)) } }));
       }
       for (const item of state.classified.entries) items.push(entryItem(item));
       const block = blockItem(state.block);
