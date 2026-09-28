@@ -5,7 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
-import { hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
+import { appendRunLog, hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
 import { doctor, hostDoctorWarnings } from "./lib/doctor.mjs";
 import { skillsList } from "./lib/skills.mjs";
 import { writeSnapshot } from "./lib/snapshot.mjs";
@@ -289,14 +289,18 @@ export function findCommand(positionals) {
   return null;
 }
 
-export async function main(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT } = {}) {
+export async function main(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT, run = {} } = {}) {
   const { positionals, flags } = parseArgs(argv);
+  run.flags = flags;
   if (!positionals.length || positionals[0] === "help") {
+    run.params = positionals.slice(1);
     terminal.log(helpText());
     return 0;
   }
   const found = findCommand(positionals);
   if (!found) throw usageError(`Unknown command: ${positionals.join(" ")}`);
+  run.command = found.name;
+  run.params = found.rest;
   if (flags.help) {
     terminal.log(`ags ${found.name}${found.spec.usage ? ` ${found.spec.usage}` : ""}`);
     return 0;
@@ -308,17 +312,34 @@ export async function main(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT
   return code ?? 0;
 }
 
+function leadingCommand(argv) {
+  const end = argv.findIndex((arg) => arg.startsWith("--"));
+  const leading = end < 0 ? argv : argv.slice(0, end);
+  return findCommand(leading)?.name ?? leading.slice(0, 2).join(" ");
+}
+
+export async function invoke(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT } = {}) {
+  const at = `${new Date().toISOString().slice(0, 19)}Z`;
+  const run = { command: leadingCommand(argv), flags: {}, params: [] };
+  let code;
+  try {
+    code = await main(argv, { terminal, agsRoot, run });
+  } catch (error) {
+    terminal.warn(error instanceof AgsError ? error.message : error.stack || String(error));
+    if (error.written?.length) terminal.warn(`Incomplete files: ${error.written.join(", ")}`);
+    code = error instanceof AgsError ? error.exitCode || 1 : 1;
+  }
+  try {
+    await appendRunLog(agsRoot, { ...run, at, error: code === 1 || code === 2 });
+  } catch (error) {
+    terminal.warn(`Warning: the run log was not written: ${error.message}`);
+  }
+  return code;
+}
+
 const invoked = process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url;
 if (invoked) {
-  const terminal = realTerminal();
-  main(process.argv.slice(2), { terminal }).then(
-    (code) => {
-      process.exitCode = code;
-    },
-    (error) => {
-      terminal.warn(error instanceof AgsError ? error.message : error.stack || String(error));
-      if (error.written?.length) terminal.warn(`Incomplete files: ${error.written.join(", ")}`);
-      process.exitCode = error instanceof AgsError ? error.exitCode || 1 : 1;
-    },
-  );
+  invoke(process.argv.slice(2)).then((code) => {
+    process.exitCode = code;
+  });
 }

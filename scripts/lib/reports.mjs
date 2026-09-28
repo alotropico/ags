@@ -157,6 +157,19 @@ export async function withLocks(lockDirs, command, fn, options) {
   }
 }
 
+export function runLogPath(agsRoot, at) {
+  return path.join(agsRoot, "reports", "runs", `${at.slice(0, 7)}.jsonl`);
+}
+
+export async function appendRunLog(agsRoot, { command, flags, params, at, error }) {
+  const file = runLogPath(agsRoot, at);
+  await withLock(runsLockPath(agsRoot), "run log", () => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, `${JSON.stringify({ command, flags, params, at, error })}\n`);
+  });
+  return file;
+}
+
 export const USAGE_REL = ".tmp/ags/reports/usage.jsonl";
 
 export function usageFiles(hostRoot, values, managed) {
