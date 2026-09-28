@@ -1,4 +1,6 @@
 ## Unreleased
+
+## 2.1.2 - 2026-09-28
 - doctor reports an unanchored tmp/ line in .cursorignore or .cursorindexingignore, which Cursor also applies to .tmp/.
 
 ## 2.1.1 - 2026-09-28
