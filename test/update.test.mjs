@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "yaml";
-import { hostInstall, hostUpdate } from "../scripts/lib/host.mjs";
-import { commitAll, digestOf, git, makeAgsRepo, makeHostRepo, quietTerminal, REAL_ROOT, sampleCatalog, sampleMaterial, skillFile, tag, writeFiles } from "./helpers/fixtures.mjs";
+import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "../scripts/lib/host.mjs";
+import { commitAll, digestOf, git, makeAgsRepo, makeHostRepo, quietTerminal, REAL_ROOT, runAgs, sampleCatalog, sampleMaterial, skillFile, tag, withCli, writeFiles } from "./helpers/fixtures.mjs";
 
 const CONFIG_TEMPLATE = fs.readFileSync(path.join(REAL_ROOT, "templates", "ags.yaml"), "utf8").replaceAll("\r\n", "\n");
 const REFS = ["a", "b", "c", "d", "e", "f", "g"];
@@ -386,4 +386,66 @@ test("update: an interruption after a promotion records it on rerun without aski
   await decided(ags, host);
   assert.equal(read(ags, "CHANGELOG.md").match(/Promoted from watcher/g).length, 1);
   assert.equal(registry(ags).hosts[0].promoted.length, 1);
+});
+
+// status, list and unregister
+
+test("status: read-only, takes no lock, and shows versions, the plan digest, host changes, records and usage count", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  edit(host, `${REF}/c.md`, "# c host\n");
+  edit(host, ".tmp/ags/reports/usage.jsonl", "{}\n{}\n");
+  const lock = path.join(host, ".tmp", "ags", "locks", "host");
+  fs.mkdirSync(lock, { recursive: true });
+  fs.writeFileSync(path.join(lock, "owner.json"), JSON.stringify({ command: "other", pid: process.pid, startedAt: new Date().toISOString() }));
+  const before = fs.readFileSync(path.join(ags, "hosts.yaml"), "utf8");
+  const terminal = quietTerminal();
+  assert.equal(await hostStatus({ agsRoot: ags, route: host, terminal }), 0);
+  const text = terminal.text();
+  assert.match(text, /Installed: 2\.0\.0/);
+  assert.match(text, /Latest release: 2\.0\.0/);
+  assert.match(text, /Reporting: on/);
+  assert.match(text, /Usage records: 2/);
+  assert.match(text, /Update plan to 2\.0\.0: 1 item, digest [0-9a-f]{12}/);
+  assert.match(text, /Host changes: \.agents\/skills\/plan-work\/references\/c\.md/);
+  assert.equal(fs.readFileSync(path.join(ags, "hosts.yaml"), "utf8"), before);
+  assert.equal(read(host, `${REF}/c.md`), "# c host\n");
+});
+
+test("list and unregister: list shows installed versions; unregister removes the entry and leaves host files untouched", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  await install(ags, host);
+  const listed = quietTerminal();
+  hostList({ agsRoot: ags, terminal: listed });
+  assert.match(listed.text(), /^host {2}host {2}2\.0\.0 {2}/);
+  const args = ["host", "unregister", "--host", "host"];
+  const first = quietTerminal();
+  assert.equal(await hostUnregister({ agsRoot: ags, hostId: "host", rerunArgs: args, terminal: first, options: options() }), 3);
+  assert.match(first.text(), /hosts\.yaml\s+registry\s+remove host/);
+  const second = quietTerminal();
+  assert.equal(await hostUnregister({ agsRoot: ags, hostId: "host", rerunArgs: args, terminal: second, options: options({ plan: digestOf(first.text()) }) }), 0, second.text());
+  assert.deepEqual(registry(ags).hosts, []);
+  assert.equal(config(host).agsVersion, "2.0.0");
+  const empty = quietTerminal();
+  hostList({ agsRoot: ags, terminal: empty });
+  assert.equal(empty.text(), "No registered hosts.");
+});
+
+test("CLI: host status, list, update --host and unregister are dispatched", async () => {
+  const ags = withCli(agsFixture());
+  const host = makeHostRepo();
+  await install(ags, host);
+  release(ags, "2.0.1", { files: { "skills/plan-work/references/a.md": "# a2\n" } });
+  assert.match(runAgs(ags, ["host", "list"]).stdout, /^host {2}host {2}2\.0\.0/);
+  assert.match(runAgs(ags, ["host", "status", "--host", "host"]).stdout, /Latest release: 2\.0\.1/);
+  const first = runAgs(ags, ["host", "update", "--host", "host"]);
+  assert.equal(first.code, 3, first.stderr);
+  assert.match(first.stdout, /Rerun: ags host update --host host --plan [0-9a-f]{12}/);
+  const second = runAgs(ags, ["host", "update", "--host", "host", "--plan", digestOf(first.stdout)]);
+  assert.equal(second.code, 0, second.stdout + second.stderr);
+  assert.equal(config(host).agsVersion, "2.0.1");
+  assert.equal(runAgs(ags, ["host", "update", "--host", "host", "--route", host]).code, 2);
+  assert.equal(runAgs(ags, ["host", "unregister"]).code, 2);
 });

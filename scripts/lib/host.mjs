@@ -24,7 +24,7 @@ import {
 import { appendUnreleasedNote } from "./version.mjs";
 import { CONFIG_REL, configText, mergeConfig, missingRequired, newConfig, parseSets, readConfig, setAgsVersion, validateConfig, writeSelection } from "./config.mjs";
 import { detectEvidence } from "./packages.mjs";
-import { planItem, removeFileAt, runOperation, verifyWrites, writeFileAt } from "./operation.mjs";
+import { normalizePlan, planDigest, planItem, removeFileAt, runOperation, verifyWrites, writeFileAt } from "./operation.mjs";
 import { applyExclude, applyMoves, backupExcludeInto, cleanupPrompt, hostConfigState, inspectSetup, prepareItems, resolveHost, setupNotes } from "./prepare.mjs";
 import { analyzeBlock, BLOCK_KEY, buildIndex, EXCLUDE_KEY, inspectExclude, placeBlock, renderAgsBlock } from "./render.mjs";
 import { findHost, loadRegistry, saveRegistry } from "./registry.mjs";
@@ -857,6 +857,103 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
     },
   };
   return op;
+}
+
+export function usageRecordCount(hostRoot) {
+  const buffer = readFileOrNull(abs(hostRoot, ".tmp/ags/reports/usage.jsonl"));
+  return buffer == null ? 0 : buffer.toString("utf8").split("\n").filter((line) => line.trim()).length;
+}
+
+export async function hostStatus({ agsRoot = AGS_ROOT, route, hostId = null, terminal, extraWarnings = () => [] }) {
+  const op = updateOperation({ agsRoot, route, hostId, rerunArgs: hostId ? ["host", "update", "--host", hostId] : ["host", "update", "--route", route] });
+  const hostRoot = op.hostRoot;
+  const configState = hostConfigState(hostRoot);
+  if (!configState) throw new AgsError(`${displayPath(hostRoot)} has no AGS installation. Run ags host install.`);
+  const { data } = readConfig(hostRoot);
+  const installed = data.agsVersion == null ? null : String(data.agsVersion);
+  terminal.log(`Host: ${data.host} at ${posix(hostRoot)}`);
+  terminal.log(`Installed: ${installed ?? "none (interrupted install; run ags host install)"}`);
+  terminal.log(`Latest release: ${latestRelease(agsRoot) ?? "none"}`);
+  terminal.log(`Reporting: ${data.reporting === false ? "off" : "on"}`);
+  terminal.log(`Usage records: ${usageRecordCount(hostRoot)}`);
+  if (installed) {
+    try {
+      const state = op.inspect();
+      const plan = normalizePlan(op.plan(state));
+      const digest = planDigest(plan);
+      const changes = plan.items.filter((item) => item.choices);
+      terminal.log(`Update plan to ${state.version}: ${plan.items.length} item${plan.items.length === 1 ? "" : "s"}, digest ${digest}`);
+      for (const item of plan.items) terminal.log(`- ${item.path}: ${item.choices ? `choose ${item.choices.join("/")}` : item.action}`);
+      terminal.log(`Host changes: ${changes.length ? changes.map((item) => item.path).join(", ") : "none"}`);
+      terminal.log(`Promoted, pending release: ${state.classified.pending.join(", ") || "none"}`);
+      terminal.log(`Ignored: ${state.classified.skipped.join(", ") || "none"}`);
+    } catch (error) {
+      if (!(error instanceof AgsError)) throw error;
+      if (error.missing) terminal.log(`Missing settings: ${error.missing.join(", ")}`);
+      terminal.log(`Update plan unavailable: ${error.message}`);
+    }
+  }
+  for (const line of extraWarnings(hostRoot)) terminal.log(`Warning: ${line}`);
+  return 0;
+}
+
+export function hostList({ agsRoot = AGS_ROOT, terminal }) {
+  const { hosts } = loadRegistry(agsRoot);
+  if (!hosts.length) {
+    terminal.log("No registered hosts.");
+    return 0;
+  }
+  for (const host of hosts) {
+    let version = "missing";
+    if (fs.existsSync(host.path)) {
+      try {
+        version = String(parse(fs.readFileSync(path.join(host.path, ".agents", "ags.yaml"), "utf8"))?.agsVersion ?? "not installed");
+      } catch {
+        version = "unreadable ags.yaml";
+      }
+    }
+    terminal.log(`${host.id}  ${host.name}  ${version}  ${posix(host.path)}`);
+  }
+  return 0;
+}
+
+export function unregisterOperation({ agsRoot = AGS_ROOT, route = null, hostId = null, rerunArgs }) {
+  let hostRoot = null;
+  let id = hostId;
+  if (id == null) {
+    hostRoot = resolveHost(route, { agsRoot, command: "ags host unregister" });
+    id = hostIdAt(hostRoot);
+  }
+  return {
+    name: "unregister",
+    command: "host unregister",
+    rerunArgs,
+    inspect() {
+      const registry = loadRegistry(agsRoot);
+      const entry = (id != null && findHost(registry, { id })) || (hostRoot && findHost(registry, { hostPath: hostRoot }));
+      if (!entry) throw new AgsError(`No registry entry for ${hostId ?? displayPath(hostRoot)}.`);
+      return { entry, root: fs.existsSync(entry.path) ? entry.path : null };
+    },
+    plan(state) {
+      const { entry } = state;
+      return {
+        header: { title: `ags host unregister: ${entry.id}`, operation: "unregister", host: entry.id, notes: [`Removes ${entry.id} (${posix(entry.path)}) with ${entry.promoted.length} promotion and ${entry.ignored.length} ignore records. Host files are not touched.`] },
+        items: [planItem({ path: REGISTRY_KEY, kind: "registry", action: `remove ${entry.id}` })],
+      };
+    },
+    locks: (plan, state) => operationLocks({ hostRoot: state.root, agsRoot }),
+    async apply(ctx) {
+      const registry = loadRegistry(agsRoot);
+      registry.hosts = registry.hosts.filter((host) => host.id !== ctx.state.entry.id);
+      saveRegistry(agsRoot, registry);
+      ctx.done(REGISTRY_KEY);
+      return [`Unregistered ${ctx.state.entry.id}. Its files are unchanged; ags host update would register it again.`];
+    },
+  };
+}
+
+export async function hostUnregister({ agsRoot = AGS_ROOT, route, hostId = null, rerunArgs, terminal, options }) {
+  return runOperation(unregisterOperation({ agsRoot, route, hostId, rerunArgs }), { terminal, ...options });
 }
 
 export async function hostUpdate({ agsRoot = AGS_ROOT, route, hostId = null, to = null, enable = [], disable = [], sets = [], rerunArgs, terminal, options }) {

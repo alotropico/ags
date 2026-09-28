@@ -2,7 +2,7 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
-import { hostInstall, hostUpdate } from "./lib/host.mjs";
+import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "./lib/host.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { AgsError, AGS_ROOT } from "./lib/util.mjs";
 
@@ -107,7 +107,6 @@ COMMANDS.set("host update", {
   usage: "[--route . | --host <id>] [--to X.Y.Z] [--enable <ids>] [--disable <ids>] [--set key=value ...] [--dry-run] [--plan <digest>] [--decide <path>=<choice> ...] [--decide-all <choice>]",
   flags: ["route", "host", "to", "enable", "disable", "set", ...OPERATION_FLAGS],
   run: ({ agsRoot, flags, terminal, command }) => {
-    if (flags.route && flags.host) throw usageError("Pass --route or --host, not both.");
     const options = operationOptions(flags);
     const route = routeOf(flags);
     return hostUpdate({
@@ -118,10 +117,41 @@ COMMANDS.set("host update", {
       enable: csvList(flags.enable),
       disable: csvList(flags.disable),
       sets: flags.set || [],
-      rerunArgs: flags.host ? rerunArgs(command, flags, route).filter((_, index, all) => all[index] !== "--route" && all[index - 1] !== "--route") : rerunArgs(command, flags, route),
+      rerunArgs: hostArgs(command, flags, route),
       terminal,
       options,
     });
+  },
+});
+
+function hostArgs(command, flags, route) {
+  if (flags.route && flags.host) throw usageError("Pass --route or --host, not both.");
+  const args = rerunArgs(command, flags, route);
+  return flags.host ? args.filter((_, index, all) => all[index] !== "--route" && all[index - 1] !== "--route") : args;
+}
+
+COMMANDS.set("host status", {
+  usage: "[--route . | --host <id>]",
+  flags: ["route", "host"],
+  run: ({ agsRoot, flags, terminal, command }) => {
+    hostArgs(command, flags, routeOf(flags));
+    return hostStatus({ agsRoot, route: routeOf(flags), hostId: flags.host ?? null, terminal });
+  },
+});
+
+COMMANDS.set("host list", {
+  usage: "",
+  flags: [],
+  run: ({ agsRoot, terminal }) => hostList({ agsRoot, terminal }),
+});
+
+COMMANDS.set("host unregister", {
+  usage: "(--route . | --host <id>) [--plan <digest>]",
+  flags: ["route", "host", "plan", "dry-run"],
+  run: ({ agsRoot, flags, terminal, command }) => {
+    if (!flags.route && !flags.host) throw usageError("Pass --route or --host.");
+    const route = routeOf(flags);
+    return hostUnregister({ agsRoot, route, hostId: flags.host ?? null, rerunArgs: hostArgs(command, flags, route), terminal, options: operationOptions(flags) });
   },
 });
 
