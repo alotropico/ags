@@ -745,7 +745,7 @@ Sources read on 2026-09-28: D2 `.agents/guidance/code-idioms.md` (D2's `.agents/
 
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Craft conventions for TypeScript and React; prefer examples over doctrine | D2 and HXP `code-idioms.md`, introduction | AGS | `rules/code-idioms.md`, introduction | |
+| 1 | Craft conventions for TypeScript and React; prefer examples over doctrine | D2 and HXP `code-idioms.md`, introduction | AGS | `rules/code-idioms.md`, introduction | The rule's description covers any code, so "Changes" applies beyond TypeScript and React |
 | 2 | Verification command pointers (`npm run check:types && npm run lint`; `yarn type-check && yarn lint`) and links to `repository-profile.md` | D2 and HXP `code-idioms.md`, introduction | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23); the shared rule points to the `check` skill (row 49) |
 | 3 | Do not enforce the idioms on untouched legacy code | D2 `code-idioms.md`, "Scope gate" | AGS | `rules/code-idioms.md`, "Changes" | |
 | 4 | D2 scope gate paths: modern `src/pages/`, `src/page-components/`, `src/form_components/`, `src/hooks/`, `src/stores/`; legacy `src/widgets/`, `src/form_features/`, class forms with `props.context`, canvas internals | D2 `code-idioms.md`, "Scope gate" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host-specific scope gate (P23) |

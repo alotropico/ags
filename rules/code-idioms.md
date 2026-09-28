@@ -1,10 +1,10 @@
 ---
-description: Writing or reviewing TypeScript or React code.
+description: Writing or reviewing code, including TypeScript and React idioms.
 ---
 
 # Code idioms
 
-Craft defaults for TypeScript and React. Follow the examples rather than applying each line mechanically. Path aliases, libraries, folder layout and verification commands are repository facts, and the established style of the surrounding code wins on them as well.
+Craft defaults for code. "Changes" applies to any code; the later sections are TypeScript and React idioms. Follow the examples rather than applying each line mechanically. Path aliases, libraries, folder layout and verification commands are repository facts, and the established style of the surrounding code wins on them as well.
 
 ## Changes
 

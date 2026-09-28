@@ -1,6 +1,7 @@
 ## Unreleased
 - Prose pass: remove repetition and contradictions across rules and skills, without changing behavior.
 - Review correction: git.ticketPrefix is described as the ticket prefix for branch names and merge request titles, matching commit-granular's subjects without ticket ids.
+- Review correction: code-idioms applies its general code rules (touched lines, formatting, file size, boundaries, TODOs, secrets) to any code, not only TypeScript and React.
 
 ## 2.1.0 - 2026-09-28
 - New opt-in skill commit-granular: split work into small, well-scoped commits with the shared subject and body format.
