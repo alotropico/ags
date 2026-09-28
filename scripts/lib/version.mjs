@@ -140,7 +140,7 @@ export async function versionNote({ agsRoot, text, terminal }) {
   return 0;
 }
 
-function releaseCommit(agsRoot, version) {
+export function releaseCommit(agsRoot, version) {
   const log = git(["log", "--format=%H%x09%s", "HEAD"], agsRoot).stdout.split(/\r?\n/);
   return log.map((line) => line.split("\t")).find(([, subject]) => subject === `Release: ${version}`)?.[0] ?? null;
 }

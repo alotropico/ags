@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
 import { hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
+import { doctor } from "./lib/doctor.mjs";
 import { skillsList } from "./lib/skills.mjs";
 import { writeSnapshot } from "./lib/snapshot.mjs";
 import { readConfig } from "./lib/config.mjs";
@@ -246,6 +247,15 @@ COMMANDS.set("skills list", {
   run: ({ agsRoot, rest, terminal }) => {
     if (rest.length) throw usageError(`Unknown command: skills list ${rest.join(" ")}`);
     return skillsList({ agsRoot, terminal });
+  },
+});
+
+COMMANDS.set("doctor", {
+  usage: "",
+  flags: [],
+  run: ({ agsRoot, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: doctor ${rest.join(" ")}`);
+    return doctor({ agsRoot, terminal });
   },
 });
 

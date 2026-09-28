@@ -147,7 +147,7 @@ export function toolConfigs(root) {
 
 const TMP_ENTRY = /^\/?\.tmp(\/(\*\*?)?)?$/;
 
-export function findings(root) {
+export function harnessTmpEntries(root) {
   const found = [];
   for (const rel of HARNESS_IGNORE_FILES) {
     const abs = path.join(root, rel);
@@ -160,6 +160,11 @@ export function findings(root) {
         }
       });
   }
+  return found;
+}
+
+export function findings(root) {
+  const found = harnessTmpEntries(root);
   const result = git(["check-ignore", "--no-index", "-v", "--", "AGENTS.md", ".agents/", ".agents/ags.yaml"], root, { allow: [0, 1] });
   for (const line of result.stdout.split(/\r?\n/).filter(Boolean)) {
     const [source, target] = line.split("\t");
