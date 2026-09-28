@@ -1,4 +1,6 @@
 ## Unreleased
+
+## 2.0.0 - 2026-09-28
 - Hosts hold installed copies of released AGS material; AGS is no longer read at runtime.
 - New host lifecycle: ags host prepare, install, update, status, list and unregister, with plans, digests, bound decisions, locks, backups and idempotent reruns.
 - Host edits to AGS files are reviewed on each run: promote, restore, ignore or disable.
