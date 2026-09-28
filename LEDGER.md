@@ -275,7 +275,7 @@ Dispositions, exactly one per row:
 
 ## Run 2: Watcher backup
 
-Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-144501-prepare/` (taken from Watcher commit `d40179a`), named relative to that folder. Destinations prefixed "Watcher" are paths in the Watcher repository. `Migrate later` rows wait for the Run 2 consolidation (step 4) and are resolved in place.
+Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-144501-prepare/` (taken from Watcher commit `d40179a`), named relative to that folder. Destinations prefixed "Watcher" are paths in the Watcher repository. Rows first written as `Migrate later` were resolved in place during the Run 2 consolidation (step 4) and its audit.
 
 ### Before prepare: Graphify and Fallow
 
@@ -392,7 +392,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Forward drift and explicit non-candidates | "Forward drift", "Explicit non-candidates" | Host | Watcher `.agents/local/candidates.md` | |
-| 2 | Candidates-list format and how candidates mature | "How candidates mature" | Migrate later | Watcher `.agents/local/candidates.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 2 | Candidates-list format and how candidates mature | "How candidates mature" | Removed | None | Promotion through AGS and `BACKLOG.md` replace the candidates workflow; step 5.1 keeps Watcher's substantive candidate entries |
 
 ### _agents/skills/
 
