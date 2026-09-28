@@ -265,6 +265,22 @@ test("doctor: settings, an interrupted install, a missing tag and an unregistere
   assert.deepEqual(warnings, ["Host host is not registered; the next update registers it."]);
 });
 
+test("doctor: a registry entry at another path or under another id, and a missing .tmp/, are reported", async () => {
+  const { ags, host } = await installedHost();
+  const moved = path.join(path.dirname(host), "old-place");
+  writeFiles(ags, { "hosts.yaml": stringify({ format: 2, hosts: [{ id: "host", name: "host", path: moved, ignored: [], promoted: [] }] }) });
+  assert.ok(has(doctorHost(ags, host).warnings, /^The registry records host host at .*old-place; the next update moves it to /));
+
+  writeFiles(ags, { "hosts.yaml": stringify({ format: 2, hosts: [{ id: "other", name: "other", path: host, ignored: [], promoted: [] }] }) });
+  assert.ok(has(doctorHost(ags, host).errors, /^Registry entry other holds .*, but \.agents\/ags\.yaml says host host\./));
+
+  writeFiles(ags, { "hosts.yaml": stringify({ format: 2, hosts: [{ id: "host", name: "host", path: host, ignored: [], promoted: [] }] }) });
+  fs.rmSync(path.join(host, ".tmp"), { recursive: true, force: true });
+  const { errors, warnings } = doctorHost(ags, host);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(warnings, [".tmp/ does not exist."]);
+});
+
 test("doctor: a host item using an id new at the latest release is an error", async () => {
   const { ags, host } = await installedHost();
   const catalog = sampleCatalog();
