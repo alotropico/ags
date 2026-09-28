@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "./lib/host.mjs";
+import { readConfig } from "./lib/config.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { versionBump, versionNote, versionShow } from "./lib/version.mjs";
 import { AgsError, AGS_ROOT, gitRoot, posix } from "./lib/util.mjs";
@@ -201,6 +202,23 @@ COMMANDS.set("diff", {
   usage: "<mode> <name> [args] [--route .]",
   flags: ["route"],
   run: ({ flags, rest, terminal }) => runSkillScript({ route: routeOf(flags), skill: "write-commit-diff", script: "write-commit-diff.mjs", args: rest, terminal }),
+});
+
+COMMANDS.set("check", {
+  usage: "[--route .] [--only type,lint,prettier]",
+  flags: ["route", "only"],
+  run: ({ flags, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: check ${rest.join(" ")}`);
+    const kinds = ["type", "lint", "prettier"];
+    const only = flags.only ? csvList(flags.only) : kinds;
+    const unknown = only.filter((kind) => !kinds.includes(kind));
+    if (unknown.length) throw usageError(`--only takes type, lint and prettier: ${unknown.join(", ")}`);
+    const route = routeOf(flags);
+    const hostRoot = gitRoot(route);
+    const checks = fs.existsSync(path.join(hostRoot, ".agents", "ags.yaml")) ? readConfig(hostRoot).data.checks || {} : {};
+    const args = only.flatMap((kind) => (checks[kind] ? [`--${kind}`, String(checks[kind])] : []));
+    return runSkillScript({ route, skill: "check", script: "run-checks.mjs", args, terminal });
+  },
 });
 
 function helpText() {

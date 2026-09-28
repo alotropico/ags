@@ -4,8 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { commitCount, emptyTreeId, writeDiff } from "../skills/write-commit-diff/scripts/write-commit-diff.mjs";
-import { runChecks } from "../scripts/lib/checks.mjs";
-import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
+import { detectPackageManager, isPackageScriptKey, packageScriptInvocation, runChecks } from "../skills/check/scripts/run-checks.mjs";
 import { main } from "../scripts/ags.mjs";
 import { git, makeHostRepo, quietTerminal, REAL_ROOT, tempDir } from "./helpers/fixtures.mjs";
 
@@ -266,4 +265,26 @@ test("check script names reject shell metacharacters before cmd.exe", () => {
     assert.deepEqual(command.args, ["run", good]);
     assert.deepEqual(command.fallback.slice(-3), ["npm.cmd", "run", good]);
   }
+});
+
+test("check: the script imports only node: modules; ags check passes the host's checks settings to the installed script", async () => {
+  const script = path.join(REAL_ROOT, "skills", "check", "scripts", "run-checks.mjs");
+  assert.ok(nodeImports(script).every((name) => name.startsWith("node:")));
+  const host = makeHostRepo({ name: "check-alias" });
+  writePackage(host, { typecheck: "node -e \"process.exit(0)\"", lint: "node -e \"process.exit(3)\"" });
+  fs.mkdirSync(path.join(host, ".agents"), { recursive: true });
+  fs.writeFileSync(path.join(host, ".agents", "ags.yaml"), "format: 2\nhost: h\nagsVersion: 2.0.0\nchecks:\n  type: typecheck\n  lint: lint\n  prettier: \"\"\n");
+  await assert.rejects(main(["check", "--route", host], { terminal: quietTerminal() }), /The check skill is not installed/);
+  installSkillScript(host, "check", "run-checks.mjs");
+  const all = quietTerminal();
+  assert.equal(await main(["check", "--route", host], { terminal: all }), 1);
+  assert.match(all.text(), /type: passed \(npm(\.cmd)? run typecheck\)/);
+  assert.match(all.text(), /lint: failed/);
+  assert.match(all.text(), /prettier: not-configured/);
+  const only = quietTerminal();
+  assert.equal(await main(["check", "--route", host, "--only", "type"], { terminal: only }), 0);
+  assert.match(only.text(), /lint: not-configured/);
+  await assert.rejects(main(["check", "--route", host, "--only", "style"], { terminal: quietTerminal() }), (error) => error.exitCode === 2);
+  const direct = spawnSync(process.execPath, [script, "--bogus", "x"], { cwd: host, encoding: "utf8" });
+  assert.equal(direct.status, 2);
 });
