@@ -103,7 +103,8 @@ test("doctor: the CLI exits 0 with no findings and 1 on an error", () => {
   fs.writeFileSync(path.join(ags, "CHANGELOG.md"), "# Changelog\n");
   const broken = runAgs(ags, ["doctor"]);
   assert.equal(broken.code, 1);
-  assert.match(broken.stdout, /Error: CHANGELOG\.md must start with ## Unreleased\./);
+  assert.match(broken.stderr, /Error: CHANGELOG\.md must start with ## Unreleased\./);
+  assert.doesNotMatch(broken.stdout, /Error: /);
   assert.match(broken.stdout, /1 error, 0 warnings\./);
 });
 
@@ -150,9 +151,11 @@ test("doctor: a freshly installed host reports nothing, through the library and 
   writeFiles(host, { ".agents/local/stray.md": "# stray\n" });
   const status = runAgs(ags, ["host", "status", "--route", host]);
   assert.equal(status.code, 0, status.stdout + status.stderr);
-  assert.match(status.stdout, /Warning: \.agents\/local\/stray\.md: no skill stray is installed/);
+  assert.match(status.stderr, /Warning: \.agents\/local\/stray\.md: no skill stray is installed/);
+  assert.doesNotMatch(status.stdout, /Warning: /);
   const warned = runAgs(ags, ["doctor", "--route", host]);
   assert.equal(warned.code, 0);
+  assert.match(warned.stderr, /Warning: \.agents\/local\/stray\.md/);
   assert.match(warned.stdout, /0 errors, 1 warning\./);
 });
 

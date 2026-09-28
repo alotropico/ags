@@ -372,8 +372,8 @@ export function hostDoctorWarnings(agsRoot, hostRoot) {
 
 function printSection(terminal, out) {
   for (const line of out.info) terminal.log(line);
-  for (const line of out.errors) terminal.log(`Error: ${line}`);
-  for (const line of out.warnings) terminal.log(`Warning: ${line}`);
+  for (const line of out.errors) terminal.warn(`Error: ${line}`);
+  for (const line of out.warnings) terminal.warn(`Warning: ${line}`);
 }
 
 function summary(terminal, reports) {

@@ -73,6 +73,13 @@ export function formatPlan(plan, digest) {
   return lines;
 }
 
+export function showPlan(terminal, plan, digest) {
+  for (const line of formatPlan(plan, digest)) {
+    if (line.startsWith("Warning: ")) terminal.warn(line);
+    else terminal.log(line);
+  }
+}
+
 export function quoteArg(value) {
   const text = String(value);
   return /^[\w@%+=:,./\\-]+$/.test(text) ? text : `"${text.replaceAll('"', '\\"')}"`;
@@ -193,7 +200,7 @@ function rerunArgs(op, digest, { decisions = new Map(), decideAll = null, pendin
 }
 
 function printNeedsDecision(terminal, plan, digest, args, pending) {
-  for (const line of formatPlan(plan, digest)) terminal.log(line);
+  showPlan(terminal, plan, digest);
   if (pending.length) terminal.log(`Decisions needed: ${pending.map((item) => item.path).join(", ")}`);
   terminal.log(`Rerun: ${commandLine(args)}`);
   terminal.log(AGENT_LINE);
@@ -205,11 +212,11 @@ export async function runOperation(op, { terminal = realTerminal(), dryRun = fal
   let digest = planDigest(plan);
 
   if (!planWrites(plan)) {
-    for (const line of formatPlan(plan, digest)) terminal.log(line);
+    showPlan(terminal, plan, digest);
     return 0;
   }
   if (dryRun) {
-    for (const line of formatPlan(plan, digest)) terminal.log(line);
+    showPlan(terminal, plan, digest);
     return 0;
   }
 
@@ -233,7 +240,7 @@ export async function runOperation(op, { terminal = realTerminal(), dryRun = fal
       printNeedsDecision(terminal, plan, digest, rerunArgs(op, digest, { pending }), pending);
       return 3;
     }
-    for (const line of formatPlan(plan, digest)) terminal.log(line);
+    showPlan(terminal, plan, digest);
     const answered = await askDecisions(terminal, plan, new Map(bound?.decisions));
     if (answered === STOP) {
       terminal.log("Stopped. Nothing was written.");
@@ -261,7 +268,7 @@ export async function runOperation(op, { terminal = realTerminal(), dryRun = fal
       plan = nextPlan;
       digest = nextDigest;
       if (!planWrites(plan)) {
-        for (const line of formatPlan(plan, digest)) terminal.log(line);
+        showPlan(terminal, plan, digest);
         return 0;
       }
       terminal.warn("The plan changed before it could be applied; earlier decisions are discarded.");
@@ -270,7 +277,7 @@ export async function runOperation(op, { terminal = realTerminal(), dryRun = fal
         printNeedsDecision(terminal, plan, digest, rerunArgs(op, digest, { pending }), pending);
         return 3;
       }
-      for (const line of formatPlan(plan, digest)) terminal.log(line);
+      showPlan(terminal, plan, digest);
       const answered = await askDecisions(terminal, plan, new Map());
       if (answered === STOP) {
         terminal.log("Stopped. Nothing was written.");

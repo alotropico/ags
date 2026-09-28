@@ -930,7 +930,7 @@ export async function hostStatus({ agsRoot = AGS_ROOT, route, hostId = null, ter
       terminal.log(`Update plan unavailable: ${error.message}`);
     }
   }
-  for (const line of extraWarnings(hostRoot)) terminal.log(`Warning: ${line}`);
+  for (const line of extraWarnings(hostRoot)) terminal.warn(`Warning: ${line}`);
   return 0;
 }
 
