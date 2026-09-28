@@ -1,4 +1,5 @@
 ## Unreleased
+- Prose pass: remove repetition and contradictions across rules and skills, without changing behavior.
 
 ## 2.1.0 - 2026-09-28
 - New opt-in skill commit-granular: split work into small, well-scoped commits with the shared subject and body format.

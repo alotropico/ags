@@ -919,3 +919,12 @@ AGS items with no variant in any other Run 2 source (spec Appendix H, group 5). 
 | 3 | `report-usage` skill | `v2.0.1:skills/report-usage/SKILL.md` | AGS | `skills/report-usage/SKILL.md` | Kept; no other variant |
 | 4 | `check` skill and its script | `v2.0.1:skills/check/` | AGS | `skills/check/SKILL.md`, `skills/check/scripts/run-checks.mjs` | Kept; no other variant |
 | 5 | `ui-library-css` skill | `v2.0.1:skills/ui-library-css/SKILL.md` | AGS | `skills/ui-library-css/SKILL.md` | Kept; no other variant |
+
+## Run 2: prose pass
+
+Merges and removals of the wording pass (plan step 6.1, P25). Sources are AGS paths at `v2.1.0`. No id, setting key, `params`, `includes` or behavior changed.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Host guidance wins on repository facts such as path aliases and verification commands | `v2.1.0:rules/code-idioms.md`, intro | Removed | None | Repeated in `rules/core.md`; the sentence keeps that the surrounding code's style also wins |
+| 2 | Shared and presentational components stay prop-driven; a composition hook does not replace props at reusable boundaries | `v2.1.0:rules/code-idioms.md`, "Feature composition hooks" 2 and "State" 3 | AGS | `rules/code-idioms.md`, "State"; "Feature composition hooks" points to it | Merged into the "State" exception |

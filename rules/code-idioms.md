@@ -4,7 +4,7 @@ description: Writing or reviewing TypeScript or React code.
 
 # Code idioms
 
-Craft defaults for TypeScript and React. Follow the examples rather than applying each line mechanically. Path aliases, libraries, folder layout and verification commands are repository facts: host guidance and the established style of the surrounding code win on them.
+Craft defaults for TypeScript and React. Follow the examples rather than applying each line mechanically. Path aliases, libraries, folder layout and verification commands are repository facts, and the established style of the surrounding code wins on them as well.
 
 ## Changes
 
@@ -110,8 +110,7 @@ function OrdersTable() {
 }
 ```
 
-- A composition hook coordinates one owned workflow. It must not silently arbitrate between unrelated sources of truth merely to reduce prop count.
-- It does not replace props at reusable boundaries: shared and presentational components stay prop-driven.
+- A composition hook coordinates one owned workflow. It must not silently arbitrate between unrelated sources of truth merely to reduce prop count, and it does not replace props at reusable boundaries (see "State").
 
 ## State
 
@@ -122,7 +121,7 @@ function OrdersTable() {
 
 - Never mirror server state into a store or local state; read it from the query hook wherever it is needed.
 - Components do not call the network directly; they go through the repository's data hooks, stores or services.
-- No prop drilling of data a component can read from a store, query, router or other hook. Reusable shared components are the exception: they stay store-agnostic and take data and callbacks through props.
+- No prop drilling of data a component can read from a store, query, router or other hook. Reusable shared and presentational components are the exception: they stay store-agnostic and take data and callbacks through props.
 - Ask before introducing a new React Context; prefer the existing store or query cache. Do not add `window` globals.
 - Never mutate state in place.
 
