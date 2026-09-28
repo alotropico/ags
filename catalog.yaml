@@ -30,7 +30,7 @@ skills:
   - id: css-cleanup
     install: opt-in
     params: [checks.type, checks.lint, checks.prettier]
-    keywords: [css, cleanup, unused, modules]
+    keywords: [css, cleanup, unused, modules, audit, variables]
   - id: css-theme-tokens
     install: opt-in
     keywords: [css, theme, tokens]

@@ -398,7 +398,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 3 | `css-authoring-conventions`: preserve global marker classes; floating surfaces layer above their owner | same file, "Selectors and naming", "Markup and components" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" (marker classes), "Markup and composition" (floating surfaces) | |
 | 4 | `css-cleanup`: grep audit, confirm, remove, verify | `skills/css-cleanup/SKILL.md` | AGS | `skills/css-cleanup/SKILL.md` | |
 | 5 | `css-cleanup`: no audit script in `package.json`; importers under `src/` | same file | Host | Watcher `.agents/local/css-cleanup.md` | |
-| 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | Migrate later | Watcher `.agents/local/css-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | AGS | `skills/css-cleanup/SKILL.md`, "Confirm and remove" (introduction and step 2) | |
 | 7 | `css-theme-tokens` Watcher variant | `skills/css-theme-tokens/SKILL.md` | Migrate later | Watcher `.agents/skills/watcher-css-theme-tokens/SKILL.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
 | 8 | `git-cleanup`: trigger, scope, fetch and prune, stale-based, confirm before delete, preview of unpushed work | `skills/git-cleanup/SKILL.md` | AGS | `skills/git-cleanup/SKILL.md` | |
 | 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference", "Exclusions" | The 30 days, the protected names and the prefix are shared text; `origin/main` derives from `git.mainBranch` and the remote is read from Git; the Watcher host note is deleted at step 5.1 |
@@ -566,3 +566,30 @@ Sources: `<MS>` = `meta/templates/ags/shared/skills/git-cleanup/SKILL.md`; D2 = 
 | 20 | Orphaned `backup-*` branches (original gone, tip stale) listed separately | HXP, "Level 2" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 3 | Marked in the level 3 preview; removed only when named, because backup branches are protected (step 4.4) |
 | 21 | Level 3 preview: unpushed or no-upstream branches, stashes, backups that may hold unique work; remove only named items | `<MS>`, D2, HXP, "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 3 | |
 | 22 | Preview-only mode: fetch, print all levels, delete nothing | HXP, "Dry-run / preview mode" | AGS | `skills/git-cleanup/SKILL.md`, last paragraph | |
+
+### css-cleanup
+
+Sources: `<MS>` = `meta/templates/ags/shared/skills/css-cleanup/SKILL.md`; D2 = `designer2/.agents/skills/css-cleanup/SKILL.md` (same text as `<MS>`); HXP = `hxpoc/.agents/skills/css-cleanup/SKILL.md`; `<PS>` = `~/.cursor/skills/css-audit/SKILL.md` (personal, merged here per P21). All read on 2026-09-28.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Scope gate paths: modern modules under `src/page-components/`, `src/form_components/`, `src/pages/`; caution with legacy widgets and `src/styles/` | `<MS>`, D2, "Scope gate" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
+| 2 | Provenance line "distilled from archived on-demand css-cleanup.mdc" | `<MS>`, D2, first paragraph | Removed | None | Provenance only; states no behavior |
+| 3 | Audit only first; never bulk auto-fix on the first pass | `<MS>`, D2, "Workflow" 1 | AGS | `skills/css-cleanup/SKILL.md`, "Report" | Merged with `<PS>` row 14 |
+| 4 | Remove in small batches | `<MS>`, D2, "Workflow" 4 | AGS | `skills/css-cleanup/SKILL.md`, "Confirm and remove" 4 | |
+| 5 | Strip dead TSX references by deleting the prop, never leaving `className=""` | `<MS>`, D2, "Workflow" 4 | AGS | `skills/css-cleanup/SKILL.md`, "Confirm and remove" 5 | Reconciled with "add a missing class": add it when the element needs the styling, else delete the dead prop |
+| 6 | Verify with `npm run check:types` and `npm run lint` (D2) or `yarn type-check && yarn lint` (HXP) | `<MS>`, D2, "Workflow" 5; HXP, "Step 4" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Their `checks.*` values at install (P23); the shared "Verify" reads Host settings |
+| 7 | Skip auto-removal for shared or global modules, dynamic access, and legacy string class names beside CSS modules | `<MS>`, D2, "Skip auto-removal for" | AGS | `skills/css-cleanup/SKILL.md`, "Scope" | Generic wording; D2's `src/styles/` is row 1 |
+| 8 | No dedicated CSS-module audit script in `package.json` | HXP, introduction | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP fact (P23); the shared "Established command" checks `package.json` |
+| 9 | Walk `src/**/*.module.scss`; the `rg -l` importer command over `src` and `tests`; binding names such as `tableStyle` | HXP, "Step 1" | AGS | `skills/css-cleanup/SKILL.md`, "Scope", "Grep audit" 1 and 2 | |
+| 10 | Prefer module-scoped verification over a full production build unless asked | HXP, "Step 4" | AGS | `skills/css-cleanup/SKILL.md`, "Verify" | |
+| 11 | Scope from the prompt, default the whole client styles tree | `<PS>`, "Procedure" 1 | AGS | `skills/css-cleanup/SKILL.md`, "Scope" | |
+| 12 | Global classes: grep raw names across templates and TS or JS, including concatenation and `classNames(...)`; SCSS variables and custom properties across all style files | `<PS>`, "Procedure" 2 | AGS | `skills/css-cleanup/SKILL.md`, "Grep audit" | Custom properties are also searched in TS or TSX |
+| 13 | Classify unused, suspicious, used | `<PS>`, "Procedure" 3 | AGS | `skills/css-cleanup/SKILL.md`, "Grep audit" | |
+| 14 | Report with file and line before any deletion | `<PS>`, description, "Procedure" 4 | AGS | `skills/css-cleanup/SKILL.md`, "Report" | |
+| 15 | Report path `.cursor/records/YYMMDD-styles_unused_<scope>.md` | `<PS>`, "Procedure" 4 | Removed | None | `tmp-conventions` sets `.tmp/records/YYYY-MM-DD-kebab-slug.md` (consolidation rule 1); the skill writes `.tmp/records/YYYY-MM-DD-css-audit-<scope>.md` |
+| 16 | Delete only after confirmation, or when explicitly asked to audit and fix in one pass; never delete suspicious entries unverified | `<PS>`, "Procedure" 5 | AGS | `skills/css-cleanup/SKILL.md`, "Report", "Confirm and remove" 3 | |
+| 17 | Redundant overrides as an audit target | `<PS>`, description | AGS | `skills/css-cleanup/SKILL.md`, "Grep audit" | Defined as a value the cascade already gives, or one always overridden later in the same scope |
+| 18 | Read the project's own `css-cleanup.mdc` or token rules first; they take precedence | `<PS>`, introduction | AGS | `rules/core.md` (host guidance and `.agents/local/<skill-name>.md` win) | |
+| 19 | `disable-model-invocation: true` | `<PS>`, frontmatter | Removed | None | P18; the description says "Use only when the user asks" |
+| 20 | Provenance line "promotes the per-project workflow to an invocable skill" | `<PS>`, introduction | Removed | None | Provenance only; states no behavior |

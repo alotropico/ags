@@ -4,6 +4,7 @@
 - ship now judges the branch, creates one when needed, commits through commit-granular, pushes, targets the right branch and prepares the merge request title and review material.
 - git-cleanup consolidates the host variants: stale-branch levels with confirmation before each destructive step.
 - css-authoring-conventions consolidates the host variants into one shared version.
+- css-cleanup consolidates the host variants and the personal css-audit: report first, then remove unused selectors, variables and redundant overrides.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`
