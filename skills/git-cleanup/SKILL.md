@@ -13,7 +13,7 @@ description: Inspect and clean stale local Git branches in levels, with explicit
 
 Read these keys from `.agents/ags.yaml` at the repository root before acting. Use each value exactly as written; never guess one. If a required key is missing, stop and ask the user.
 
-- `git.mainBranch` (required): the trunk branch that feature branches start from and merge into. It is protected and never deleted.
+- `git.mainBranch` (required): the trunk branch that feature branches start from and merge into.
 
 ## Remote and main reference
 

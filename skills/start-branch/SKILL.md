@@ -41,4 +41,4 @@ Read these keys from `.agents/ags.yaml` at the repository root before acting. Us
 ## Do not
 
 - Commit, push or open a merge request. `ship` does that when the user asks to ship.
-- Invent a ticket id or a branch name the user must choose.
+- Invent a branch name the user must choose.

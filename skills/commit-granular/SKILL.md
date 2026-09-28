@@ -7,11 +7,9 @@ description: Commit working-tree changes as a series of small, well-scoped commi
 
 **Trigger:** The user asks to commit, to commit granularly, or to split changes into commits; or `ship` commits the work it ships.
 
-Host guidance wins on formats. When `AGENTS.md`, a host rule or a host note states a different kind list, subject shape or body rule, follow it.
-
 ## When to commit
 
-Commit only when the user asks for it, directly or by asking to ship, which includes committing. Finishing a task, a passing check or the end of a turn is not a request, and do not offer a commit as a closing habit. A request to push or publish what is already committed is not a request to commit.
+Commit only when the user asks for it, directly or by asking to ship. Finishing a task, a passing check or the end of a turn is not a request, and do not offer a commit as a closing habit. A request to push or publish what is already committed is not a request to commit.
 
 ## Procedure
 

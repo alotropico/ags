@@ -928,3 +928,8 @@ Merges and removals of the wording pass (plan step 6.1, P25). Sources are AGS pa
 | --- | --- | --- | --- | --- | --- |
 | 1 | Host guidance wins on repository facts such as path aliases and verification commands | `v2.1.0:rules/code-idioms.md`, intro | Removed | None | Repeated in `rules/core.md`; the sentence keeps that the surrounding code's style also wins |
 | 2 | Shared and presentational components stay prop-driven; a composition hook does not replace props at reusable boundaries | `v2.1.0:rules/code-idioms.md`, "Feature composition hooks" 2 and "State" 3 | AGS | `rules/code-idioms.md`, "State"; "Feature composition hooks" points to it | Merged into the "State" exception |
+| 3 | The main branch is protected and never deleted | `v2.1.0:skills/git-cleanup/SKILL.md`, "Host settings" | Removed | None | Repeated in `skills/git-cleanup/SKILL.md`, "Exclusions"; the key line now follows spec Appendix D |
+| 4 | The main branch is the default merge request target | `v2.1.0:skills/ship/SKILL.md`, "Host settings" | Removed | None | Repeated in `skills/ship/SKILL.md`, "4. Target"; the key line now follows spec Appendix D |
+| 5 | Asking to ship is the request to commit | `v2.1.0:skills/ship/SKILL.md`, "5. Commit" | Removed | None | Repeated in `skills/commit-granular/SKILL.md`, "Trigger" and "When to commit" |
+| 6 | Host guidance wins on the kind list, subject shape and body rule | `v2.1.0:skills/commit-granular/SKILL.md`, intro | Removed | None | Repeated in `rules/core.md` (host guidance wins on formats) |
+| 7 | Do not invent a ticket id | `v2.1.0:skills/start-branch/SKILL.md`, "Do not" 2 | Removed | None | Repeated in `skills/start-branch/SKILL.md`, "Branch name" 3 |

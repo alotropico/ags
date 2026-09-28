@@ -13,7 +13,7 @@ Companions: [`start-branch`](../start-branch/SKILL.md) creates the branch, and [
 
 Read these keys from `.agents/ags.yaml` at the repository root before acting. Use each value exactly as written; never guess one. If a required key is missing, stop and ask the user.
 
-- `git.mainBranch` (required): the trunk branch that feature branches start from and merge into. It is the default merge request target.
+- `git.mainBranch` (required): the trunk branch that feature branches start from and merge into.
 - `git.ticketPrefix`: prefix for ticket ids in branch names and commit subjects. With `CORE-`, a branch is `CORE-1234-short-slug`. If the key is empty or missing, leave the ticket part out: `short-slug`.
 
 ## 1. Inspect
@@ -36,7 +36,7 @@ The merge request targets the main branch from Host settings, unless the user na
 
 ## 5. Commit
 
-Asking to ship is the request to commit: commit the uncommitted changes that belong to this work through `commit-granular`. Leave changes that belong to other work uncommitted and report them.
+Commit the uncommitted changes that belong to this work through `commit-granular`. Leave changes that belong to other work uncommitted and report them.
 
 ## 6. Optional review
 
