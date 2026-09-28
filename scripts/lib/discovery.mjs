@@ -149,5 +149,10 @@ export function findings(root) {
     if (/^.*:\d+:!/.test(source)) continue;
     found.push(`An ignore rule matches ${posix(target)} (${source}). Install refuses while git ignores AGENTS.md or .agents/.`);
   }
+  for (const rel of [...SETUP_FOLDERS, ...SETUP_FILES]) {
+    if (lstat(path.join(root, ...rel.split("/")))?.isSymbolicLink()) {
+      found.push(`${rel} is a link or junction. Prepare never follows or moves links; move or remove it by hand, then rerun.`);
+    }
+  }
   return found;
 }

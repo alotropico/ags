@@ -281,6 +281,24 @@ test("prepare: an ignore rule matching AGENTS.md or .agents/ is a finding", asyn
   assert.doesNotMatch(terminal.text(), /matches AGENTS\.md/);
 });
 
+test("prepare: a setup entry that is a link is a finding and is not moved", async () => {
+  const host = setupHost({ "AGENTS.md": "x\n" });
+  const outside = fs.mkdtempSync(path.join(path.dirname(host), "ags-linked-rules-"));
+  fs.writeFileSync(path.join(outside, "r.mdc"), "rule\n");
+  fs.mkdirSync(path.join(host, ".cursor"), { recursive: true });
+  try {
+    fs.symlinkSync(outside, path.join(host, ".cursor", "rules"), "junction");
+  } catch (error) {
+    if (error.code === "EPERM" || error.code === "EACCES") return;
+    throw error;
+  }
+  const first = await prepare(host);
+  assert.match(first.terminal.text(), /Finding: \.cursor\/rules is a link or junction\. Prepare never follows or moves links/);
+  assert.doesNotMatch(first.terminal.text(), /r\.mdc/);
+  assert.equal((await prepare(host, { plan: digestOf(first.terminal.text()) })).code, 0);
+  assert.equal(fs.readFileSync(path.join(outside, "r.mdc"), "utf8"), "rule\n");
+});
+
 test("prepare: an edited exclude region asks for restore, exit 3 without a terminal", async () => {
   const host = setupHost({ "AGENTS.md": "x\n" });
   fs.writeFileSync(path.join(host, ".git", "info", "exclude"), "*.log\n# AGS:BEGIN\n/.tmpx/\n# AGS:END\n");
