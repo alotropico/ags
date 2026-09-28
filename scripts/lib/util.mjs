@@ -249,27 +249,6 @@ export function validBranchName(name) {
   return result.status === 0;
 }
 
-export function ensureHostTmpIgnored(repo) {
-  const result = git(["check-ignore", "--", ".tmp"], repo, { allow: [0, 1] });
-  if (result.status === 0) return { ignored: true, changed: false };
-  const gitPath = git(["rev-parse", "--git-path", "info/exclude"], repo).stdout.trim();
-  const excludeFile = path.isAbsolute(gitPath) ? gitPath : path.resolve(repo, gitPath);
-  fs.mkdirSync(path.dirname(excludeFile), { recursive: true });
-  const block = "# AGS:BEGIN\n/.tmp/\n# AGS:END\n";
-  const current = fs.existsSync(excludeFile) ? fs.readFileSync(excludeFile, "utf8") : "";
-  if (current.includes("# AGS:BEGIN\n/.tmp/\n# AGS:END")) return { ignored: true, changed: false, excludeFile };
-  const next = current.length === 0 || current.endsWith("\n") ? `${current}${block}` : `${current}\n${block}`;
-  fs.writeFileSync(excludeFile, next);
-  return { ignored: true, changed: true, excludeFile };
-}
-
-export function commandText(value, label) {
-  if (typeof value !== "string" || !value.trim() || /[\r\n]/.test(value)) {
-    throw new AgsError(`${label} must be a nonempty single-line command`);
-  }
-  return value;
-}
-
 export function walkFiles(directory) {
   if (!fs.existsSync(directory)) return [];
   const stat = fs.statSync(directory);
@@ -298,14 +277,6 @@ export function normalizedFileMap(directory) {
   return map;
 }
 
-export function mapsEqual(left, right) {
-  if (left.size !== right.size) return false;
-  for (const [key, value] of left) {
-    if (right.get(key) !== value) return false;
-  }
-  return true;
-}
-
 export function copyTree(from, to) {
   fs.mkdirSync(to, { recursive: true });
   for (const file of walkFiles(from)) {
@@ -314,41 +285,4 @@ export function copyTree(from, to) {
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(file, dest);
   }
-}
-
-export function quarantine(hostRoot, absPath, backupName = null) {
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const leaf = backupName || path.relative(hostRoot, absPath);
-  const dest = path.join(hostRoot, ".tmp", "ags-quarantine", stamp, leaf);
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.renameSync(absPath, dest);
-  return dest;
-}
-
-export function assertCanonicalAccess(root) {
-  try {
-    fs.accessSync(root, fs.constants.R_OK | fs.constants.W_OK);
-  } catch (error) {
-    throw new AgsError(`Canonical root is not readable and writable: ${root} (${error.message})`);
-  }
-  const probeDir = path.join(root, ".tmp");
-  const probe = path.join(probeDir, `.access-${process.pid}-${Date.now()}`);
-  try {
-    fs.mkdirSync(probeDir, { recursive: true });
-    fs.writeFileSync(probe, "ok");
-    fs.readFileSync(probe);
-  } catch (error) {
-    throw new AgsError(`Canonical root write failed: ${probe} (${error.message})`);
-  } finally {
-    if (fs.existsSync(probe)) fs.unlinkSync(probe);
-  }
-}
-
-export function singleLine(value, label) {
-  if (value == null || value === "") return undefined;
-  const text = String(value);
-  if (text.includes("\n") || text.includes("\r")) {
-    throw new AgsError(`${label} must be a single line`);
-  }
-  return text;
 }

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { AgsError, relativeInside } from "./util.mjs";
+import { AgsError } from "./util.mjs";
 
 const STALE_MS = 15_000;
 const WAIT_MS = 2_000;
@@ -34,36 +34,6 @@ export function dedupeReportedFiles(files) {
     if (prev == null || file.level > prev) best.set(file.path, file.level);
   }
   return [...best].map(([filePath, level]) => ({ path: filePath, level }));
-}
-
-export function canonicalFile(root, input) {
-  const raw = String(input).trim();
-  if (!raw || /[\u0000\r\n]/.test(raw)) throw new AgsError(`Not a canonical file: ${input}`);
-  const abs = path.resolve(root, raw);
-  const rel = relativeInside(root, abs);
-  if (!rel || rel === ".") throw new AgsError(`Not a canonical file: ${input}`);
-  const normalized = rel.replaceAll("\\", "/");
-  if (normalized === "hosts.yaml" || normalized.startsWith("reports/") || normalized.startsWith(".tmp/") || normalized.split("/").includes("..")) {
-    throw new AgsError(`Not a reportable guidance file: ${normalized}`);
-  }
-  if (!fs.existsSync(abs)) throw new AgsError(`Not a canonical file: ${normalized}`);
-  const stat = fs.lstatSync(abs);
-  if (stat.isSymbolicLink() || !stat.isFile()) throw new AgsError(`Not a canonical file: ${normalized}`);
-  return normalized;
-}
-
-export async function appendReport(root, kind, record) {
-  const month = record.timestamp.slice(0, 7);
-  const dir = path.join(root, "reports", kind);
-  const file = path.join(dir, `${month}.jsonl`);
-  const lock = path.join(root, "reports", ".locks", `${kind}.lock`);
-  fs.mkdirSync(dir, { recursive: true });
-  await withLock(lock, `report ${kind}`, () => {
-    const line = `${JSON.stringify(record)}\n`;
-    if (line.includes("\n\n")) throw new AgsError("Refusing to write a partial report line");
-    fs.appendFileSync(file, line);
-  });
-  return file;
 }
 
 export function hostLockPath(hostRoot) {
@@ -185,10 +155,6 @@ export async function withLocks(lockDirs, command, fn, options) {
   } finally {
     release();
   }
-}
-
-export function reportStamp() {
-  return new Date().toISOString();
 }
 
 export const USAGE_REL = ".tmp/ags/reports/usage.jsonl";

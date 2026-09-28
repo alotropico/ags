@@ -6,8 +6,14 @@ import { backupFiles, backupName, createBackupFolder, readManifest, writeManifes
 import { AGENT_LINE, bindDecisions, faultPoints, formatPlan, normalizePlan, parseDecide, planDigest, planItem, runOperation, verifyWrites, writeFileAt } from "../scripts/lib/operation.mjs";
 import { agsLockPath, hostLockPath, operationLocks } from "../scripts/lib/reports.mjs";
 import { contentHash, readFileOrNull } from "../scripts/lib/util.mjs";
+import * as catalogLib from "../scripts/lib/catalog.mjs";
+import * as discoveryLib from "../scripts/lib/discovery.mjs";
+import * as linksLib from "../scripts/lib/links.mjs";
+import * as packagesLib from "../scripts/lib/packages.mjs";
+import * as reportsLib from "../scripts/lib/reports.mjs";
+import * as utilLib from "../scripts/lib/util.mjs";
 import { COMMANDS, main, parseArgs, rerunArgs } from "../scripts/ags.mjs";
-import { fakeTerminal, makeHostRepo, runAgs, tempDir, treeSnapshot, withCli } from "./helpers/fixtures.mjs";
+import { fakeTerminal, makeHostRepo, REAL_ROOT, runAgs, tempDir, treeSnapshot, withCli } from "./helpers/fixtures.mjs";
 
 function recorder() {
   const out = [];
@@ -309,13 +315,31 @@ test("the CLI maps usage errors to exit 2 and dispatches only registered command
   }
 
   const scratch = withCli(tempDir("ags-cli-"));
-  for (const argv of [["host", "sync"], ["reporting", "status"], ["skills", "reconcile"], ["doctor", "--bogus"]]) {
+  for (const argv of [["host", "sync"], ["host", "repair"], ["skills", "install"], ["skills", "reconcile"], ["reporting", "on"], ["reporting", "status"], ["report", "changes"], ["snapshot", "canonical"], ["doctor", "--bogus"]]) {
     const result = runAgs(scratch, argv);
     assert.equal(result.code, 2, `${argv.join(" ")}: ${result.stderr}`);
   }
   const help = runAgs(scratch, []);
   assert.equal(help.code, 0);
   assert.match(help.stdout, /Usage: ags/);
+});
+
+test("V1 machinery is gone: no module keeps a V1 helper, and the V1 modules and template are deleted", () => {
+  const gone = [
+    [utilLib, ["ensureHostTmpIgnored", "commandText", "mapsEqual", "quarantine", "singleLine"]],
+    [reportsLib, ["canonicalFile", "appendReport", "reportStamp"]],
+    [linksLib, ["crossSkillIds"]],
+    [discoveryLib, ["DISCOVERY_ROOTS", "supportedDiscoveryRoots"]],
+    [packagesLib, ["assertCheckScript", "proposeCheckScripts", "reduceCheckCommand", "migrateChecks"]],
+    [catalogLib, ["catalogById", "includedSkillIds"]],
+  ];
+  for (const [lib, names] of gone) for (const name of names) assert.equal(name in lib, false, name);
+  assert.deepEqual(Object.keys(utilLib).filter((name) => /canonical/i.test(name)), []);
+  for (const rel of ["scripts/lib/report-cmd.mjs", "scripts/lib/checks.mjs", "scripts/lib/diff.mjs"]) {
+    assert.equal(fs.existsSync(path.join(REAL_ROOT, ...rel.split("/"))), false, rel);
+  }
+  assert.deepEqual(fs.readdirSync(path.join(REAL_ROOT, "scripts")).sort(), ["ags.mjs", "install-global.mjs", "lib"]);
+  assert.deepEqual(fs.readdirSync(path.join(REAL_ROOT, "templates")).sort(), ["agents-block.md", "ags.yaml"]);
 });
 
 test("the plan table is compact and shows short hashes", () => {

@@ -388,33 +388,10 @@ function linkErrors(label, fromHostRel, text, catalog, skillFiles, skill, errors
   }
 }
 
-export function catalogById(catalog) {
-  const map = new Map();
-  for (const entry of catalog.rules) map.set(entry.id, { ...entry, kind: "rule" });
-  for (const entry of catalog.skills) map.set(entry.id, { ...entry, kind: "skill" });
-  return map;
-}
-
 export function entryGroup(catalog, id) {
   if (catalog.rules.some((entry) => entry.id === id)) return "rules";
   if (catalog.skills.some((entry) => entry.id === id)) return "skills";
   return null;
-}
-
-export function includedSkillIds(catalog, rootIds) {
-  const byId = new Map(catalog.skills.map((entry) => [entry.id, entry]));
-  const out = [];
-  const seen = new Set(rootIds);
-  const walk = (id) => {
-    for (const child of byId.get(id)?.includes || []) {
-      if (seen.has(child)) continue;
-      seen.add(child);
-      out.push(child);
-      walk(child);
-    }
-  };
-  for (const id of rootIds) walk(id);
-  return out;
 }
 
 function selectionList(config, group, list) {
