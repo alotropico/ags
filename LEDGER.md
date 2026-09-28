@@ -399,7 +399,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 4 | `css-cleanup`: grep audit, confirm, remove, verify | `skills/css-cleanup/SKILL.md` | AGS | `skills/css-cleanup/SKILL.md` | |
 | 5 | `css-cleanup`: no audit script in `package.json`; importers under `src/` | same file | Host | Watcher `.agents/local/css-cleanup.md` | |
 | 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | AGS | `skills/css-cleanup/SKILL.md`, "Confirm and remove" (introduction and step 2) | |
-| 7 | `css-theme-tokens` Watcher variant | `skills/css-theme-tokens/SKILL.md` | Migrate later | Watcher `.agents/skills/watcher-css-theme-tokens/SKILL.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 7 | `css-theme-tokens` Watcher variant: `* 1` and single-variable `calc`, prefer existing tokens over hard-coded values, shortest default-`ease` transition including dropping `all` | `skills/css-theme-tokens/SKILL.md` | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 1, 2, 4 and 6 | |
 | 8 | `git-cleanup`: trigger, scope, fetch and prune, stale-based, confirm before delete, preview of unpushed work | `skills/git-cleanup/SKILL.md` | AGS | `skills/git-cleanup/SKILL.md` | |
 | 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference", "Exclusions" | The 30 days, the protected names and the prefix are shared text; `origin/main` derives from `git.mainBranch` and the remote is read from Git; the Watcher host note is deleted at step 5.1 |
 | 10 | `git-cleanup`: three levels (gone upstreams, stale locals, preview only) | same file, "Orchestration", "Level 1" to "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | |
@@ -415,6 +415,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 20 | `write-commit-diff`: output `.tmp/<name>.diff` | same file | Removed | None | `tmp-conventions` puts scratch output under `.tmp/scratch/` |
 | 21 | `write-last-n-diff.ps1`, `write-range-diff.ps1`: PowerShell implementations | `skills/write-commit-diff/*.ps1` | Removed | None | Superseded by the Node script; their `commits` and `range` behavior is row 17 |
 | 22 | `write-range-diff.ps1`: `-Repo` other checkout and `-OutInRepo` | `skills/write-commit-diff/write-range-diff.ps1` | Removed | None | The AGS script runs in the repository it writes to; run it from the other checkout instead |
+| 23 | `css-theme-tokens` Watcher variant: token source `src/client/style/variables.scss`, global shell SCSS under `src/client/style/`, the token list, the `documentation/styling.md` pointer | `skills/css-theme-tokens/SKILL.md`, "Reference" and introduction | Host | Watcher `.agents/local/css-theme-tokens.md` | Split from row 7; the interim host skill `watcher-css-theme-tokens` is deleted at step 5.1 |
 
 ### _agents/archive/, _agents/stewardship/
 
@@ -593,3 +594,26 @@ Sources: `<MS>` = `meta/templates/ags/shared/skills/css-cleanup/SKILL.md`; D2 = 
 | 18 | Read the project's own `css-cleanup.mdc` or token rules first; they take precedence | `<PS>`, introduction | AGS | `rules/core.md` (host guidance and `.agents/local/<skill-name>.md` win) | |
 | 19 | `disable-model-invocation: true` | `<PS>`, frontmatter | Removed | None | P18; the description says "Use only when the user asks" |
 | 20 | Provenance line "promotes the per-project workflow to an invocable skill" | `<PS>`, introduction | Removed | None | Provenance only; states no behavior |
+
+### css-theme-tokens
+
+Sources: `<MS>` = `meta/templates/ags/shared/skills/css-tokens/SKILL.md`; D2 = `designer2/.agents/skills/css-tokens/SKILL.md` (same text as `<MS>`); HXP = `hxpoc/.agents/skills/css-tokens/SKILL.md`; AGS = `skills/css-theme-tokens/SKILL.md` at `v2.0.1`. All read on 2026-09-28.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Trigger: the user explicitly asks to tidy styles against the tokens | `<MS>`, D2, HXP, "Trigger" | AGS | `skills/css-theme-tokens/SKILL.md`, "Trigger" | Joined with AGS's "creates, replaces, or evaluates" trigger; "Scope" limits edits during other tasks to changed lines |
+| 2 | Authority `documentation/styles.md` (D2) and `documentation/styling.md` (HXP) | `<MS>`, D2, HXP, "Also follow" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23) |
+| 3 | Also follow `css-authoring-conventions` | `<MS>`, D2, "Also follow" | Removed | None | Skills link only to `includes` companions; `ui-library-css` brings both skills, and `css-authoring-conventions` names this one |
+| 4 | Pointer to archived `_backup_pre_ags/rules/on-demand/css-ui-library-tokens.mdc` | `<MS>`, D2, "Also follow" | Removed | None | Points into a pre-AGS backup; D2's own prepare backup replaces it at Phase E |
+| 5 | Scope gate: prefer modern CSS modules; do not mass-rewrite legacy widget styles unless asked | `<MS>`, D2, "Scope gate" | AGS | `skills/css-theme-tokens/SKILL.md`, "Scope" | Generic wording; D2's legacy paths are rowed under `css-authoring-conventions` row 6 |
+| 6 | Published tokens from the `@platform/ui-library` CSS; foundation defaults `--space: 16px`, `--speed` from `--speed-ms` | HXP, "Reference" | AGS | `skills/css-theme-tokens/SKILL.md`, "@platform/ui-library tokens" | |
+| 7 | Steps 1 and 3: `* 1` and single-variable `calc` | `<MS>`, D2, HXP, "Steps" 1, 3 | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 1, 2 | |
+| 8 | Step 2: medium aliases to `--speed` and `--space`; keep scaled tokens | `<MS>`, D2, HXP, "Steps" 2 | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 3 (generic), "@platform/ui-library tokens" (the named aliases) | |
+| 9 | Step 4: omit default `ease`; keep `ease-out`, `ease-in-out`; do not collapse lists or widen to `all` | `<MS>`, D2, HXP, "Steps" 4 | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 4 | |
+| 10 | Step 5: fold space `calc` onto named tokens when the math matches; not mixed `em` and `rem`, unnamed multipliers, sub-pixel nudges | `<MS>`, D2, HXP, "Steps" 5 | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 5 | |
+| 11 | Fold examples `small+tiny` to `slim`, `space/2` to `small` | HXP, "Steps" 5 | AGS | `skills/css-theme-tokens/SKILL.md`, "@platform/ui-library tokens" | Written as `calc` expressions |
+| 12 | Step 6: grep leftovers (`speed-medium`, `space-medium`, `* 1)`) | `<MS>`, D2, HXP, "Steps" 6 | AGS | `skills/css-theme-tokens/SKILL.md`, "Verify", "@platform/ui-library tokens" | |
+| 13 | Step 6: run `npm run check:types` and `npm run lint` (D2) or `yarn type-check` and `yarn lint` (HXP) | `<MS>`, D2, HXP, "Steps" 6 | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Their `checks.*` values at install (P23); the shared "Verify" uses the `check` skill |
+| 14 | Safety: edit one file or an agreed path set; no format-only drive-by diffs | `<MS>`, D2, HXP, "Safety" | AGS | `skills/css-theme-tokens/SKILL.md`, "Scope" | |
+| 15 | Trials on a scratch copy, never casually in the working tree | HXP, "Safety" | AGS | `skills/css-theme-tokens/SKILL.md`, "Scope" | The scratch location is `.tmp/scratch/` (`tmp-conventions`) |
+| 16 | "Reach this skill from ui-library-css. It is not the primary CSS entry point." | AGS, "Trigger" | Removed | None | The skill now covers any repository's theme tokens (spec Appendix G); `ui-library-css` still includes it |
