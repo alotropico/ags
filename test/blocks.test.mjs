@@ -152,7 +152,7 @@ test("exclude block: written only when .tmp/ is not ignored", () => {
   assert.equal(inspectExclude(makeHostRepo({ gitignore: "/.tmp\n" })).need, null);
 });
 
-test("exclude block: an edited region that no longer ignores .tmp/ asks for restore", () => {
+test("exclude block: an edited region asks for restore, whether or not .tmp/ is still ignored", () => {
   const host = makeHostRepo();
   const file = excludeFile(host);
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -162,7 +162,10 @@ test("exclude block: an edited region that no longer ignores .tmp/ asks for rest
   assert.equal(state.need, "restore");
   assert.equal(state.next, "*.log\n# AGS:BEGIN\n/.tmp/\n# AGS:END\n");
   fs.writeFileSync(file, "# AGS:BEGIN\n/.tmp/\n# mine\n# AGS:END\n");
-  assert.equal(inspectExclude(host).need, null);
+  const stillIgnored = inspectExclude(host);
+  assert.equal(stillIgnored.ignored, true);
+  assert.equal(stillIgnored.need, "restore");
+  assert.equal(stillIgnored.next, "# AGS:BEGIN\n/.tmp/\n# AGS:END\n");
 });
 
 test("exclude block: a linked worktree is refused", () => {

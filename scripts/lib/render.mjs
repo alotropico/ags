@@ -188,6 +188,6 @@ export function inspectExclude(hostRoot) {
   const ignored = tmpIgnored(hostRoot);
   let need = null;
   if (!ignored && state.kind === "absent") need = "add";
-  else if (!ignored && state.kind === "edited") need = "restore";
+  else if (state.kind === "edited") need = "restore";
   return { file, content, state: state.kind, ignored, need, next: need ? renderExclude(content) : null };
 }
