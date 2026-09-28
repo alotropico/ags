@@ -851,3 +851,15 @@ Sources below are relative to `.agents/skills/react-state-transitions/` in D2 (`
 | 25 | Per-pattern repeats of "no new library or XState" and "one function writing two stores is not atomic" | `references/refactoring-patterns.md`, "Reducer or discriminated union", "Single authority, derived adapters" | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Anti-patterns in a target design"; `SKILL.md`, "Scope" | Stated once each (consolidation rule 5) |
 | 26 | Anti-patterns in a target design | `references/refactoring-patterns.md`, "Anti-patterns (target design)" | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Anti-patterns in a target design" | |
 | 27 | Implementation mode steps, including tests, type check and lint | `references/refactoring-patterns.md`, "Implementation mode" | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Implement mode"; names the `check` skill conditionally | |
+
+## Run 2: AGS 2.0.x material
+
+AGS items with no variant in any other Run 2 source (spec Appendix H, group 5). Sources are AGS paths at `v2.0.1`; none changed in Run 2 step 4.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `core` strong rule | `v2.0.1:rules/core.md` | AGS | `rules/core.md` | Kept; no other variant |
+| 2 | `tmp-conventions` soft rule | `v2.0.1:rules/tmp-conventions.md` | AGS | `rules/tmp-conventions.md` | Kept; no other variant. The Run 2 probe (step 3.3) contradicted no sentence |
+| 3 | `report-usage` skill | `v2.0.1:skills/report-usage/SKILL.md` | AGS | `skills/report-usage/SKILL.md` | Kept; no other variant |
+| 4 | `check` skill and its script | `v2.0.1:skills/check/` | AGS | `skills/check/SKILL.md`, `skills/check/scripts/run-checks.mjs` | Kept; no other variant |
+| 5 | `ui-library-css` skill | `v2.0.1:skills/ui-library-css/SKILL.md` | AGS | `skills/ui-library-css/SKILL.md` | Kept; no other variant |
