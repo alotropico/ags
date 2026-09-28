@@ -568,6 +568,32 @@ Sources: `<MS>` = `meta/templates/ags/shared/skills/git-cleanup/SKILL.md`; D2 = 
 | 21 | Level 3 preview: unpushed or no-upstream branches, stashes, backups that may hold unique work; remove only named items | `<MS>`, D2, HXP, "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 3 | |
 | 22 | Preview-only mode: fetch, print all levels, delete nothing | HXP, "Dry-run / preview mode" | AGS | `skills/git-cleanup/SKILL.md`, last paragraph | |
 
+### css-authoring-conventions
+
+Sources: `<MS>` = `meta/templates/ags/shared/skills/css-authoring-conventions/SKILL.md`; D2 = `designer2/.agents/skills/css-authoring-conventions/SKILL.md` (same text as `<MS>`); HXP = `hxpoc/.agents/skills/css-authoring-conventions/SKILL.md`; `<MR>` = `meta/templates/rules/react-ui.mdc` (CSS concepts only; its component, async, accessibility and list concepts are rowed under `code-idioms`). All read on 2026-09-28.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Trigger includes component style APIs (theme, variant, size) | `<MS>`, D2, HXP, description and "Trigger" | AGS | `skills/css-authoring-conventions/SKILL.md`, description and "Trigger" | |
+| 2 | Authority document `documentation/styles.md` (D2) and `documentation/styling.md` (HXP) | `<MS>`, D2, HXP, "Authority" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23) |
+| 3 | Link to the token skill (`css-tokens`) | `<MS>`, D2, HXP, "Authority" | AGS | `skills/css-authoring-conventions/SKILL.md`, introduction ("use the `css-theme-tokens` skill when it is installed") | Named conditionally: skills link only to `includes` companions |
+| 4 | Pointer to an optional pre-AGS leftover `.tmp/_backup_pre_ags/rules/styling.mdc` | `<MS>`, D2, "Authority" | Removed | None | Points into a pre-AGS backup; D2's own prepare backup replaces it at Phase E |
+| 5 | Link to `code-idioms.md` for component reuse and props before modules | HXP, "Authority" | Removed | None | Skills link only to `includes` companions; the `code-idioms` soft rule is indexed by the AGS block, and the props-first order is row 16 |
+| 6 | Scope gate paths: modern `src/pages/`, `src/page-components/`, `src/form_components/`; legacy `src/widgets/`, `src/styles/legacy.scss`, canvas styles | `<MS>`, D2, "Scope gate" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
+| 7 | Apply defaults to touched styles; do not mass-rewrite legacy styles unless the task edits them | `<MS>`, D2, "Scope gate" | AGS | `skills/css-authoring-conventions/SKILL.md`, introduction | The generic part of the scope gate |
+| 8 | Leave a property undeclared "especially when no design rule requires another value" | `<MS>`, D2, HXP, "Declarations" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" | |
+| 9 | `@extend` and `@include` before sorted properties; nested rules after declarations | `<MS>`, D2, "Declarations" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" | Stated only by D2; no variant contradicts it |
+| 10 | Global theme layer paths: `src/styles/base.scss`, shared `components/` (D2); `src/style/_elements.scss` (HXP) | `<MS>`, D2, HXP, "Selectors and naming" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23) |
+| 11 | Reuse documented global primitives; never invent a global utility for one-off feature UI, prefer co-located modules | `<MS>`, D2, "Selectors and naming" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | |
+| 12 | D2's global primitives `src/styles/utilities.scss` and form shells `.form-component`, `.form-button`; HXP's global classes in `src/style/` | `<MS>`, D2, HXP, "Selectors and naming" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23) |
+| 13 | Preserve required global marker classes in global shell selectors | `<MS>`, D2, "Selectors and naming" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | |
+| 14 | Prefer theme tokens over hard-coded lengths, colors, radii, shadows, durations | `<MS>`, D2, "Selectors and naming"; `<MR>`, "Theme tokens only" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" | Generic wording; the UI library's token facts live in `css-theme-tokens` |
+| 15 | Component order: the UI library, then shared components, then feature components; D2's `src/form_components/`, `src/page-components/`; HXP's `src/components` | `<MS>`, D2, HXP, "Markup and components" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Markup and composition" | The order is shared text; the D2 and HXP folder names are rowed with row 12's Backlog bullet |
+| 16 | Escalation: props and variants, then the global override stylesheet, then a component CSS module; never custom styles for what props support | `<MR>`, "Props before custom styling" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Markup and composition" | |
+| 17 | Bare element styles belong in the global layer; tag selectors in a module are a smell | `<MR>`, "Element styles belong in the global layer" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | Same concept as the existing tag-selector bullet |
+| 18 | Reuse exported types for style props "including UI-library types" | HXP, "Style-related APIs" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Component boundaries" | |
+| 19 | Verify with `npm run check:types && npm run lint` (D2) or `yarn type-check && yarn lint` (HXP) | `<MS>`, D2, HXP, "Verify" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Their `checks.*` values at install (P23); the shared "Verify" uses the `check` skill |
+
 ### css-cleanup
 
 Sources: `<MS>` = `meta/templates/ags/shared/skills/css-cleanup/SKILL.md`; D2 = `designer2/.agents/skills/css-cleanup/SKILL.md` (same text as `<MS>`); HXP = `hxpoc/.agents/skills/css-cleanup/SKILL.md`; `<PS>` = `~/.cursor/skills/css-audit/SKILL.md` (personal, merged here per P21). All read on 2026-09-28.
