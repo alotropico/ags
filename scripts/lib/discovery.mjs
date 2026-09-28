@@ -124,6 +124,7 @@ export function toolConfigs(root) {
 }
 
 const TMP_ENTRY = /^\/?\.tmp(\/(\*\*?)?)?$/;
+const UNANCHORED_TMP_ENTRY = /^(\*\*\/)?tmp(\/(\*\*?)?)?$/;
 
 export function harnessTmpEntries(root) {
   const found = [];
@@ -133,8 +134,11 @@ export function harnessTmpEntries(root) {
     fs.readFileSync(abs, "utf8")
       .split(/\r?\n/)
       .forEach((line, index) => {
-        if (TMP_ENTRY.test(line.trim())) {
+        const entry = line.trim();
+        if (TMP_ENTRY.test(entry)) {
           found.push(`${rel} line ${index + 1} lists .tmp/, which blocks agent reads of .tmp/. AGS never edits ${rel}; remove the line by hand.`);
+        } else if (UNANCHORED_TMP_ENTRY.test(entry)) {
+          found.push(`${rel} line ${index + 1} lists ${entry}, which Cursor also applies to .tmp/ and so blocks agent reads of .tmp/. AGS never edits ${rel}; anchor the line as /tmp/ by hand.`);
         }
       });
   }

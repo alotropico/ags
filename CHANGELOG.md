@@ -1,4 +1,5 @@
 ## Unreleased
+- doctor reports an unanchored tmp/ line in .cursorignore or .cursorindexingignore, which Cursor also applies to .tmp/.
 
 ## 2.1.1 - 2026-09-28
 - Prose pass: remove repetition and contradictions across rules and skills, without changing behavior.

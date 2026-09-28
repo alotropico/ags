@@ -206,7 +206,7 @@ test("doctor: an edited AGS block, an edited exclude block, harness ignore entri
   const { ags, host } = await installedHost();
   writeFiles(host, {
     "AGENTS.md": read(host, "AGENTS.md").replace("## AGS", "## AGS edited"),
-    ".cursorignore": ".tmp/\n",
+    ".cursorignore": ".tmp/\ntmp/\n/tmp/\n",
     ".tmp/scratch/.cursor/rules.mdc": "x\n",
     ".tmp/old/AGENTS.md": "x\n",
   });
@@ -217,6 +217,8 @@ test("doctor: an edited AGS block, an edited exclude block, harness ignore entri
   assert.ok(has(errors, "The AGS region of .git/info/exclude was edited; the next update asks to restore it."));
   assert.ok(has(errors, "Git does not ignore .tmp/; the next update adds /.tmp/ to the exclude block."));
   assert.ok(has(errors, /^\.cursorignore line 1 lists \.tmp\//));
+  assert.ok(has(errors, /^\.cursorignore line 2 lists tmp\/, which Cursor also applies to \.tmp\//));
+  assert.ok(!has(errors, /^\.cursorignore line 3 /));
   assert.ok(has(errors, /^\.tmp\/scratch\/\.cursor\/ is a dot-folder or an instruction entry file/));
   assert.ok(has(errors, /^\.tmp\/old\/AGENTS\.md is a dot-folder or an instruction entry file/));
 });
