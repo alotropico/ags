@@ -20,6 +20,6 @@ test("skills list: prints id, kind, install class, description and keywords from
 test("skills list: the real catalog lists every entry, and skills.mjs keeps no install or reconcile code", async () => {
   const terminal = quietTerminal();
   assert.equal(await main(["skills", "list"], { terminal, agsRoot: REAL_ROOT }), 0);
-  assert.equal(terminal.text().trim().split("\n").length, 12);
+  assert.equal(terminal.text().trim().split("\n").length, 17);
   assert.deepEqual(Object.keys(skills).sort(), ["catalogRows", "skillsList"]);
 });
