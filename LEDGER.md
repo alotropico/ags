@@ -97,3 +97,43 @@ Dispositions, exactly one per row:
 | 18 | Report AGS edits with `ags report changes` | `v1-final:AGENTS.md`, Changes, command block | Removed | None | Changelog notes and promotion notes replace change reports (spec 15.3) |
 | 19 | Use `ags` for deterministic operations | `v1-final:AGENTS.md`, Deterministic commands | AGS | `AGENTS.md`, Commands | The V1 command list is replaced by the commands of spec 22.2 |
 | 20 | Never invoke files under `scripts/` by path | `v1-final:AGENTS.md`, Deterministic commands, last sentence | AGS | `AGENTS.md`, Commands | |
+
+### v1-final:rules/core.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | The core applies to every host and task | `v1-final:rules/core.md`, intro | AGS | `rules/core.md` (strong rule, inlined into every host block) | |
+| 2 | Read the host entry, the core and selected rules before work; load a skill only when it matches | `v1-final:rules/core.md`, bullet 1 | AGS | `templates/agents-block.md` (block and rule index); `docs/v2-spec.md` 11.1 | The block carries the core and the index; skills load natively |
+| 3 | Confirm the canonical root is readable and writable | `v1-final:rules/core.md`, bullet 2 | Removed | None | No runtime access to AGS (spec 6 invariant 2) |
+| 4 | Stop when a selected canonical file is missing | `v1-final:rules/core.md`, bullet 3 | Removed | None | Material is installed in the host; `ags doctor` reports missing managed files (spec 23) |
+| 5 | Do not copy canonical skills or rules into a host | `v1-final:rules/core.md`, bullet 4 | Removed | None | Reversed: V2 installs copies (spec 1) |
+| 6 | Use `ags` for deterministic operations it covers | `v1-final:rules/core.md`, bullet 5 | AGS | `docs/v2-spec.md` 3 principle 9; skill-local scripts (spec 19) | Hosts may lack `ags`; skills run their own scripts |
+| 7 | `.agents/local/` is host-owned; do not overwrite, delete or reformat it | `v1-final:rules/core.md`, bullet 6 | Removed | None | Dropped to fit the precedence line into five lines (spec 30 item 9); ownership is enforced by `ags`, which never writes host-owned paths (spec 10.2) |
+| 8 | Report canonical edits with `ags report changes` | `v1-final:rules/core.md`, bullet 7, first sentence | Removed | None | Changelog notes and promotion notes replace change reports (spec 15.3) |
+| 9 | Record usage with `ags report usage` when reporting is on | `v1-final:rules/core.md`, bullet 7, second sentence | AGS | `rules/core.md` bullet 5; `skills/report-usage/SKILL.md` | |
+| 10 | Engagement levels 0 to 8 and their meanings | `v1-final:rules/core.md`, level table, rows 0-8 | AGS | `skills/report-usage/SKILL.md` | |
+| 11 | Level 9 reserved for canonical change reports | `v1-final:rules/core.md`, level table, row 9 and "Level 9 is reserved" | Removed | None | Change reports are removed (spec 15.3) |
+| 12 | Example commands for usage and change reports | `v1-final:rules/core.md`, powershell block | Removed | None | The usage command moves to `skills/report-usage/SKILL.md`; `report changes` is removed (spec 15.3) |
+| 13 | Host settings are read from `.agents/ags.yaml`; ask when a value is missing | new in V2 | AGS | `rules/core.md` bullet 1 | Spec 13.3, Appendix A |
+| 14 | Host guidance wins on facts and formats; safety never yields | new in V2 | AGS | `rules/core.md` bullet 2 | Spec 11.6 |
+
+### v1-final:templates/agents-block.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Unversioned `<!-- AGS:BEGIN -->` and `<!-- AGS:END -->` markers | `v1-final:templates/agents-block.md`, markers | AGS | `scripts/lib/render.mjs` (versioned, hashed begin marker) | Spec 16.11 |
+| 2 | Pointer: read `.agents/AGS.md` before substantive work | `v1-final:templates/agents-block.md`, body | Removed | None | `.agents/AGS.md` is gone; the block inlines the core and the rule index (spec 5, Appendix A) |
+
+### v1-final:templates/host-ags.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | The host uses the canonical AGS at `{{canonicalRoot}}` | `v1-final:templates/host-ags.md`, first line | Removed | None | No canonical root; hosts hold copies (spec 1, 25) |
+| 2 | Confirm canonical root access; stop when unavailable | `v1-final:templates/host-ags.md`, second paragraph | Removed | None | No runtime access to AGS (spec 6 invariant 2) |
+| 3 | Read first: AGS `AGENTS.md`, `rules/core.md`, `.agents/local/` | `v1-final:templates/host-ags.md`, "Read first" | AGS | `templates/agents-block.md`; `rules/core.md` bullets 2-3 | The block carries the core; host notes are read per skill |
+| 4 | List of selected rules | `v1-final:templates/host-ags.md`, "Selected rules" | AGS | `templates/agents-block.md` (`{{ruleIndex}}`) | Soft rules are indexed with descriptions (spec 11.3) |
+| 5 | List of selected skills, loaded only when relevant | `v1-final:templates/host-ags.md`, "Selected skills" | Removed | None | Harnesses discover installed skills in `.agents/skills/` natively (spec 8, 11.4) |
+| 6 | Host-local exceptions | `v1-final:templates/host-ags.md`, "Host-local exceptions" | Removed | None | `requires-host-location` is removed; every skill is host-located (spec 25) |
+| 7 | Host operational settings; do not invent a missing value | `v1-final:templates/host-ags.md`, "Host operational settings" | AGS | `rules/core.md` bullet 1; `.agents/ags.yaml` settings (spec 13) | |
+| 8 | Use `ags` for deterministic operations; levels 0-8 in the core, level 9 for change reports | `v1-final:templates/host-ags.md`, last paragraph | Removed | None | Levels move to `skills/report-usage/SKILL.md`; level 9 and change reports are removed (spec 15.3) |
+| 9 | Example usage and change report commands | `v1-final:templates/host-ags.md`, powershell block | Removed | None | See `v1-final:rules/core.md` row 12 |
