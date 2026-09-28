@@ -36,10 +36,8 @@ To diff another checkout, run the same script with that checkout as the working 
 2. Name the file after the ticket id, the branch slug, or the name the user gave.
 3. Run the script.
 4. For `commits` and `current` with N, list the commits the diff covers with `git log --oneline --first-parent -n <N>`; for `range`, with `git log --oneline <from>..<to>`.
-5. Reply with the path, the size and the commits covered.
+5. Reply with the path, the size and the commits covered, not the diff content. Paste the diff only when the user asks to see it in the conversation.
 
 ## Output
 
-The script writes `.tmp/scratch/<name>.diff` in the repository, replacing a file of the same name, and prints its path, its size in bytes and the diff source. It never changes the index or the working tree.
-
-Report the path to the user, not the diff content; paste the diff only when the user asks to see it in the conversation. Read the file when you need it.
+The script writes `.tmp/scratch/<name>.diff` in the repository, replacing a file of the same name, and prints its path, its size in bytes and the diff source. It never changes the index or the working tree. Read the file when you need the diff.

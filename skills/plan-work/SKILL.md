@@ -17,8 +17,7 @@ Skip a tiny one-file fix with a clear done condition.
 
 ## Where plans go
 
-- Write the plan in this repository at `.tmp/plans/YYYY-MM-DD-kebab-slug.md`, following the `tmp-conventions` rule. A plan with supporting files, such as to-dos or open questions, becomes a folder `.tmp/plans/YYYY-MM-DD-kebab-slug/`.
-- `.tmp/` is gitignored. Read plan files by direct path; built-in search may skip them.
+- Write the plan in this repository at `.tmp/plans/YYYY-MM-DD-kebab-slug.md`, following the `tmp-conventions` rule. A plan with supporting files, such as to-dos or open questions, becomes a folder of the same name.
 - Do not create plan stores under `.agents/` or `.cursor/`.
 - When the user or host guidance asks for it, draft the plan where the team reviews it with the change instead, such as a merge request description or a ticket, or in another location they name.
 
@@ -40,7 +39,7 @@ Record each non-obvious decision in the plan as you go, one line each: a library
 
 ## When the work is done
 
-- Move a plan worth keeping to `.tmp/records/` under its existing name, and a stale one to `.tmp/archive/YYYY-MM/`. Do not edit a record afterwards beyond a short completion note.
+- Move a plan worth keeping to `.tmp/records/`, and a stale one to `.tmp/archive/YYYY-MM/`. Do not edit a record afterwards beyond a short completion note.
 - Promote only durable architectural notes into the repository's tracked documentation, where host guidance names a place for them. Ephemeral to-dos stay out of tracked history.
 - Do not leave imperative living-document instructions in tracked guidance.
 
