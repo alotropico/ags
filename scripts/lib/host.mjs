@@ -21,7 +21,7 @@ import {
   textOf,
   VERSION_PATTERN,
 } from "./catalog.mjs";
-import { appendUnreleasedNote } from "./version.mjs";
+import { appendUnreleasedNote, gitOperationInProgress } from "./version.mjs";
 import { CONFIG_REL, configText, mergeConfig, missingRequired, newConfig, parseSets, readConfig, setAgsVersion, validateConfig, writeSelection } from "./config.mjs";
 import { detectEvidence } from "./packages.mjs";
 import { normalizePlan, planDigest, planItem, removeFileAt, runOperation, verifyWrites, writeFileAt } from "./operation.mjs";
@@ -430,8 +430,7 @@ function itemOf(hostRel) {
 }
 
 export function agsOperationInProgress(agsRoot) {
-  const gitDir = path.resolve(agsRoot, git(["rev-parse", "--git-dir"], agsRoot).stdout.trim());
-  return ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"].find((name) => fs.existsSync(path.join(gitDir, name))) ?? null;
+  return gitOperationInProgress(agsRoot);
 }
 
 function hostIdAt(root) {

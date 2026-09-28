@@ -4,11 +4,12 @@ import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "./lib/host.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
+import { versionBump, versionNote, versionShow } from "./lib/version.mjs";
 import { AgsError, AGS_ROOT } from "./lib/util.mjs";
 
 const VALUE_FLAGS = new Set(["route", "host", "id", "name", "out", "plan", "decide", "decide-all", "set", "enable", "disable", "file", "to", "label", "only"]);
 const REPEATABLE = new Set(["set", "decide", "enable", "disable", "file"]);
-const BOOLEAN_FLAGS = new Set(["dry-run", "help", "include-nested"]);
+const BOOLEAN_FLAGS = new Set(["dry-run", "help", "include-nested", "allow-empty"]);
 const OPERATION_FLAGS = ["dry-run", "plan", "decide", "decide-all"];
 
 export function usageError(message) {
@@ -152,6 +153,34 @@ COMMANDS.set("host unregister", {
     if (!flags.route && !flags.host) throw usageError("Pass --route or --host.");
     const route = routeOf(flags);
     return hostUnregister({ agsRoot, route, hostId: flags.host ?? null, rerunArgs: hostArgs(command, flags, route), terminal, options: operationOptions(flags) });
+  },
+});
+
+COMMANDS.set("version", {
+  usage: "",
+  flags: [],
+  run: ({ agsRoot, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: version ${rest.join(" ")}`);
+    return versionShow({ agsRoot, terminal });
+  },
+});
+
+COMMANDS.set("version note", {
+  usage: '"<text>"',
+  flags: [],
+  run: ({ agsRoot, rest, terminal }) => {
+    if (rest.length !== 1) throw usageError('ags version note takes one quoted argument: ags version note "<text>"');
+    return versionNote({ agsRoot, text: rest[0], terminal });
+  },
+});
+
+COMMANDS.set("version bump", {
+  usage: "patch|minor|major [--allow-empty] [--dry-run] [--plan <digest>]",
+  flags: ["allow-empty", "dry-run", "plan"],
+  run: ({ agsRoot, flags, rest, terminal }) => {
+    if (rest.length !== 1) throw usageError("ags version bump takes one level: patch, minor or major");
+    const args = ["version", "bump", rest[0], ...(flags["allow-empty"] ? ["--allow-empty"] : [])];
+    return versionBump({ agsRoot, level: rest[0], allowEmpty: Boolean(flags["allow-empty"]), rerunArgs: args, terminal, options: operationOptions(flags) });
   },
 });
 
