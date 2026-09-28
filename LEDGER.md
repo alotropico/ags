@@ -305,10 +305,10 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 12 | Finishing a task is not a commit; commit, push, open merge requests only when asked | `AGENTS.md.bak`, "Hygiene" 1 and 2 | Host | Watcher `AGENTS.md`, "Working here" | Applies to every task: one line |
 | 13 | Scratch writes go to `.tmp/` | `AGENTS.md.bak`, "Hygiene" 3 | AGS | `rules/tmp-conventions.md` | |
 | 14 | Keep `tmp/` ignored as a safety net, do not use it | `AGENTS.md.bak`, "Hygiene" 3 | Host | Watcher `AGENTS.md`, "Working here" | |
-| 15 | Touch only needed lines; no drive-by refactors; do not mix formatting and behavior; soft cap of 300 lines | `AGENTS.md.bak`, "Hygiene" 4 to 6 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 15 | Touch only needed lines; no drive-by refactors; do not mix formatting and behavior; soft cap of 300 lines | `AGENTS.md.bak`, "Hygiene" 4 to 6 | AGS | `rules/code-idioms.md`, "Changes" | |
 | 16 | Skim code idioms, state topology and `documentation/ui.md` before such work | `AGENTS.md.bak`, "Hygiene" 7 | Removed | None | Host rule descriptions in the AGS block route this |
-| 17 | Validate at system boundaries; no defensive checks on internal paths | `AGENTS.md.bak`, "Hygiene" 8 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 18 | TODOs cite a ticket or plan | `AGENTS.md.bak`, "Hygiene" 9 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 17 | Validate at system boundaries; no defensive checks on internal paths | `AGENTS.md.bak`, "Hygiene" 8 | AGS | `rules/code-idioms.md`, "Changes" | |
+| 18 | TODOs cite a ticket or plan | `AGENTS.md.bak`, "Hygiene" 9 | AGS | `rules/code-idioms.md`, "Changes" | |
 | 19 | Candidate learnings pointer | `AGENTS.md.bak`, "Hygiene" 10 | Host | Watcher `AGENTS.md`, "Working here"; `.agents/local/candidates.md` | |
 | 20 | Machine-local notes in `.agents/guidance/local.md` | `AGENTS.md.bak`, "Hygiene" 11 | Removed | None | Old guidance system; `.agents/local/` holds host notes (spec 11.6) |
 | 21 | Suggest recording pilot feedback in `PILOT-OBSERVATIONS.md` | `AGENTS.md.bak`, "Hygiene" 12 | Removed | None | The pilot ended with the AGS install; the log is kept as a record (`_agents/stewardship/PILOT-OBSERVATIONS.md` row) |
@@ -358,14 +358,19 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Component structure example and ordering | "Component structure" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 2 | Types | "Types" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 3 | Imports (relative client imports, `@shared`, server `.js` imports) | "Imports" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 4 | Callbacks and hooks | "Callbacks and hooks" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 5 | State ladder, no mirrored server state, no prop drilling, ask before Context | "State ladder" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 6 | Client API boundary and naming | "Client API" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 7 | Components and UI | "Components and UI" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 8 | Vitest outside baseline; colocated tests | "Testing" | Host | Watcher `AGENTS.md`, "Commands"; `.agents/rules/code-idioms.md`, "Testing" | |
+| 1 | Component structure example and ordering | "Component structure" | AGS | `rules/code-idioms.md`, "Component structure" | |
+| 2 | Types | "Types" | AGS | `rules/code-idioms.md`, "Types" | |
+| 3 | Imports (relative client imports, `@shared`, server `.js` imports) | "Imports" | Host | Watcher `.agents/rules/watcher-code-idioms.md`, "Imports" | |
+| 4 | Callbacks and hooks | "Callbacks and hooks" | AGS | `rules/code-idioms.md`, "Callbacks and hooks" | |
+| 5 | State ladder, no mirrored server state, no prop drilling, ask before Context | "State ladder" | AGS | `rules/code-idioms.md`, "State" | |
+| 6 | Client API boundary and naming | "Client API" | Host | Watcher `.agents/rules/watcher-code-idioms.md`, "Client API" | |
+| 7 | Components and UI | "Components and UI" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 8 | Vitest outside baseline; colocated tests | "Testing" | Host | Watcher `AGENTS.md`, "Commands"; `.agents/rules/watcher-code-idioms.md`, "Tests" | |
+| 9 | Named exports only; no default exports | "Component structure" | Host | Watcher `.agents/rules/watcher-code-idioms.md`, "Component structure" | Stricter than the shared "prefer named exports" (consolidation rule 4: D2 and HXP say "prefer") |
+| 10 | Shared types in `src/shared/types/`; client-only types under the feature | "Types" | Host | Watcher `.agents/rules/watcher-code-idioms.md`, "Types" | |
+| 11 | Combine imports from one module; no React import only for JSX | "Imports" | AGS | `rules/code-idioms.md`, "Component structure" | |
+| 12 | Orchestrator feature hooks fetch, digest and expose actions | "Client API" | AGS | `rules/code-idioms.md`, "Feature composition hooks" | Watcher's API-hook source stays in the host rule (row 6) |
+| 13 | Reuse ladder without an external UI library; tag styles in the global theme SCSS; `documentation/ui.md` defaults for new work, not a mandate to restyle; Zustand and TanStack Query as the state libraries | "Components and UI", "State ladder" | Host | Watcher `.agents/rules/watcher-code-idioms.md`, "State and components" | |
 
 ### _agents/guidance/state-topology.md, _agents/guidance/state/README.md
 
@@ -587,9 +592,9 @@ Sources: `<MS>` = `meta/templates/ags/shared/skills/css-authoring-conventions/SK
 | 11 | Reuse documented global primitives; never invent a global utility for one-off feature UI, prefer co-located modules | `<MS>`, D2, "Selectors and naming" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | |
 | 12 | D2's global primitives `src/styles/utilities.scss` and form shells `.form-component`, `.form-button`; HXP's global classes in `src/style/` | `<MS>`, D2, HXP, "Selectors and naming" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23) |
 | 13 | Preserve required global marker classes in global shell selectors | `<MS>`, D2, "Selectors and naming" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | |
-| 14 | Prefer theme tokens over hard-coded lengths, colors, radii, shadows, durations | `<MS>`, D2, "Selectors and naming"; `<MR>`, "Theme tokens only" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" | Generic wording; the UI library's token facts live in `css-theme-tokens` |
+| 14 | Prefer theme tokens over hard-coded lengths, colors, radii, shadows, durations | `<MS>`, D2, "Selectors and naming"; `<MR>`, "Theme tokens only"; D2 and HXP `.agents/guidance/code-idioms.md`, "React UI" 2 and 3 | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" | Generic wording; the UI library's token facts live in `css-theme-tokens` |
 | 15 | Component order: the UI library, then shared components, then feature components; D2's `src/form_components/`, `src/page-components/`; HXP's `src/components` | `<MS>`, D2, HXP, "Markup and components" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Markup and composition" | The order is shared text; the D2 and HXP folder names are rowed with row 12's Backlog bullet |
-| 16 | Escalation: props and variants, then the global override stylesheet, then a component CSS module; never custom styles for what props support | `<MR>`, "Props before custom styling" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Markup and composition" | |
+| 16 | Escalation: props and variants, then the global override stylesheet, then a component CSS module; never custom styles for what props support | `<MR>`, "Props before custom styling"; D2 and HXP `.agents/guidance/code-idioms.md`, "React UI" 2 | AGS | `skills/css-authoring-conventions/SKILL.md`, "Markup and composition" | CSS modules are the last step; `rules/code-idioms.md` keeps only a props-first pointer to this skill |
 | 17 | Bare element styles belong in the global layer; tag selectors in a module are a smell | `<MR>`, "Element styles belong in the global layer" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" | Same concept as the existing tag-selector bullet |
 | 18 | Reuse exported types for style props "including UI-library types" | HXP, "Style-related APIs" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Component boundaries" | |
 | 19 | Verify with `npm run check:types && npm run lint` (D2) or `yarn type-check && yarn lint` (HXP) | `<MS>`, D2, HXP, "Verify" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Their `checks.*` values at install (P23); the shared "Verify" uses the `check` skill |
@@ -733,3 +738,82 @@ D2 is `C:/Cosmos/projects/work/designer2`, HXP is `C:/Cosmos/projects/work/hxpoc
 | 21 | D2 documentation links: services, Subjects, save process, repository profile | D2, "Existing documentation" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
 | 22 | HXP documentation links: authentication, roles and permissions, module federation, repository profile | HXP, "Existing documentation" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP fact (P23) |
 | 23 | D2 and HXP record indexes (three records each) | D2 and HXP, "Records" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host indexes; the records themselves are rowed in step 4.14 |
+
+### code-idioms
+
+Sources read on 2026-09-28: D2 `.agents/guidance/code-idioms.md` (D2's `.agents/` is untracked, so no revision), HXP `.agents/guidance/code-idioms.md` at `49aeab84`, and Meta `templates/rules/code-hygiene.mdc`, `react-state.mdc`, `react-ui.mdc` (Meta has no history). Where D2 and HXP state the same concept, one row names both.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Craft conventions for TypeScript and React; prefer examples over doctrine | D2 and HXP `code-idioms.md`, introduction | AGS | `rules/code-idioms.md`, introduction | |
+| 2 | Verification command pointers (`npm run check:types && npm run lint`; `yarn type-check && yarn lint`) and links to `repository-profile.md` | D2 and HXP `code-idioms.md`, introduction | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23); the shared rule points to the `check` skill (row 49) |
+| 3 | Do not enforce the idioms on untouched legacy code | D2 `code-idioms.md`, "Scope gate" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 4 | D2 scope gate paths: modern `src/pages/`, `src/page-components/`, `src/form_components/`, `src/hooks/`, `src/stores/`; legacy `src/widgets/`, `src/form_features/`, class forms with `props.context`, canvas internals | D2 `code-idioms.md`, "Scope gate" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host-specific scope gate (P23) |
+| 5 | `@app/*` alias for modules under `src/` | D2 `code-idioms.md`, "Imports and alias" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact (P23); the shared rule says to use the repository's aliases |
+| 6 | Use the repository's path aliases where defined, relative paths elsewhere | D2 `code-idioms.md`, "Imports and alias" | AGS | `rules/code-idioms.md`, "Component structure" | Generalized from the D2 alias rule and Watcher's import rules |
+| 7 | Combine imports; three or more named symbols on multiple lines | D2 `code-idioms.md`, "Imports and alias" | AGS | `rules/code-idioms.md`, "Component structure" | The line-break rule applies when no formatter decides |
+| 8 | Keep nearby import and object-property order; no drive-by reordering | D2 `code-idioms.md`, "Imports and alias"; HXP `code-idioms.md`, "Component structure" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 9 | No Prettier in D2 | D2 `code-idioms.md`, "Imports and alias" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact (P23) |
+| 10 | Do not reformat for style alone; no format-only diffs or unsolicited project-wide `lint --fix` | D2 `code-idioms.md`, "Imports and alias", "Avoid" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 11 | Component structure example; order hooks, handlers, render | D2 and HXP `code-idioms.md`, "Component structure" | AGS | `rules/code-idioms.md`, "Component structure" | One generic example replaces the host examples |
+| 12 | Package imports, then local imports | HXP `code-idioms.md`, "Component structure" | AGS | `rules/code-idioms.md`, "Component structure" | Merged with Watcher's three groups (packages, aliases, relative) |
+| 13 | Components return `ReactElement` | HXP `code-idioms.md`, "Component structure" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Only HXP states it; Watcher's form (no return annotation) wins (consolidation rule 4) |
+| 14 | D2 folder placements: `src/form_components/<kebab>/` with barrel, `src/page-components/`, `src/pages/`, `src/utilities/functions/` with kebab-case names | D2 `code-idioms.md`, "Component structure (modern)" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23) |
+| 15 | Pure helpers in a utilities folder or the feature's `utils/` | HXP `code-idioms.md`, "Component structure" | AGS | `rules/code-idioms.md`, "Component structure" | HXP's `src/utils/` path is row 16 |
+| 16 | HXP helper path `src/utils/` | HXP `code-idioms.md`, "Component structure" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host fact (P23) |
+| 17 | Options object when named arguments improve clarity | HXP `code-idioms.md`, "Component structure" | AGS | `rules/code-idioms.md`, "Component structure" | |
+| 18 | Prefer named exports for components and utilities | D2 and HXP `code-idioms.md`, "Types" | AGS | `rules/code-idioms.md`, "Component structure" | |
+| 19 | Types: `type` over `interface`, `string[]` and `Record<string, T>`, `Pick` and `Omit`, `?` over `\| undefined`, defaults in destructuring, enums for finite sets | D2 and HXP `code-idioms.md`, "Types" | AGS | `rules/code-idioms.md`, "Types" | |
+| 20 | Loose typing is known debt: no new `any`, no workarounds around the old | D2 and HXP `code-idioms.md`, "Types" | AGS | `rules/code-idioms.md`, "Types" | The two phrasings merged |
+| 21 | Destructure callback parameters and hook returns; rename at the source | HXP `code-idioms.md`, "Callbacks and hooks" | AGS | `rules/code-idioms.md`, "Callbacks and hooks" | |
+| 22 | `useCallback` only for a dependency array, expensive child or memoized child | HXP `code-idioms.md`, "Callbacks and hooks" | AGS | `rules/code-idioms.md`, "Callbacks and hooks" | Merged with Watcher's measured-cost rule and Meta's `useMemo` rule |
+| 23 | Feature composition hook: digested data plus trigger methods; components consume; not a replacement for props at reusable boundaries | D2 and HXP `code-idioms.md`, "Feature composition (orchestrator) hooks" | AGS | `rules/code-idioms.md`, "Feature composition hooks" | |
+| 24 | A composition hook coordinates one owned workflow and must not silently arbitrate unrelated authorities | HXP `code-idioms.md`, "Feature composition (orchestrator) hooks", "Components" | AGS | `rules/code-idioms.md`, "Feature composition hooks" | |
+| 25 | Host data sources and links of the composition hook (`useDesign`, `useServices`, `/src/api` React Query hooks, `state-management.md`, `frontend-api-layer.md`) | D2 and HXP `code-idioms.md`, "Feature composition (orchestrator) hooks" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23) |
+| 26 | Derive in render when cheap and same lifecycle; `useEffect` for external synchronization, not render copies or event reactions | D2 and HXP `code-idioms.md`, "Derived state and effects" | AGS | `rules/code-idioms.md`, "Derived state and effects" | |
+| 27 | Ownership and sync pointer to state topology or state management | D2 and HXP `code-idioms.md`, "Derived state and effects" | AGS | `rules/code-idioms.md`, "Derived state and effects" | Names the `state-topology` rule conditionally; HXP's documentation link is row 25 |
+| 28 | D2 state facts: `useDesign()`, Zustand in `src/hooks/` and `src/stores/` over new services, services with Subject and Observable stay, `useServices()` | D2 `code-idioms.md`, "State (modern)" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23) |
+| 29 | No direct network calls in components | D2 `code-idioms.md`, "State (modern)" | AGS | `rules/code-idioms.md`, "State" | |
+| 30 | Keep rendering in components; reusable logic in scoped hooks and utilities | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "Component structure" | |
+| 31 | Reuse ladder: UI library, shared components, feature components; no redundant wrapper; no duplicates of library or shared capabilities | D2 `code-idioms.md`, "React UI" 1; HXP `code-idioms.md`, "Components", "Avoid" | AGS | `rules/code-idioms.md`, "Components and UI" | Library and folder names are host facts (row 25, BACKLOG) |
+| 32 | Read the UI-library component's type definitions and prefer its built-in props | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 33 | Explicit dependencies at boundaries; reusable components take data and callbacks through props | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "State", "Feature composition hooks" | |
+| 34 | Secondary representations allowed with a distinct lifecycle; state authority, sync direction, write boundary, reset rule, conflict policy | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "Derived state and effects" | |
+| 35 | Collection handlers take the full updated value (`onChange`) | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "Callbacks and hooks" | |
+| 36 | Transient UI state stays local | HXP `code-idioms.md`, "Components" | AGS | `rules/code-idioms.md`, "State" | |
+| 37 | Dedicated components over raw `<button>`, `<input>`, `<a>` and one-off replacements | D2 and HXP `code-idioms.md`, "React UI" 1 | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 38 | Async views: explicit loading, error and empty states | D2 and HXP `code-idioms.md`, "React UI" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 39 | Keyboard reach, labels, `alt` | HXP `code-idioms.md`, "React UI" 5 | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 40 | Stable list keys; virtualize or paginate large lists | D2 and HXP `code-idioms.md`, "React UI" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 41 | No inline styles | HXP `code-idioms.md`, "Avoid" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 42 | No hardcoded `className` strings; use CSS modules with `classSet` | HXP `code-idioms.md`, "Avoid" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Contradicts Watcher's global shell classes and names an HXP helper; host-specific (consolidation rules 3 and 4) |
+| 43 | Never mutate state in place | HXP `code-idioms.md`, "Avoid" | AGS | `rules/code-idioms.md`, "State" | |
+| 44 | Never commit `.env*` secrets; no packages without need | HXP `code-idioms.md`, "Avoid" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 45 | No new `window` globals | D2 `code-idioms.md`, "Avoid" | AGS | `rules/code-idioms.md`, "State" | |
+| 46 | Prop drilling avoidable through existing stores, hooks or services | D2 `code-idioms.md`, "Avoid" | AGS | `rules/code-idioms.md`, "State" | |
+| 47 | Do not expand `src/widgets/`; do not change canvas and diagram internals without a task; the afterFileEdit ESLint hook is fine | D2 `code-idioms.md`, "Avoid" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host facts (P23); the hooks are rowed at step 4.14 |
+| 48 | Legacy edits: minimal change, match surrounding style, import modern components instead of growing legacy patterns | D2 `code-idioms.md`, "Legacy edits" | AGS | `rules/code-idioms.md`, "Changes" | jQuery and class forms are D2 examples (row 4) |
+| 49 | A task is done when the project's verification passes | Meta `code-hygiene.mdc`, "Verification" | AGS | `rules/code-idioms.md`, "Changes" | Points to the `check` skill (P22) |
+| 50 | Scope discipline: only needed lines, cleanups only on edited lines, no drive-by refactors, renames or reformatting; never mix formatting and behavior | Meta `code-hygiene.mdc`, "Scope discipline" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 51 | Delete code instead of commenting it out | Meta `code-hygiene.mdc`, "Dead code and TODOs" | AGS | `rules/code-idioms.md`, "Changes" | P22: no proto-rule covers it |
+| 52 | `TODO` needs a reference (issue or plan entry) | Meta `code-hygiene.mdc`, "Dead code and TODOs" | AGS | `rules/code-idioms.md`, "Changes" | `.cursor/plans/` becomes "a plan" under `tmp-conventions` |
+| 53 | Search for an existing utility, hook or helper before writing one | Meta `code-hygiene.mdc`, "Reuse before writing" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 54 | Justify a new dependency; let the package manager pick the latest version | Meta `code-hygiene.mdc`, "Reuse before writing" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 55 | Soft cap of about 300 lines; extract cohesive pieces; oversized legacy files exempt until substantially edited | Meta `code-hygiene.mdc`, "File size" | AGS | `rules/code-idioms.md`, "Changes" | Watcher holds the cap, so P22 sends it here, not to Proto-rules |
+| 56 | Validate at system boundaries only | Meta `code-hygiene.mdc`, "Validation" | AGS | `rules/code-idioms.md`, "Changes" | |
+| 57 | Bug fix gets a regression test where a harness exists | Meta `code-hygiene.mdc`, "Process" | AGS | `rules/code-idioms.md`, "Tests" | |
+| 58 | Record non-obvious decisions in the plan or record | Meta `code-hygiene.mdc`, "Process" | AGS | `skills/plan-work/SKILL.md`, "Decision log" | Already stated there |
+| 59 | Exploration routing: Task/explore for unknown locations, Grep and Read only for known symbols, route first through AGENTS | Meta `code-hygiene.mdc`, "Exploration" | Removed | None | Duplicates the "Lean sessions" section of the Layer 0 user rules, which applies in every repository; not code craft |
+| 60 | Activation by `alwaysApply` and `globs` (`*.ts`, `*.tsx`, `*.scss`) | Meta `code-hygiene.mdc`, `react-state.mdc`, `react-ui.mdc`, frontmatter | Removed | None | An opt-in AGS soft rule, indexed by its description, replaces Cursor rule activation |
+| 61 | State ladder: local, lift, store, query cache | Meta `react-state.mdc`, "State ladder" | AGS | `rules/code-idioms.md`, "State" | |
+| 62 | Never mirror server state into a store or local state | Meta `react-state.mdc`, "State ladder" | AGS | `rules/code-idioms.md`, "State" | |
+| 63 | No prop drilling; generic components stay store-agnostic | Meta `react-state.mdc`, "No prop drilling" | AGS | `rules/code-idioms.md`, "State" | |
+| 64 | Pass a value from parent to child only when the parent may modify or override it | Meta `react-state.mdc`, "No prop drilling" | Backlog | `BACKLOG.md`, Guidance, "Proto-rules" | No host variant holds it; proto-rules 1 and 2 cover it (P22) |
+| 65 | Derived values in render, never a `useState` plus `useEffect` copy; `useMemo` only for measured cost | Meta `react-state.mdc`, "Derived state" | AGS | `rules/code-idioms.md`, "Derived state and effects", "Callbacks and hooks" | |
+| 66 | Effects only for external systems; not for render transforms, event reactions or chained updates | Meta `react-state.mdc`, "Effects" | AGS | `rules/code-idioms.md`, "Derived state and effects" | |
+| 67 | Dedicated components over native elements; note why when one cannot do the job | Meta `react-ui.mdc`, "Dedicated components over vanilla elements" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 68 | Async UI: loading, error and empty states; no blank flashes or swallowed failures; loading does not freeze the app | Meta `react-ui.mdc`, "Async UI has three states" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 69 | Accessibility floor, including no click handlers on non-interactive elements | Meta `react-ui.mdc`, "Accessibility floor" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+| 70 | Stable keys; virtualize or paginate lists that grow into the hundreds | Meta `react-ui.mdc`, "Lists" | AGS | `rules/code-idioms.md`, "Components and UI" | |
+
+Not rowed here, to keep one row per concept: the CSS concepts of `react-ui.mdc` ("Props before custom styling", "Element styles belong in the global layer", "Theme tokens only"), and the matching "React UI" 2 and 3 concepts of D2 and HXP (CSS modules and the styling escalation; theme tokens instead of raw hex), are rowed under `### css-authoring-conventions` rows 14 and 16; the "Plan first" bullet of `code-hygiene.mdc` belongs to `plan-work` (step 4.8); its commit, ship and rebase routing line is rowed at step 4.14.

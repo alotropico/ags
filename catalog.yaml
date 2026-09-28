@@ -7,6 +7,9 @@ rules:
   - id: tmp-conventions
     tier: soft
     install: always
+  - id: code-idioms
+    tier: soft
+    install: opt-in
   - id: state-topology
     tier: soft
     install: opt-in

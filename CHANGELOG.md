@@ -9,6 +9,7 @@
 - plan-work consolidates the host variants and Meta's plans rule.
 - write-commit-diff consolidates the host variants; the PowerShell writers are replaced by the script's modes.
 - New opt-in soft rule state-topology: fill a state record before changing shared client state.
+- New opt-in soft rule code-idioms: shared TypeScript and React idioms.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`
