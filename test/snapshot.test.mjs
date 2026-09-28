@@ -58,10 +58,15 @@ test("snapshot: zips AGENTS.md, all of .agents and one manifest with host, versi
 
 test("snapshot: --out writes there, and unsafe or existing outputs are refused", async () => {
   const host = hostWithAgents();
-  const out = path.join(tempDir("ags-snap-out-"), "copy.zip");
+  const out = path.join(host, ".tmp", "copies", "copy.zip");
   assert.equal((await snapshot(["--route", host, "--out", out])).code, 0);
   assert.ok(fs.existsSync(out));
   assert.equal((await snapshot(["--route", host, "--out", out])).code, 1);
+  const outside = path.join(tempDir("ags-snap-out-"), "copy.zip");
+  const escaped = await snapshot(["--route", host, "--out", outside]);
+  assert.equal(escaped.code, 1);
+  assert.match(escaped.text, /must be inside the host/);
+  assert.equal(fs.existsSync(outside), false);
   assert.equal((await snapshot(["--route", host, "--out", path.join(host, "copy.txt")])).code, 2);
   const inside = await snapshot(["--route", host, "--out", path.join(host, ".agents", "copy.zip")]);
   assert.equal(inside.code, 1);

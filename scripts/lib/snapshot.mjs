@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { backupStamp } from "./backup.mjs";
-import { AgsError } from "./util.mjs";
+import { AgsError, insidePath } from "./util.mjs";
 
 const CRC_TABLE = crc32Table();
 
@@ -131,6 +131,8 @@ export function snapshotTarget(hostRoot, out, now = new Date()) {
   if (!abs.toLowerCase().endsWith(".zip")) throw new AgsError("Snapshot output must end in .zip");
   const rel = path.relative(path.resolve(hostRoot), abs);
   const name = rel.startsWith("..") || path.isAbsolute(rel) ? null : rel.replaceAll("\\", "/");
+  if (name == null) throw new AgsError(`Snapshot output must be inside the host: ${abs}`);
+  insidePath(hostRoot, name);
   if (name === "AGENTS.md" || name === ".agents" || name?.startsWith(".agents/")) throw new AgsError(`Refusing to write a snapshot inside the files it captures: ${name}`);
   if (fs.existsSync(abs)) throw new AgsError(`Snapshot output already exists: ${abs}`);
   return abs;
