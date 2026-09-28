@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { catalogById, includedSkillIds } from "./catalog.mjs";
-import { AgsError, displayPath, relativeInside, samePath, walkFiles } from "./util.mjs";
+import { backupStamp } from "./backup.mjs";
+import { AgsError } from "./util.mjs";
 
 const CRC_TABLE = crc32Table();
 
@@ -97,177 +97,54 @@ export function buildZip(entries) {
   return Buffer.concat([...localParts, central, end]);
 }
 
-const CREDENTIAL = /(^|\/)(\.env(\..*)?|credentials\.json|id_rsa|[^/]*\.pem)$/i;
-const LOCK_BASES = new Set(["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"]);
-const RESERVED_ARCHIVE = new Set(["manifest.json"]);
-const LEGACY_PARTS = ["hooks", "archive", "stewardship", "graphify"];
+export const SNAPSHOTS_REL = ".tmp/ags/snapshots";
 
-export function normalizeRel(rel) {
-  return String(rel || "").replaceAll("\\", "/");
-}
-
-export function isStandardSensitivePath(rel) {
-  return CREDENTIAL.test(normalizeRel(rel));
-}
-
-export function isOperationalCanonicalPath(rel) {
-  const name = normalizeRel(rel);
-  if (!name || name === "hosts.yaml" || name.startsWith("reports/") || name.startsWith(".tmp/") || name.startsWith(".git/") || name.split("/").includes("node_modules")) return true;
-  const head = name.split("/").filter(Boolean)[0];
-  if (head && LEGACY_PARTS.includes(head)) return true;
-  if (name.endsWith("versioning-todo.md")) return true;
-  return false;
-}
-
-export function excludedRelative(rel) {
-  return isOperationalCanonicalPath(rel) || isStandardSensitivePath(rel);
-}
-
-export function localExcluded(hostRoot, abs) {
-  const rel = relativeInside(path.join(hostRoot, ".agents", "local"), abs);
-  const listFile = path.join(hostRoot, ".agents", "local", ".ags-exclude");
-  if (!fs.existsSync(listFile)) return false;
-  const listed = fs.readFileSync(listFile, "utf8").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  return listed.includes(rel);
-}
-
-export function collectSnapshot(root, hostRoot, catalog, settings) {
-  const files = [];
-  const warnings = [];
-  const add = (abs, name, { required = false, label = name } = {}) => {
-    if (RESERVED_ARCHIVE.has(name)) return;
-    if (LOCK_BASES.has(path.posix.basename(name))) return;
-    if (!fs.existsSync(abs) || !fs.lstatSync(abs).isFile()) {
-      if (required) warnings.push(`missing ${label}`);
-      return;
+function hostFiles(hostRoot) {
+  const found = [];
+  const agents = path.join(hostRoot, "AGENTS.md");
+  if (fs.existsSync(agents) && fs.lstatSync(agents).isFile()) found.push("AGENTS.md");
+  const walk = (rel) => {
+    for (const entry of fs.readdirSync(path.join(hostRoot, ...rel.split("/")), { withFileTypes: true })) {
+      const child = `${rel}/${entry.name}`;
+      if (entry.isDirectory()) walk(child);
+      else if (entry.isFile()) found.push(child);
     }
-    if (excludedRelative(name) || isStandardSensitivePath(name)) return;
-    files.push({ name, data: fs.readFileSync(abs) });
   };
-  add(path.join(hostRoot, "AGENTS.md"), "host/AGENTS.md");
-  add(path.join(hostRoot, ".agents", "AGS.md"), "host/.agents/AGS.md");
-  add(path.join(hostRoot, ".agents", "ags.yaml"), "host/.agents/ags.yaml");
-  const local = path.join(hostRoot, ".agents", "local");
-  for (const file of walkFiles(local)) {
-    if (localExcluded(hostRoot, file)) continue;
-    const rel = relativeInside(local, file);
-    if (rel === ".ags-exclude") continue;
-    add(file, `host/.agents/local/${rel}`);
-  }
-  add(path.join(root, "AGENTS.md"), "canonical/AGENTS.md");
-  add(path.join(root, "rules", "core.md"), "canonical/rules/core.md");
-  for (const id of settings.rules.enabled) {
-    const entry = catalogById(catalog).get(id);
-    if (!entry) throw new AgsError(`Selected rule missing from catalog: ${id}`);
-    add(path.join(root, ...entry.path.split("/")), `canonical/${entry.path}`, { required: true, label: entry.path });
-  }
-  const skillIds = [];
-  const seenSkills = new Set();
-  for (const id of [...settings.skills.enabled, ...includedSkillIds(catalog, settings.skills.enabled)]) {
-    if (seenSkills.has(id)) continue;
-    seenSkills.add(id);
-    skillIds.push(id);
-  }
-  for (const id of skillIds) {
-    const entry = catalogById(catalog).get(id);
-    if (!entry) throw new AgsError(`Selected skill missing from catalog: ${id}`);
-    const skillFile = path.join(root, ...entry.path.split("/"));
-    if (!fs.existsSync(skillFile)) {
-      warnings.push(`missing ${entry.path}`);
-      continue;
-    }
-    const dir = path.dirname(skillFile);
-    for (const file of walkFiles(dir)) {
-      const rel = relativeInside(dir, file);
-      add(file, `canonical/skills/${id}/${rel}`);
-    }
-  }
-  for (const item of settings.skills?.localExceptions || []) {
-    const skillFile = path.join(hostRoot, ...String(item.path || "").split("/"));
-    if (!fs.existsSync(skillFile)) {
-      warnings.push(`missing host-local exception: ${item.path}`);
-      continue;
-    }
-    const dir = path.dirname(skillFile);
-    for (const file of walkFiles(dir)) {
-      const rel = relativeInside(dir, file);
-      add(file, `host/.agents/skills/${item.id}/${rel}`);
-    }
-  }
-  const resolution = {
-    host: settings.host,
-    canonicalRoot: displayPath(root),
-    git: settings.git || null,
-    checks: settings.checks || null,
-    rules: settings.rules.enabled.map((id) => ({ id, path: catalogById(catalog).get(id).path })),
-    skills: settings.skills.enabled.map((id) => {
-      const entry = catalogById(catalog).get(id);
-      return { id, path: entry.path, kind: entry.kind, includes: entry.includes || [] };
-    }),
-  };
-  files.push({ name: "resolution.json", data: Buffer.from(`${JSON.stringify(resolution, null, 2)}\n`) });
-  files.sort((a, b) => a.name.localeCompare(b.name));
+  const dir = path.join(hostRoot, ".agents");
+  if (fs.existsSync(dir) && fs.lstatSync(dir).isDirectory()) walk(".agents");
+  return found.sort();
+}
+
+export function collectSnapshot(hostRoot, { host, agsVersion, now = new Date() }) {
+  const files = hostFiles(hostRoot).map((rel) => ({ name: rel, data: fs.readFileSync(path.join(hostRoot, ...rel.split("/"))) }));
   const manifest = {
-    warnings,
+    host,
+    agsVersion,
+    createdAt: now.toISOString(),
     files: files.map((file) => ({ path: file.name, bytes: file.data.length, sha256: sha256(file.data) })),
   };
-  files.push({ name: "manifest.json", data: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`) });
-  return { files, manifest, warnings };
+  return { files: [...files, { name: "manifest.json", data: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`) }], manifest };
 }
 
-export function assertSnapshotTarget(root, hostRoot, catalog, settings, outPath) {
-  const abs = path.resolve(outPath);
+export function snapshotTarget(hostRoot, out, now = new Date()) {
+  const abs = out ? path.resolve(out) : path.join(hostRoot, ...SNAPSHOTS_REL.split("/"), `${backupStamp(now)}.zip`);
   if (!abs.toLowerCase().endsWith(".zip")) throw new AgsError("Snapshot output must end in .zip");
-  const forbidden = [];
-  if (hostRoot) {
-    forbidden.push(
-      path.join(hostRoot, "AGENTS.md"),
-      path.join(hostRoot, ".agents", "AGS.md"),
-      path.join(hostRoot, ".agents", "ags.yaml"),
-    );
-    for (const id of settings?.rules?.enabled || []) {
-      const entry = catalogById(catalog).get(id);
-      if (entry) forbidden.push(path.join(root, ...entry.path.split("/")));
-    }
-    const skillIds = [...(settings?.skills?.enabled || []), ...includedSkillIds(catalog, settings?.skills?.enabled || [])];
-    for (const id of skillIds) {
-      const entry = catalogById(catalog).get(id);
-      if (!entry) continue;
-      const file = path.join(root, ...entry.path.split("/"));
-      forbidden.push(file, path.dirname(file));
-    }
-  }
-  for (const file of forbidden) {
-    if (samePath(abs, file)) throw new AgsError(`Refusing to overwrite managed or selected file: ${abs}`);
-    if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
-      const rel = path.relative(file, abs);
-      if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) {
-        throw new AgsError(`Refusing to overwrite selected skill: ${abs}`);
-      }
-    }
-  }
-  const canonRoot = path.resolve(root);
-  const canonRel = path.relative(canonRoot, abs);
-  const insideCanon = canonRel !== "" && !canonRel.startsWith("..") && !path.isAbsolute(canonRel);
-  const canonTmp = path.resolve(root, ".tmp");
-  const tmpRel = path.relative(canonTmp, abs);
-  const insideTmp = tmpRel === "" || (!tmpRel.startsWith("..") && !path.isAbsolute(tmpRel));
-  if (insideCanon && !insideTmp) throw new AgsError(`Refusing to overwrite canonical source: ${abs}`);
+  const rel = path.relative(path.resolve(hostRoot), abs);
+  const name = rel.startsWith("..") || path.isAbsolute(rel) ? null : rel.replaceAll("\\", "/");
+  if (name === "AGENTS.md" || name === ".agents" || name?.startsWith(".agents/")) throw new AgsError(`Refusing to write a snapshot inside the files it captures: ${name}`);
+  if (fs.existsSync(abs)) throw new AgsError(`Snapshot output already exists: ${abs}`);
+  return abs;
 }
 
-function writeZipAtomic(outPath, body) {
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const staging = `${outPath}.${process.pid}.tmp`;
-  fs.writeFileSync(staging, body);
-  fs.renameSync(staging, outPath);
-}
-
-export function writeSnapshot(root, hostRoot, catalog, settings, outPath) {
-  assertSnapshotTarget(root, hostRoot, catalog, settings, outPath);
-  const packed = collectSnapshot(root, hostRoot, catalog, settings);
+export function writeSnapshot(hostRoot, { host, agsVersion, out = null, now = new Date() }) {
+  const target = snapshotTarget(hostRoot, out, now);
+  const packed = collectSnapshot(hostRoot, { host, agsVersion, now });
   const body = buildZip(packed.files);
-  writeZipAtomic(outPath, body);
-  return { path: outPath, bytes: body.length, count: packed.files.length, manifest: packed.manifest };
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  const staging = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(staging, body);
+  fs.renameSync(staging, target);
+  return { path: target, bytes: body.length, count: packed.manifest.files.length, manifest: packed.manifest };
 }
 
 export function readStoredZip(buffer) {

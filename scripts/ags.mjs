@@ -5,7 +5,8 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
-import { reportUsage, USAGE_REL } from "./lib/reports.mjs";
+import { hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
+import { writeSnapshot } from "./lib/snapshot.mjs";
 import { readConfig } from "./lib/config.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { versionBump, versionNote, versionShow } from "./lib/version.mjs";
@@ -234,6 +235,23 @@ COMMANDS.set("report usage", {
     if (config.agsVersion == null) throw new AgsError("The AGS installation is incomplete. Run ags host install.");
     const result = await reportUsage({ hostRoot, config, managed: config.reporting === false ? new Set() : installedPaths(agsRoot, hostRoot, config), values: flags.file, label: flags.label });
     terminal.log(result.recorded ? `Recorded usage in ${USAGE_REL}.` : "Reporting is off in .agents/ags.yaml; nothing recorded.");
+    return 0;
+  },
+});
+
+COMMANDS.set("snapshot", {
+  usage: "[--route .] [--out <file.zip>]",
+  flags: ["route", "out"],
+  run: async ({ flags, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: snapshot ${rest.join(" ")}`);
+    if (flags.out != null && !String(flags.out).toLowerCase().endsWith(".zip")) throw usageError("--out must end in .zip");
+    const hostRoot = gitRoot(routeOf(flags));
+    if (!fs.existsSync(path.join(hostRoot, ".agents", "ags.yaml"))) throw new AgsError(`${posix(hostRoot)} has no AGS installation. Run ags host install.`);
+    const config = readConfig(hostRoot).data;
+    const written = await withLock(hostLockPath(hostRoot), "snapshot", () =>
+      writeSnapshot(hostRoot, { host: config.host ?? null, agsVersion: config.agsVersion == null ? null : String(config.agsVersion), out: flags.out ?? null }),
+    );
+    terminal.log(`Wrote ${posix(written.path)} (${written.count} file${written.count === 1 ? "" : "s"}).`);
     return 0;
   },
 });
