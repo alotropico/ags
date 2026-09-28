@@ -19,8 +19,7 @@ Unused-class audit: [`css-cleanup`](../css-cleanup/SKILL.md). To normalize theme
 ## Declarations
 
 - Prefer CSS shorthand when it is fully equivalent and will not reset an intentional longhand or hide a later override.
-- Do not redeclare a value that cascade, inheritance, a component default, or the same scope already gets right, unless explicitness has a concrete purpose.
-- Prefer fewer declarations. Leave a property undeclared when inheritance or the existing default already matches and no design rule requires another value.
+- Prefer fewer declarations. Do not declare a value that cascade, inheritance, a component default, or the same scope already gets right, unless a design rule requires another value or explicitness has a concrete purpose.
 - Use the repository's theme tokens for colors, spacing, lengths, radii, shadows, and durations when a token exists. Do not hard-code a raw hex value or a magic pixel value in its place.
 - Order declarations alphabetically by default. Preserve intentional order for shorthand and longhand interactions, fallbacks, vendor-prefixed pairs, repeated-property overrides, and other dependencies. Put `@extend` and `@include` before the sorted properties of the same block, and nested rules after the declarations. Do not mechanically reorder nested rules or Sass directives.
 
