@@ -4,7 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
-import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "./lib/host.mjs";
+import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
+import { reportUsage, USAGE_REL } from "./lib/reports.mjs";
 import { readConfig } from "./lib/config.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { versionBump, versionNote, versionShow } from "./lib/version.mjs";
@@ -218,6 +219,22 @@ COMMANDS.set("check", {
     const checks = fs.existsSync(path.join(hostRoot, ".agents", "ags.yaml")) ? readConfig(hostRoot).data.checks || {} : {};
     const args = only.flatMap((kind) => (checks[kind] ? [`--${kind}`, String(checks[kind])] : []));
     return runSkillScript({ route, skill: "check", script: "run-checks.mjs", args, terminal });
+  },
+});
+
+COMMANDS.set("report usage", {
+  usage: '[--route .] --file <host path>=<level> ... [--label "<text>"]',
+  flags: ["route", "file", "label"],
+  run: async ({ agsRoot, flags, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: report usage ${rest.join(" ")}`);
+    if (!flags.file?.length) throw usageError("ags report usage needs at least one --file <host path>=<level>");
+    const hostRoot = gitRoot(routeOf(flags));
+    if (!fs.existsSync(path.join(hostRoot, ".agents", "ags.yaml"))) throw new AgsError(`${posix(hostRoot)} has no AGS installation. Run ags host install.`);
+    const config = readConfig(hostRoot).data;
+    if (config.agsVersion == null) throw new AgsError("The AGS installation is incomplete. Run ags host install.");
+    const result = await reportUsage({ hostRoot, config, managed: config.reporting === false ? new Set() : installedPaths(agsRoot, hostRoot, config), values: flags.file, label: flags.label });
+    terminal.log(result.recorded ? `Recorded usage in ${USAGE_REL}.` : "Reporting is off in .agents/ags.yaml; nothing recorded.");
+    return 0;
   },
 });
 

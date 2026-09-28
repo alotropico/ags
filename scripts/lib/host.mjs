@@ -863,6 +863,13 @@ export function usageRecordCount(hostRoot) {
   return buffer == null ? 0 : buffer.toString("utf8").split("\n").filter((line) => line.trim()).length;
 }
 
+export function installedPaths(agsRoot, hostRoot, config) {
+  const version = String(config.agsVersion);
+  const { catalog, source } = releaseInputs(agsRoot, version);
+  const selection = resolveSelection(catalog, config, detectEvidence(hostRoot));
+  return new Set([BLOCK_KEY, ...targetMaterial(source, catalog, selection).keys()]);
+}
+
 export async function hostStatus({ agsRoot = AGS_ROOT, route, hostId = null, terminal, extraWarnings = () => [] }) {
   const op = updateOperation({ agsRoot, route, hostId, rerunArgs: hostId ? ["host", "update", "--host", hostId] : ["host", "update", "--route", route] });
   const hostRoot = op.hostRoot;

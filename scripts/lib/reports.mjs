@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { AgsError, relativeInside } from "./util.mjs";
@@ -188,4 +189,41 @@ export async function withLocks(lockDirs, command, fn, options) {
 
 export function reportStamp() {
   return new Date().toISOString();
+}
+
+export const USAGE_REL = ".tmp/ags/reports/usage.jsonl";
+
+export function usageFiles(hostRoot, values, managed) {
+  const normalized = parseUsageFiles(values).map(({ path: input, level }) => ({ input, path: String(input).trim().replaceAll("\\", "/").replace(/^\.\//, ""), level }));
+  for (const { input, path: rel } of normalized) {
+    if (!managed.has(rel)) throw new AgsError(`Not a managed file of this host: ${input}. Report AGENTS.md or files AGS installed under .agents/.`);
+  }
+  return dedupeReportedFiles(normalized).map(({ path: rel, level }) => {
+    const file = path.join(hostRoot, ...rel.split("/"));
+    let buffer;
+    try {
+      buffer = fs.readFileSync(file);
+    } catch {
+      throw new AgsError(`Managed file is missing: ${rel}`);
+    }
+    return { path: rel, level, sha256: createHash("sha256").update(buffer).digest("hex") };
+  });
+}
+
+export async function reportUsage({ hostRoot, config, managed, values, label }) {
+  if (config.reporting === false) return { recorded: false, file: null };
+  return withLock(hostLockPath(hostRoot), "report usage", () => {
+    const files = usageFiles(hostRoot, values, managed);
+    const record = {
+      id: randomUUID(),
+      timestamp: `${new Date().toISOString().slice(0, 19)}Z`,
+      agsVersion: String(config.agsVersion),
+      label: label ?? "",
+      files,
+    };
+    const file = path.join(hostRoot, ...USAGE_REL.split("/"));
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, `${JSON.stringify(record)}\n`);
+    return { recorded: true, file };
+  });
 }
