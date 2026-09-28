@@ -71,12 +71,20 @@ export function writeYamlAtomic(file, value) {
   writeAtomic(file, body.endsWith("\n") ? body : `${body}\n`);
 }
 
+let atomicCounter = 0;
+
 export function writeAtomic(file, data) {
   const dir = path.dirname(file);
   fs.mkdirSync(dir, { recursive: true });
-  const temp = path.join(dir, `.${path.basename(file)}.${process.pid}.${Date.now()}.tmp`);
-  fs.writeFileSync(temp, data);
-  fs.renameSync(temp, file);
+  atomicCounter += 1;
+  const temp = path.join(dir, `.${path.basename(file)}.${process.pid}.${Date.now()}.${atomicCounter}.tmp`);
+  try {
+    fs.writeFileSync(temp, data);
+    fs.renameSync(temp, file);
+  } catch (error) {
+    fs.rmSync(temp, { force: true });
+    throw error;
+  }
 }
 
 export function git(args, cwd, { allow = [0], input } = {}) {
