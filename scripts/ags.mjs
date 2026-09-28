@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
 import { hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
-import { doctor } from "./lib/doctor.mjs";
+import { doctor, hostDoctorWarnings } from "./lib/doctor.mjs";
 import { skillsList } from "./lib/skills.mjs";
 import { writeSnapshot } from "./lib/snapshot.mjs";
 import { readConfig } from "./lib/config.mjs";
@@ -143,7 +143,7 @@ COMMANDS.set("host status", {
   flags: ["route", "host"],
   run: ({ agsRoot, flags, terminal, command }) => {
     hostArgs(command, flags, routeOf(flags));
-    return hostStatus({ agsRoot, route: routeOf(flags), hostId: flags.host ?? null, terminal });
+    return hostStatus({ agsRoot, route: routeOf(flags), hostId: flags.host ?? null, terminal, extraWarnings: (hostRoot) => hostDoctorWarnings(agsRoot, hostRoot) });
   },
 });
 
@@ -251,11 +251,11 @@ COMMANDS.set("skills list", {
 });
 
 COMMANDS.set("doctor", {
-  usage: "",
-  flags: [],
-  run: ({ agsRoot, rest, terminal }) => {
+  usage: "[--route .]",
+  flags: ["route"],
+  run: ({ agsRoot, flags, rest, terminal }) => {
     if (rest.length) throw usageError(`Unknown command: doctor ${rest.join(" ")}`);
-    return doctor({ agsRoot, terminal });
+    return doctor({ agsRoot, route: flags.route ? routeOf(flags) : null, terminal });
   },
 });
 
