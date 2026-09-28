@@ -2,7 +2,7 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
-import { hostInstall } from "./lib/host.mjs";
+import { hostInstall, hostUpdate } from "./lib/host.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { AgsError, AGS_ROOT } from "./lib/util.mjs";
 
@@ -97,6 +97,28 @@ COMMANDS.set("host install", {
       sets: flags.set || [],
       includeNested: Boolean(flags["include-nested"]),
       rerunArgs: rerunArgs(command, flags, route),
+      terminal,
+      options,
+    });
+  },
+});
+
+COMMANDS.set("host update", {
+  usage: "[--route . | --host <id>] [--to X.Y.Z] [--enable <ids>] [--disable <ids>] [--set key=value ...] [--dry-run] [--plan <digest>] [--decide <path>=<choice> ...] [--decide-all <choice>]",
+  flags: ["route", "host", "to", "enable", "disable", "set", ...OPERATION_FLAGS],
+  run: ({ agsRoot, flags, terminal, command }) => {
+    if (flags.route && flags.host) throw usageError("Pass --route or --host, not both.");
+    const options = operationOptions(flags);
+    const route = routeOf(flags);
+    return hostUpdate({
+      agsRoot,
+      route,
+      hostId: flags.host ?? null,
+      to: flags.to ?? null,
+      enable: csvList(flags.enable),
+      disable: csvList(flags.disable),
+      sets: flags.set || [],
+      rerunArgs: flags.host ? rerunArgs(command, flags, route).filter((_, index, all) => all[index] !== "--route" && all[index - 1] !== "--route") : rerunArgs(command, flags, route),
       terminal,
       options,
     });

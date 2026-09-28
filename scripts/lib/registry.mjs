@@ -50,8 +50,10 @@ function recordErrors(label, list, fields) {
     if (typeof record.path !== "string" || !record.path || record.path.includes("\\") || record.path.startsWith("/") || record.path.split("/").includes("..")) {
       errors.push(`${label} record path must be a host-relative path with forward slashes`);
     }
-    if (!HASH.test(String(record.hostHash))) errors.push(`${label} ${record.path}: hostHash must be a SHA-256 hex`);
     const other = fields.includes("agsHash") ? "agsHash" : "targetHash";
+    if (other === "agsHash" ? !HASH.test(String(record.hostHash)) : record.hostHash != null && !HASH.test(String(record.hostHash))) {
+      errors.push(`${label} ${record.path}: hostHash must be a SHA-256 hex${other === "targetHash" ? " or null" : ""}`);
+    }
     if (other === "agsHash" ? !HASH.test(String(record.agsHash)) : record.targetHash != null && !HASH.test(String(record.targetHash))) {
       errors.push(`${label} ${record.path}: ${other} must be a SHA-256 hex${other === "targetHash" ? " or null" : ""}`);
     }
