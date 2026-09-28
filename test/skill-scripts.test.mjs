@@ -3,10 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { commitCount, emptyTreeId, writeDiff } from "../scripts/lib/diff.mjs";
+import { commitCount, emptyTreeId, writeDiff } from "../skills/write-commit-diff/scripts/write-commit-diff.mjs";
 import { runChecks } from "../scripts/lib/checks.mjs";
 import { detectPackageManager, isPackageScriptKey, packageScriptInvocation } from "../scripts/lib/packages.mjs";
-import { git, makeHostRepo, tempDir } from "./helpers/fixtures.mjs";
+import { main } from "../scripts/ags.mjs";
+import { git, makeHostRepo, quietTerminal, REAL_ROOT, tempDir } from "./helpers/fixtures.mjs";
 
 function commitFile(repo, name, body, message) {
   fs.writeFileSync(path.join(repo, name), body);
@@ -56,7 +57,7 @@ test("diff modes match git and do not change the index", () => {
   assert.ok(fs.readFileSync(all.path, "utf8").includes("tracked.txt"));
   assert.throws(() => writeDiff(repo, "too-far", "commits", String(Number(count) + 1)));
   assert.throws(() => writeDiff(repo, "bad-ref", "range", { from: "deadbeefdead", to: "HEAD" }));
-  assert.equal(fs.existsSync(path.join(repo, ".tmp", "bad-ref.diff")), false);
+  assert.equal(fs.existsSync(path.join(repo, ".tmp", "scratch", "bad-ref.diff")), false);
   const currentAll = writeDiff(repo, "current-all", "current");
   const expectedHead = gitOut(repo, ["diff", "--no-color", "--no-ext-diff", "--no-textconv", "HEAD"]);
   const body = fs.readFileSync(currentAll.path, "utf8");
@@ -65,7 +66,7 @@ test("diff modes match git and do not change the index", () => {
   const nestedDiffDir = path.join(repo, "src", "nested");
   fs.mkdirSync(nestedDiffDir, { recursive: true });
   const nestedDiff = writeDiff(nestedDiffDir, "from-nested", "staged");
-  assert.equal(path.resolve(nestedDiff.path), path.join(path.resolve(repo), ".tmp", "from-nested.diff"));
+  assert.equal(path.resolve(nestedDiff.path), path.join(path.resolve(repo), ".tmp", "scratch", "from-nested.diff"));
 });
 
 test("diff first-parent count bounds merge history", () => {
@@ -137,6 +138,40 @@ test("diff at the root commit uses the empty tree and leaves the index", () => {
   assert.match(text, /fresh\.txt/);
   assert.equal(git(repo, ["write-tree"]), indexBefore);
   assert.throws(() => writeDiff(repo, "past-root", "commits", "2"));
+});
+
+function installSkillScript(host, skill, script) {
+  const dir = path.join(host, ".agents", "skills", skill, "scripts");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(path.join(REAL_ROOT, "skills", skill, "scripts", script), path.join(dir, script));
+}
+
+function nodeImports(file) {
+  const text = fs.readFileSync(file, "utf8");
+  return [...text.matchAll(/^import .* from "([^"]+)";$/gm)].map((match) => match[1]);
+}
+
+test("diff: the script imports only node: modules and runs from the command line", () => {
+  const script = path.join(REAL_ROOT, "skills", "write-commit-diff", "scripts", "write-commit-diff.mjs");
+  assert.ok(nodeImports(script).every((name) => name.startsWith("node:")));
+  const repo = makeHostRepo({ name: "diff-cli" });
+  fs.writeFileSync(path.join(repo, "fresh.txt"), "new\n");
+  const result = spawnSync(process.execPath, [script, "untracked", "fresh"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /scratch[\\/]fresh\.diff\nbytes: \d+\nsource: untracked\n$/);
+  assert.equal(spawnSync(process.execPath, [script, "nope", "x"], { cwd: repo, encoding: "utf8" }).status, 2);
+});
+
+test("diff: ags diff runs the host's installed script, and says so when the skill is not installed", async () => {
+  const repo = makeHostRepo({ name: "diff-alias" });
+  fs.writeFileSync(path.join(repo, "fresh.txt"), "new\n");
+  const missing = main(["diff", "untracked", "fresh", "--route", repo], { terminal: quietTerminal() });
+  await assert.rejects(missing, /The write-commit-diff skill is not installed/);
+  installSkillScript(repo, "write-commit-diff", "write-commit-diff.mjs");
+  const terminal = quietTerminal();
+  assert.equal(await main(["diff", "untracked", "fresh", "--route", repo], { terminal }), 0);
+  assert.match(terminal.text(), /source: untracked/);
+  assert.match(fs.readFileSync(path.join(repo, ".tmp", "scratch", "fresh.diff"), "utf8"), /fresh\.txt/);
 });
 
 // check

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate } from "./lib/host.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
 import { versionBump, versionNote, versionShow } from "./lib/version.mjs";
-import { AgsError, AGS_ROOT } from "./lib/util.mjs";
+import { AgsError, AGS_ROOT, gitRoot, posix } from "./lib/util.mjs";
 
 const VALUE_FLAGS = new Set(["route", "host", "id", "name", "out", "plan", "decide", "decide-all", "set", "enable", "disable", "file", "to", "label", "only"]);
 const REPEATABLE = new Set(["set", "decide", "enable", "disable", "file"]);
@@ -182,6 +184,23 @@ COMMANDS.set("version bump", {
     const args = ["version", "bump", rest[0], ...(flags["allow-empty"] ? ["--allow-empty"] : [])];
     return versionBump({ agsRoot, level: rest[0], allowEmpty: Boolean(flags["allow-empty"]), rerunArgs: args, terminal, options: operationOptions(flags) });
   },
+});
+
+export function runSkillScript({ route, skill, script, args, terminal }) {
+  const hostRoot = gitRoot(route);
+  const file = path.join(hostRoot, ".agents", "skills", skill, "scripts", script);
+  if (!fs.existsSync(file)) throw new AgsError(`The ${skill} skill is not installed in ${hostRoot}; ${posix(path.relative(hostRoot, file))} is missing.`);
+  const result = spawnSync(process.execPath, [file, ...args], { cwd: hostRoot, encoding: "utf8", windowsHide: true });
+  if (result.error) throw new AgsError(`Could not run ${file}: ${result.error.message}`);
+  for (const line of (result.stdout || "").split(/\r?\n/).filter(Boolean)) terminal.log(line);
+  for (const line of (result.stderr || "").split(/\r?\n/).filter(Boolean)) terminal.warn(line);
+  return result.status ?? 1;
+}
+
+COMMANDS.set("diff", {
+  usage: "<mode> <name> [args] [--route .]",
+  flags: ["route"],
+  run: ({ flags, rest, terminal }) => runSkillScript({ route: routeOf(flags), skill: "write-commit-diff", script: "write-commit-diff.mjs", args: rest, terminal }),
 });
 
 function helpText() {
