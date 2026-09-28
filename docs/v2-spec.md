@@ -875,11 +875,12 @@ Cursor and Claude Code load such files from subfolders when an agent works with 
 ### 17.5 Ignoring and readability
 
 - `.tmp/` is gitignored in AGS and in every host, through an ignore rule or the exclude block. Git's ignore is the only ignore AGS relies on.
-- `.tmp/` must not be listed in `.cursorignore`, `.cursorindexingignore` or any other harness-specific ignore file; `.cursorignore` blocks agent reads. AGS never edits these files, and `doctor` reports the entry.
+- `.tmp/` must not be listed in `.cursorignore`, `.cursorindexingignore` or any other harness-specific ignore file; `.cursorignore` blocks agent reads. Nor may an unanchored `tmp/` line, which Cursor also applies to `.tmp/`; write `/tmp/` instead. AGS never edits these files, and `doctor` reports the entry.
 - **Contract:** agents read `.tmp/` files by direct path. Built-in search, Grep, `@` suggestions and indexing are not guaranteed to include gitignored `.tmp/` content, whether or not a harness ignore file lists it. Terminal tools may search `.tmp/` explicitly, for example with `rg --no-ignore`; `tmp-conventions` says so.
 - Observed in Cursor in AGS, where `.tmp/` is ignored through `.gitignore` and listed in no harness ignore file: direct reads worked; the built-in search skipped the files, and on 2026-09-27 returned no matches, rather than an error, for a `.tmp/` file given by its exact path; `rg --no-ignore` found them.
 - Observed in Cursor 3.22.7 from the AGS workspace, in a scratch host ignored only through the exclude block: the direct read worked; Grep (host root and exact path) and Glob found nothing, without an error; `rg` found nothing and `rg --hidden --no-ignore` found the file.
-- Observed in Watcher, ignored through `.gitignore`, in the same session: Grep, Glob and `rg` behaved as in the scratch host, but the direct read was denied. Cursor caches a folder's `.cursorignore` at first access, and Watcher's still listed `.tmp/` then; removing the entry takes effect only after the Cursor window reloads.
+- Observed in Watcher, ignored through `.gitignore`, in the same session: Grep, Glob and `rg` behaved as in the scratch host, but the direct read was denied, also after a window reload. Two causes: Cursor caches a known workspace's `.cursorignore` until the window reloads, and it applies Watcher's unanchored `tmp/` line to `.tmp/` as well. A folder that is not a known Cursor workspace showed no `.cursorignore` effect at all.
+- Observed with Watcher open as the workspace: `@` did not suggest the probe file, the search panel did not find its token, and Indexing & Docs did not list it as indexed.
 - Old material under `.tmp/` stays inert because backups rename instruction entry files and discovery-triggering folders (17.4, Appendix E.4), not because search skips it.
 - Run 2 probed the contract on 2026-09-28 in Watcher and a scratch host; the record is Watcher's `.tmp/records/2026-09-28-ags-tmp-probe.md`.
 
