@@ -29,6 +29,7 @@ Dispositions, exactly one per row:
 | 9 | React skills reference | `.tmp/references/ags-react-skills.md` | Removed | None | Byte-for-byte copy of the V1 spec; deleted |
 | 10 | AGS future work notes | `.tmp/references/ags-future-work-notes.md` | Removed | `.tmp/archive/2026-09/ags-future-work-notes.md` | Items reconciled into `BACKLOG.md`, rows below; archived at `.tmp/archive/2026-09/` |
 | 11 | AGS raw notes | `.tmp/references/ags-raw-notes.md` | Removed | `.tmp/archive/2026-09/ags-raw-notes.md` | Items reconciled into `BACKLOG.md`, rows below; archived at `.tmp/archive/2026-09/` |
+| 12 | Archived copy of the first backlog | `.tmp/archive/2026-09/2026-09-27-ags-backlog.md` | Removed | `.tmp/archive/2026-09/2026-09-27-ags-backlog.md` | History only; the live backlog is `BACKLOG.md` (row 2), which its header names |
 
 ### .tmp/archive/2026-09/ags-future-work-notes.md
 
@@ -50,18 +51,19 @@ Dispositions, exactly one per row:
 | 14 | Snapshot exclusion override | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Snapshot exclusion override" | Removed | None | Obsolete: the host snapshot holds only `AGENTS.md` and `.agents/**` (spec 20) |
 | 15 | Windows-only CLI and tests | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Windows-only CLI and tests" | Backlog | `BACKLOG.md`, CLI and platform, "Portable CLI" | |
 | 16 | Skill compatibility and stack inference | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Skill compatibility and stack inference" | AGS | `docs/v2-spec.md` 12.1, 12.2, 12.4 | V2 keeps the V1 condition grammar and adds install classes and companions, with no solver |
-| 17 | Reporting semantics and cross-run analysis | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Reporting: keep per-host toggles" | Backlog | `BACKLOG.md`, Reporting, "Usage collection" | |
+| 17 | Reporting semantics and cross-run analysis | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Reporting: keep per-host toggles", "Possible later work" | Backlog | `BACKLOG.md`, Reporting, "Usage analysis" | |
 | 18 | No versioning or release process | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Versioning: a simple private sketch" | Removed | None | Rejected by spec 15: V2 releases semver tags with notes |
 | 19 | Engineering items are candidates, not prerequisites | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Engineering backlog from Claude's review" | Removed | None | Framing only; each item has its own row below |
 | 20 | Reuse catalog lookups; parse `.ags-exclude` once | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Reuse catalog lookups within a call" | Removed | None | Obsolete: `.ags-exclude` is V1 and the modules are rewritten in Run 1 (spec 20, 25) |
 | 21 | Remove redundant loads, probes and reads | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Remove demonstrably redundant catalog loads" | Removed | None | Obsolete: the V1 code paths are rewritten in Run 1 (spec 25) |
 | 22 | Consolidate collision checks and repaired-settings parsing | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Consolidate duplicated collision checks" | Removed | None | Obsolete: repair is removed and settings are rewritten (spec 13, 25) |
-| 23 | Consistent CLI usage errors and `--key=value` | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Make CLI usage errors consistent" | Backlog | `BACKLOG.md`, CLI and platform, "`--key=value` flags" | Exit codes are fixed by spec 22.4; the flag form is new backlog |
+| 23 | Consistent CLI usage errors and `--key=value` | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Make CLI usage errors consistent" | Backlog | `BACKLOG.md`, CLI and platform, "`--key=value` flags" | Exit codes are fixed by spec 22.4; `scripts/ags.mjs` is the only entry point, and a bare `snapshot --out` exits 2 (`test/snapshot.test.mjs`); the flag form is new backlog |
 | 24 | Markdown link detection | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Improve Markdown-link detection" | Backlog | `BACKLOG.md`, CLI and platform, "Markdown link detection" | |
 | 25 | ZIP64 | `.tmp/archive/2026-09/ags-future-work-notes.md`, "ZIP64 is unnecessary" | Backlog | `BACKLOG.md`, Snapshots, "ZIP64" | |
 | 26 | Install rollback residue | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Revisit install rollback residual directories" | Removed | None | Obsolete: the operation model replaces V1 install rollback (spec 16.1) |
 | 27 | Exploratory ideas and AGSO history | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Exploratory, not a roadmap commitment" | Removed | None | No commitment; capabilities are added when usage calls for them (spec 3 principle 8, 4) |
 | 28 | Order: meta content, lean guidance, tactical quality | `.tmp/archive/2026-09/ags-future-work-notes.md`, "The ordering can change after using AGS" | AGS | `docs/v2-spec.md` 28 | Run 2 consolidates, then usage-driven additions, then V3 proto-rules |
+| 29 | Per-host reporting toggle and JSONL usage records | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Reporting: keep per-host toggles and JSONL usage/change scripts" | AGS | `docs/v2-spec.md` 13.1 (`reporting`), 18 | Change scripts are dropped with change reports (spec 15.3) |
 
 ### .tmp/archive/2026-09/ags-raw-notes.md
 
@@ -215,6 +217,8 @@ Dispositions, exactly one per row:
 | 14 | Read `.agents/ags.yaml` `checks` before deciding no audit exists | `v1-final:skills/css-cleanup/SKILL.md`, "Established command" | AGS | `skills/css-cleanup/SKILL.md`, "Host settings" and "Established command" | Appendix D wording for its `params` |
 | 15 | Verify with the host `check` skill; never fall back to canonical AGS scripts | `v1-final:skills/css-cleanup/SKILL.md`, Verify | AGS | `skills/css-cleanup/SKILL.md`, Verify | The canonical-scripts clause is dropped with the canonical root (spec 25) |
 | 16 | Skills act on "the verified host", checked through AGS before use | `v1-final:skills/check/SKILL.md`, description; `v1-final:skills/git-cleanup/SKILL.md`, "Required host setting"; `v1-final:skills/css-cleanup/SKILL.md`, "Established command" | AGS | `skills/check/SKILL.md`, `skills/git-cleanup/SKILL.md`, `skills/css-cleanup/SKILL.md` ("the repository") | Reworded: skills run inside the host that installed them, with no registry check (spec 6 invariant 2, 19) |
+| 17 | Canonical `.tmp` is only for work on AGS itself or files AGS scripts stage | `v1-final:skills/plan-work/SKILL.md`, "Canonical `.tmp` is only for work on AGS itself" | AGS | `rules/tmp-conventions.md` (`.tmp/ags/` reserved for the `ags` command); `AGENTS.md`, ".tmp conventions" | Every repository, AGS included, follows the same `.tmp` conventions (spec 17.1) |
+| 18 | Do not modify the host's tracked `.gitignore` | `v1-final:skills/plan-work/SKILL.md`, "Do not modify the host's tracked `.gitignore`" | AGS | `scripts/lib/render.mjs` (only the exclude block in `.git/info/exclude`) | AGS never touches `.gitignore` (spec Appendix E.3, 16.12) |
 
 ### v1-final: removed commands and settings
 

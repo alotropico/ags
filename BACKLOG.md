@@ -39,6 +39,7 @@
 - **Usage collection** (`ags report collect`, and during update). Rename the host spool into a batch, append its records to `reports/usage/YYYY-MM.jsonl` in AGS with id deduplication, then delete the batch. Add the host name from the registry, and map host paths to source paths. Test concurrent writes.
 
 ## Snapshots
+- **Usage analysis.** Once records are collected: concise structured events, clearer semantics for the usage levels, compact per-run summaries, and cross-run analysis. No telemetry runtime or reporting-level framework.
 
 - **`ags snapshot source [--out <zip>]`.** Archive the AGS source material for review; it replaces V1's `snapshot canonical`.
 - **ZIP64.** Unnecessary for guidance-sized snapshots. If a snapshot approaches ZIP limits, first fail visibly rather than write an invalid archive; implement ZIP64 only for a real case.
@@ -50,7 +51,7 @@
   - `allowed` and `forbidden` are guidance, not enforcement.
   - Tool outputs join the exclude block (`/graphify-out/`, `/.fallow/`). A tool's own repository configuration, such as `.fallowrc.json`, is host-owned.
   - A skill that uses a tool must work without it: "if the tool is available, meaning its detect command succeeds and `tools.<id>` is not `false`, use it; otherwise skip the step".
-  - Graphify: rebuild with `graphify update <path>`, which runs without an LLM, and run read-only queries. Never `label`, `install`, `add` or `watch`, and never an LLM backend or model option.
+  - Graphify: the first generation defaults to `graphify extract . --code-only`; rebuild with `graphify update <path>`, which runs without an LLM, and run read-only queries. Never `label`, `install`, `add` or `watch`, and never an LLM backend or model option.
   - Fallow: read-only analysis (`fallow`, `audit`, `health`, `dupes`, `doctor`, `explain`, `config`). Never `fix`, `init` or `migrate` unless the user explicitly asks.
   - Tools need no dedicated skill; the skills that benefit carry the steps.
   - Inputs for the Graphify steps: Watcher's former `graphify` skill and Meta's `templates/rules/graphify.mdc` (spec Appendix H).
