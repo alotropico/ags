@@ -72,7 +72,7 @@ settings:
   - key: git.ticketPrefix
     type: string
     default: ""
-    description: Prefix for ticket ids in branch names and commit subjects. Empty means no ticket part.
+    description: Prefix for ticket ids in branch names and merge request titles. Empty means no ticket part.
   - key: checks.type
     type: string
     default: ""

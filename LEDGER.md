@@ -466,7 +466,7 @@ Sources: "Personal" is the pre-routing-edit personal skill, AGS `.tmp/records/20
 | 10 | Subject examples | Personal, D2, HXP examples | AGS | "Subject" example block | Rewritten to the settled lower-case form |
 | 11 | Change written with a capital (`Add`, `Fix`) | D2, "Commit message format" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP and Watcher write the change in lower case (rule 4); D2 keeps its form as a host note at Phase E (rule 3, P23) |
 | 12 | "Prefer this over HXP `Type: Scope`" | D2, intro | Removed | None | One shared format replaces the cross-host preference; the only remaining difference is row 11 |
-| 13 | Ticket id in the branch name, not on every commit subject | D2, "Tickets and feature branches" | AGS | "Subject" (no ticket id); `skills/start-branch/SKILL.md`, "Branch name" | |
+| 13 | Ticket id in the branch name, not on every commit subject | D2, "Tickets and feature branches" | AGS | "Subject" (no ticket id); `skills/start-branch/SKILL.md`, "Branch name" | `git.ticketPrefix` is described as the prefix for branch names and merge request titles (`catalog.yaml`, spec Appendix D) |
 | 14 | Default is not to commit; task completion, green lint or end of turn is no cue; no "should I commit?" habit | D2 and HXP, "When to commit" | AGS | "When to commit" | |
 | 15 | Ship, publish or push does not create commits; stop and ask if the tree is dirty and the user did not ask to commit | D2 and HXP, "When to commit" | AGS | "When to commit"; `skills/ship/SKILL.md`, "5. Commit" | Asking to ship is the explicit request to commit, so `ship` commits uncommitted work through `commit-granular` (spec 28.2); pushing or publishing alone commits nothing |
 | 16 | Never update git config | D2, "When to commit" | AGS | "Procedure" | |

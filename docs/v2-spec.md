@@ -413,7 +413,7 @@ settings:
   - key: git.ticketPrefix
     type: string
     default: ""
-    description: Prefix for ticket ids in branch names and commit subjects. Empty means no ticket part.
+    description: Prefix for ticket ids in branch names and merge request titles. Empty means no ticket part.
   - key: checks.type
     type: string
     default: ""
@@ -1529,7 +1529,7 @@ The selection and the script names are illustrative; install records what Watche
 Read these keys from `.agents/ags.yaml` at the repository root before acting. Use each value exactly as written; never guess one. If a required key is missing, stop and ask the user.
 
 - `git.mainBranch` (required): the trunk branch that feature branches start from and merge into.
-- `git.ticketPrefix`: prefix for ticket ids in branch names and commit subjects. With `CORE-`, a branch is `CORE-1234-short-slug`. If the key is empty or missing, leave the ticket part out: `short-slug`.
+- `git.ticketPrefix`: prefix for ticket ids in branch names and merge request titles. With `CORE-`, a branch is `CORE-1234-short-slug`. If the key is empty or missing, leave the ticket part out: `short-slug`.
 ```
 
 In the body, steps refer to "the prefix from Host settings" rather than repeating the rule. For a skill with a script:
