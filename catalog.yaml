@@ -46,6 +46,9 @@ skills:
     install: opt-in
     params: [checks.type, checks.lint, checks.prettier]
     keywords: [check, typecheck, lint, prettier]
+  - id: commit-granular
+    install: opt-in
+    keywords: [commit, commits, git]
 
 settings:
   - key: git.mainBranch

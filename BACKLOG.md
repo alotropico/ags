@@ -99,6 +99,7 @@
 - **Phase E sources.** Material from the Run 2 sources (spec Appendix H) that waits for the D2 and HXP installs. Ledger rows filed under Phase E point here:
   - D2- and HXP-only meta inventory rows that Watcher does not use: `smoke-save`, `smoke-branch-merge`, their state records and forms, `linting-and-formatting`, and the afterFileEdit hooks;
   - `windows-browser-use` (D2 `.agents/skills/`, Meta `templates/ags/shared/skills/`) and its overlap with Layer 0's browser rules. The skill launches Chrome with a remote-debugging port. The "Windows browser automation" section of `~/.cursor/rules/00-layer0.mdc` and `~/.cursor/rules/01-no-chrome-protocol.mdc` forbid `chrome://` URLs and browser-use CDP probes unless remote debugging is already active, and prefer Playwright. Reconcile them into one rule set;
+  - D2's commit subjects capitalize the change (`Fix: SelectorList, Restore focus after filter clear`), where the shared `commit-granular` writes it in lower case; a D2 host note `.agents/local/commit-granular.md` at Phase E, or D2 adopts the shared form;
   - removing the personal `commit-granular` and `ship` skills, and retiring or rewording the Layer 0 routing and standards lines, once D2 and HXP have the AGS versions.
 - **Team collaboration.** Separate personal and team material if others start using AGS in shared repositories such as HXP. Not a concern for now: the owner controls AGS and HXP, and HXP teams work in separate areas.
 
@@ -106,4 +107,5 @@
 
 - **Proto-rules.** `docs/v3-proto-rules.md`, with 51 proto-rules and diagnostic signals, is planned for V3, after the Run 2 consolidation. It covers the state-management and code-quality rules. `3.0.0` needs config migrations first.
 - **Host fact verification.** Check the repository facts a host states in `AGENTS.md` (trunk, verification scripts, pinned package majors) against the repository, as Watcher's former `verify-profile.mjs` did. Its layout checks are covered by `ags doctor`; the fact checks have no AGS home yet.
+- **`git.ticketPrefix` wording.** The setting's description in `catalog.yaml` and the Appendix D bullet say the prefix is for "branch names and commit subjects", but `commit-granular` puts no ticket id in commit subjects (D2 and Watcher; P28). Reword both to "branch names and merge request titles" in a later release; the skills copy Appendix D verbatim until then.
 - **Deeper TanStack and Mantine guidance,** building on the consolidated Run 2 content rather than reconciling variants again.

@@ -1,4 +1,5 @@
 ## Unreleased
+- New opt-in skill commit-granular: split work into small, well-scoped commits with the shared subject and body format.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`

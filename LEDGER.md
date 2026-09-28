@@ -345,10 +345,10 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Subject shape `Type: Scope, summary`, type list, examples; not Conventional Commits; no Jira | "Subject line" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 2 | Dividing commits | "Dividing commits" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 3 | Required body | "Body (required)" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 4 | What never goes in | "What never goes in" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 1 | Subject shape `Type: Scope, summary`, type list, examples; not Conventional Commits; no Jira | "Subject line" | AGS | `skills/commit-granular/SKILL.md`, "Subject"; Watcher's empty `git.ticketPrefix` in `.agents/ags.yaml` covers "no Jira" | Watcher's `Endpoint` and `Module` kinds are in the shared thing-kind list |
+| 2 | Dividing commits | "Dividing commits" | AGS | `skills/commit-granular/SKILL.md`, "Dividing commits" | |
+| 3 | Required body | "Body (required)" | AGS | `skills/commit-granular/SKILL.md`, "Body" | |
+| 4 | What never goes in | "What never goes in" | AGS | `skills/commit-granular/SKILL.md`, "Never in a message" | |
 | 5 | Scratch diffs under the clone's `tmp/` | "Scratch diffs" | Removed | None | Contradicts `tmp-conventions`; `write-commit-diff` writes under `.tmp/scratch/` (consolidation rule 1) |
 | 6 | Trunk `main` | "Trunk" | Host | Watcher `.agents/rules/git-conventions.md`; `git.mainBranch` in `.agents/ags.yaml` | |
 | 7 | Ship pointer with the GitLab merge request URL | "Ship" | Migrate later | Watcher `.agents/rules/git-conventions.md`, "Trunk and merge requests"; consolidation, step 4 | Waits for the Run 2 consolidation |
@@ -439,3 +439,36 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 5 | Profile verifier: layout checks | `scripts/verify-profile.mjs` | Removed | None | Superseded by `ags doctor` (P12) |
 | 6 | Profile verifier: repository facts checked against the repository | `scripts/verify-profile.mjs` | Backlog | `BACKLOG.md`, Guidance, "Host fact verification" | No AGS home yet (P12) |
 | 7 | Generated Cursor pointer rule | `_cursor/rules/00-watcher-generated.mdc` | Removed | None | The AGS block supersedes it; its landmines are in Watcher `AGENTS.md` |
+
+## Run 2: consolidation
+
+### commit-granular
+
+Sources: "Personal" is the pre-routing-edit personal skill, AGS `.tmp/records/2026-09-28-run2-layer0-before/commit-granular-SKILL.md`; "D2" is `designer2/.agents/guidance/git-conventions.md`; "HXP" is `hxpoc/.agents/guidance/git-conventions.md`. Destinations are in `skills/commit-granular/SKILL.md` unless named otherwise.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Read the project's `.cursor/rules/git.mdc` first; it overrides the skill | Personal, "Procedure" 1 | AGS | Intro ("Host guidance wins on formats"); `rules/core.md` host-note line | Host guidance (`AGENTS.md`, host rules, `.agents/local/commit-granular.md`) replaces `git.mdc` (spec 11.6) |
+| 2 | Read status, staged and unstaged diff, and `git log -8 --oneline` to match repository style | Personal, "Procedure" 2 | AGS | "Procedure" 1 | |
+| 3 | Group, present nothing, commit in dependency order, each commit buildable | Personal, "Procedure" 3 | AGS | "Procedure" 2 | |
+| 4 | Stage precisely by path; hunk-level only when one file mixes unrelated changes | Personal, "Procedure" 4 | AGS | "Procedure" 3 | |
+| 5 | Final `git status`; report intentional leftovers | Personal, "Procedure" 5 | AGS | "Procedure" 4 | |
+| 6 | Subject shape `{Scope}: {Target}, {Change}` with an optional brief description | Personal, "Commit message format"; D2, "Commit message format" | AGS | "Subject" | Same shape as HXP and Watcher `Type: Scope, summary`; the optional part is stated only by D2 among hosts, so the personal form wins (rule 4) |
+| 7 | Kind list with precedence (`Fix` … `Test`, including `Utility`, `Configuration`) | Personal, "Commit message format"; D2, "Commit message format" | AGS | "Subject", Kind | Merged with the HXP and Watcher lists; `Configuration` becomes `Config` (HXP and Watcher, rule 4); precedence kept (only D2 among hosts states it; personal agrees) |
+| 8 | Kind list with `Chore` and open thing-kinds (`Component`, `Hook`, `Modal`) | HXP, "Commit subject" | AGS | "Subject", Kind | `Chore` placed last in the precedence |
+| 9 | Imperative, no trailing period, not Conventional Commits | Personal, "Commit message format"; D2 and HXP, "Commit subject" and intro | AGS | "Subject" | |
+| 10 | Subject examples | Personal, D2, HXP examples | AGS | "Subject" example block | Rewritten to the settled lower-case form |
+| 11 | Change written with a capital (`Add`, `Fix`) | D2, "Commit message format" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP and Watcher write the change in lower case (rule 4); D2 keeps its form as a host note at Phase E (rule 3, P23) |
+| 12 | "Prefer this over HXP `Type: Scope`" | D2, intro | Removed | None | One shared format replaces the cross-host preference; the only remaining difference is row 11 |
+| 13 | Ticket id in the branch name, not on every commit subject | D2, "Tickets and feature branches" | AGS | "Subject" (no ticket id); `skills/start-branch/SKILL.md`, "Branch name" | |
+| 14 | Default is not to commit; task completion, green lint or end of turn is no cue; no "should I commit?" habit | D2 and HXP, "When to commit" | AGS | "When to commit" | |
+| 15 | Ship, publish or push does not create commits; stop and ask if the tree is dirty and the user did not ask to commit | D2 and HXP, "When to commit" | AGS | "When to commit"; `skills/ship/SKILL.md`, "5. Commit" | Asking to ship is the explicit request to commit, so `ship` commits uncommitted work through `commit-granular` (spec 28.2); pushing or publishing alone commits nothing |
+| 16 | Never update git config | D2, "When to commit" | AGS | "Procedure" | |
+| 17 | Never force-push trunk | D2, "When to commit" | AGS | `skills/ship/SKILL.md`, "7. Push" | |
+| 18 | One atomic, reviewable idea per commit; rename or move apart from content, including `.ts` to `.tsx`, identical content first | Personal, "Split strategy"; D2, "Dividing commits" | AGS | "Dividing commits" | |
+| 19 | Split mechanical refactors; never mix logic, styles, docs and version bumps; a short series that reverts cleanly | HXP, "Dividing commits"; D2, "Dividing commits" (dependency bumps) | AGS | "Dividing commits" | |
+| 20 | Cross-cutting app-level changes first unless tied to one feature | Personal, "Split strategy" | AGS | "Dividing commits" | |
+| 21 | A fix gets its own commit above 10 lines, 2 hunks, or as the only change to a file set; tiny fixes may fold | Personal, "Split strategy" | AGS | "Dividing commits" | |
+| 22 | Never mix formatting-only and behavioral changes | Personal, "Split strategy" | AGS | "Dividing commits" | |
+| 23 | Required conceptual body of 2 to 4 short sentences on why, no file narration | HXP, "Commit body" | AGS | "Body" | HXP and Watcher require it; D2 and the personal skill are silent (rule 4) |
+| 24 | No "This commit…", no AI attribution, no emoji | HXP, "Commit body" | AGS | "Never in a message" | |
