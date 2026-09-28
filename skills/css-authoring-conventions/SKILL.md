@@ -41,4 +41,4 @@ Unused-class audit: [`css-cleanup`](../css-cleanup/SKILL.md).
 
 ## Verify
 
-Use the host `check` skill when it is selected. Otherwise run the host's existing type, lint, or format scripts. Do not invent a package manager or a script name. Do not run canonical AGS scripts against the host.
+Use the `check` skill when it is installed. Otherwise run the repository's existing type, lint, or format scripts. Do not invent a package manager or a script name.
