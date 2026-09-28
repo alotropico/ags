@@ -350,7 +350,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 3 | Required body | "Body (required)" | AGS | `skills/commit-granular/SKILL.md`, "Body" | |
 | 4 | What never goes in | "What never goes in" | AGS | `skills/commit-granular/SKILL.md`, "Never in a message" | |
 | 5 | Scratch diffs under the clone's `tmp/` | "Scratch diffs" | Removed | None | Contradicts `tmp-conventions`; `write-commit-diff` writes under `.tmp/scratch/` (consolidation rule 1) |
-| 6 | Trunk `main` | "Trunk" | Host | Watcher `git.mainBranch` in `.agents/ags.yaml` | The interim `git-conventions` rule is deleted at step 5.1 (P26) |
+| 6 | Trunk `main` | "Trunk" | Host | Watcher `git.mainBranch` in `.agents/ags.yaml` | The interim `git-conventions` rule was deleted at step 5.1 (P26; Watcher `0c08216`) |
 | 7 | Ship pointer with the GitLab merge request URL | "Ship" | AGS | `skills/ship/SKILL.md`, "7. Push", "8. Merge request" | The provider comes from Watcher's remote |
 | 8 | Commit range diffs pointer | "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md` | Native skill discovery routes it |
 
@@ -406,7 +406,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | AGS | `skills/css-cleanup/SKILL.md`, "Confirm and remove" (introduction and step 2) | |
 | 7 | `css-theme-tokens` Watcher variant: `* 1` and single-variable `calc`, prefer existing tokens over hard-coded values, shortest default-`ease` transition including dropping `all` | `skills/css-theme-tokens/SKILL.md` | AGS | `skills/css-theme-tokens/SKILL.md`, "Normalize" 1, 2, 4 and 6 | |
 | 8 | `git-cleanup`: trigger, scope, fetch and prune, stale-based, confirm before delete, preview of unpushed work | `skills/git-cleanup/SKILL.md` | AGS | `skills/git-cleanup/SKILL.md` | |
-| 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference", "Exclusions" | The 30 days, the protected names and the prefix are shared text; `origin/main` derives from `git.mainBranch` and the remote is read from Git; the Watcher host note is deleted at step 5.1 |
+| 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference", "Exclusions" | The 30 days, the protected names and the prefix are shared text; `origin/main` derives from `git.mainBranch` and the remote is read from Git; the Watcher host note was deleted at step 5.1 (Watcher `0c08216`) |
 | 10 | `git-cleanup`: three levels (gone upstreams, stale locals, preview only) | same file, "Orchestration", "Level 1" to "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | |
 | 11 | `graphify` skill | `skills/graphify/SKILL.md` | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | Graphify left Watcher |
 | 12 | `plan-work`: skeleton, decision log, done when, skip tiny fixes | `skills/plan-work/SKILL.md` | AGS | `skills/plan-work/SKILL.md` | |
@@ -420,7 +420,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 20 | `write-commit-diff`: output `.tmp/<name>.diff` | same file | Removed | None | `tmp-conventions` puts scratch output under `.tmp/scratch/` |
 | 21 | `write-last-n-diff.ps1`, `write-range-diff.ps1`: PowerShell implementations | `skills/write-commit-diff/*.ps1` | Removed | None | Superseded by the Node script; their `commits` and `range` behavior is row 17 |
 | 22 | `write-range-diff.ps1`: `-Repo` other checkout and `-OutInRepo` | `skills/write-commit-diff/write-range-diff.ps1` | AGS | `skills/write-commit-diff/SKILL.md`, "Command" | Represented by running the script with the other checkout as the working directory, which equals `-Repo` with `-OutInRepo`; `-Repo` alone is `Removed` (`## Run 2: consolidation`, `### write-commit-diff` row 10) |
-| 23 | `css-theme-tokens` Watcher variant: token source `src/client/style/variables.scss`, global shell SCSS under `src/client/style/`, the token list, the `documentation/styling.md` pointer | `skills/css-theme-tokens/SKILL.md`, "Reference" and introduction | Host | Watcher `.agents/local/css-theme-tokens.md` | Split from row 7; the interim host skill `watcher-css-theme-tokens` is deleted at step 5.1 |
+| 23 | `css-theme-tokens` Watcher variant: token source `src/client/style/variables.scss`, global shell SCSS under `src/client/style/`, the token list, the `documentation/styling.md` pointer | `skills/css-theme-tokens/SKILL.md`, "Reference" and introduction | Host | Watcher `.agents/local/css-theme-tokens.md` | Split from row 7; the interim host skill `watcher-css-theme-tokens` was deleted at step 5.1 (Watcher `0c08216`) |
 
 ### _agents/archive/, _agents/stewardship/
 
