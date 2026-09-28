@@ -2,6 +2,7 @@
 - New opt-in skill commit-granular: split work into small, well-scoped commits with the shared subject and body format.
 - New opt-in skill start-branch: create a feature branch from git.mainBranch, named with git.ticketPrefix when set.
 - ship now judges the branch, creates one when needed, commits through commit-granular, pushes, targets the right branch and prepares the merge request title and review material.
+- git-cleanup consolidates the host variants: stale-branch levels with confirmation before each destructive step.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`

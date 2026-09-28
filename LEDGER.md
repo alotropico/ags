@@ -401,8 +401,8 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | Migrate later | Watcher `.agents/local/css-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
 | 7 | `css-theme-tokens` Watcher variant | `skills/css-theme-tokens/SKILL.md` | Migrate later | Watcher `.agents/skills/watcher-css-theme-tokens/SKILL.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
 | 8 | `git-cleanup`: trigger, scope, fetch and prune, stale-based, confirm before delete, preview of unpushed work | `skills/git-cleanup/SKILL.md` | AGS | `skills/git-cleanup/SKILL.md` | |
-| 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | Host | Watcher `.agents/local/git-cleanup.md` | |
-| 10 | `git-cleanup`: three levels (gone upstreams, stale locals, preview only) | same file, "Orchestration", "Level 1" to "Level 3" | Migrate later | Watcher `.agents/local/git-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference", "Exclusions" | The 30 days, the protected names and the prefix are shared text; `origin/main` derives from `git.mainBranch` and the remote is read from Git; the Watcher host note is deleted at step 5.1 |
+| 10 | `git-cleanup`: three levels (gone upstreams, stale locals, preview only) | same file, "Orchestration", "Level 1" to "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | |
 | 11 | `graphify` skill | `skills/graphify/SKILL.md` | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | Graphify left Watcher |
 | 12 | `plan-work`: skeleton, decision log, done when, skip tiny fixes | `skills/plan-work/SKILL.md` | AGS | `skills/plan-work/SKILL.md` | |
 | 13 | `plan-work`: naming `YYMMDD-snake_case` and `.cursor/plans/` drafts | same file, "Naming", "Location and lifecycle" | Removed | None | `tmp-conventions` sets `.tmp/plans/YYYY-MM-DD-kebab-slug.md` (consolidation rule 1) |
@@ -537,3 +537,32 @@ Sources: "ship (Meta, D2, HXP)" is the same skill in three copies, `meta/templat
 | 33 | Commit only when the user explicitly asks | AGS 2.0.1, "Preconditions" 2 | AGS | "5. Commit"; `skills/commit-granular/SKILL.md`, "When to commit" | |
 | 34 | The current branch is not the main branch | AGS 2.0.1, "Preconditions" 3 | AGS | "3. Branch" | Ship creates a branch through `start-branch` instead |
 | 35 | Force-push only when the user explicitly asks and names a branch that is not protected | ship (Meta, D2, HXP), "Procedure" 2; AGS 2.0.1, "Inspect Git" | Removed | None | Plan 4.3: ship never force-pushes; a force push stays a manual user action |
+
+### git-cleanup
+
+Sources: `<MS>` = `meta/templates/ags/shared/skills/git-cleanup/SKILL.md`; D2 = `designer2/.agents/skills/git-cleanup/SKILL.md` (same text as `<MS>`); HXP = `hxpoc/.agents/skills/git-cleanup/SKILL.md`. All read on 2026-09-28.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Explicit trigger only; scope is the current clone | `<MS>`, D2, HXP, "Trigger", "Scope" | AGS | `skills/git-cleanup/SKILL.md`, "Trigger", "Scope" | |
+| 2 | Provenance line "distilled from archived on-demand playbook" | `<MS>`, D2, first paragraph | Removed | None | Provenance only; states no behavior |
+| 3 | `MAIN_REF`: a main reference on the remote that staleness and merges are judged against | `<MS>`, D2, HXP, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference" | Derived from `git.mainBranch`; the local branch when no remote exists |
+| 4 | Trunk value `origin/integration-2025Q1` | `<MS>`, D2, HXP, "Config" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP trunk fact (P23); becomes their `git.mainBranch` |
+| 5 | `INTEGRATION_REF` | `<MS>`, D2, HXP, "Config" | Removed | None | Equals `MAIN_REF` in every variant and no step reads it |
+| 6 | `STALE_DAYS` of 30 | `<MS>`, D2, HXP, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Exclusions" | Shared by every variant |
+| 7 | `BACKUP_PREFIX` `backup-` | `<MS>`, D2, HXP, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Exclusions" | Shared by every variant |
+| 8 | `REMOTE` `origin` | `<MS>`, D2, HXP, "Config" | AGS | `skills/git-cleanup/SKILL.md`, "Remote and main reference" | Read from Git: one remote is used, several make the skill ask |
+| 9 | Always excluded: current branch, `main`, `master`, `develop` | `<MS>`, D2, HXP, "Always excluded" | AGS | `skills/git-cleanup/SKILL.md`, "Exclusions" | |
+| 10 | Always excluded: local branches named `integration-*` | `<MS>`, D2, HXP, "Always excluded" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 and HXP fact (P23); a protected-branch line of their host notes |
+| 11 | Never delete because a branch looks merged; cleanup is stale-based | `<MS>`, D2, HXP, paragraph after the exclusions | AGS | `skills/git-cleanup/SKILL.md`, "Exclusions" | |
+| 12 | Orchestration: fetch and prune first, stop and report after level 1, level 3 preview shown with level 2, level 2 deletes only a confirmed exact list, level 3 deletes only named items | `<MS>`, D2, HXP, "Orchestration" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | |
+| 13 | Level 1: gone upstreams found with `git for-each-ref ... %(upstream:track)` | `<MS>`, D2, HXP, "Level 1" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 1 | |
+| 14 | Level 1 deletes gone-upstream branches without asking | `<MS>`, D2, HXP, "Level 1" | Removed | None | Consolidation rule 1: AGS requires confirmation before each destructive command, so level 1 now deletes only confirmed candidates |
+| 15 | Delete with `git branch -d`; if it refuses, never `-D`, escalate to level 3 | HXP, "Level 1" | AGS | `skills/git-cleanup/SKILL.md`, "Exclusions" | |
+| 16 | Report deleted and skipped branches | HXP, "Level 1"; `<MS>`, D2, "Level 1" ("report what was deleted") | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | |
+| 17 | Level 2 candidates: stale, and tip identical to the upstream, or fully merged | HXP, "Level 2" 2 and 3; `<MS>`, D2, "Level 2" ("typically fully merged or abandoned tracking") | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 2 | "Fully merged" is checked as containment in the main reference, which still requires staleness |
+| 18 | Level 2 requires the upstream to be `origin/<same name>` | HXP, "Level 2" 1 | Removed | None | The identical-tip check carries the safety; the upstream's name adds none |
+| 19 | Candidate table: branch, upstream, tip SHA, tip date, reason | HXP, "Level 2" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" | Applied to every level |
+| 20 | Orphaned `backup-*` branches (original gone, tip stale) listed separately | HXP, "Level 2" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 3 | Marked in the level 3 preview; removed only when named, because backup branches are protected (step 4.4) |
+| 21 | Level 3 preview: unpushed or no-upstream branches, stashes, backups that may hold unique work; remove only named items | `<MS>`, D2, HXP, "Level 3" | AGS | `skills/git-cleanup/SKILL.md`, "Levels" 3 | |
+| 22 | Preview-only mode: fetch, print all levels, delete nothing | HXP, "Dry-run / preview mode" | AGS | `skills/git-cleanup/SKILL.md`, last paragraph | |
