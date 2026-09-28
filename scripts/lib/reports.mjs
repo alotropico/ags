@@ -57,7 +57,7 @@ export async function appendReport(root, kind, record) {
   const file = path.join(dir, `${month}.jsonl`);
   const lock = path.join(root, "reports", ".locks", `${kind}.lock`);
   fs.mkdirSync(dir, { recursive: true });
-  await withLock(lock, () => {
+  await withLock(lock, `report ${kind}`, () => {
     const line = `${JSON.stringify(record)}\n`;
     if (line.includes("\n\n")) throw new AgsError("Refusing to write a partial report line");
     fs.appendFileSync(file, line);
@@ -65,30 +65,124 @@ export async function appendReport(root, kind, record) {
   return file;
 }
 
-export async function withLock(lockPath, fn) {
-  fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+export function hostLockPath(hostRoot) {
+  return path.join(hostRoot, ".tmp", "ags", "locks", "host");
+}
+
+export function agsLockPath(agsRoot) {
+  return path.join(agsRoot, ".tmp", "ags", "locks", "ags");
+}
+
+export function runsLockPath(agsRoot) {
+  return path.join(agsRoot, ".tmp", "ags", "locks", "runs");
+}
+
+export function processAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === "EPERM";
+  }
+}
+
+function readOwner(lockDir) {
+  try {
+    const owner = JSON.parse(fs.readFileSync(path.join(lockDir, "owner.json"), "utf8"));
+    return owner && typeof owner === "object" && Number.isInteger(owner.pid) ? owner : null;
+  } catch {
+    return null;
+  }
+}
+
+export function lockState(lockDir, { staleMs = STALE_MS } = {}) {
+  let stat;
+  try {
+    stat = fs.statSync(lockDir);
+  } catch (error) {
+    if (error.code === "ENOENT") return { held: false };
+    throw error;
+  }
+  const owner = readOwner(lockDir);
+  if (owner) return { held: true, owner, stale: !processAlive(owner.pid) };
+  return { held: true, owner: null, stale: Date.now() - stat.mtimeMs > staleMs };
+}
+
+function describeHolder(owner) {
+  if (!owner) return "an unknown process";
+  return `${owner.command || "an unknown command"} (pid ${owner.pid}${owner.startedAt ? `, since ${owner.startedAt}` : ""})`;
+}
+
+function removeStale(lockDir) {
+  const aside = `${lockDir}.stale-${process.pid}-${Date.now()}`;
+  try {
+    fs.renameSync(lockDir, aside);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  fs.rmSync(aside, { recursive: true, force: true });
+}
+
+export async function acquireLock(lockDir, command, { waitMs = WAIT_MS, staleMs = STALE_MS } = {}) {
+  fs.mkdirSync(path.dirname(lockDir), { recursive: true });
   const started = Date.now();
   for (;;) {
     try {
-      fs.mkdirSync(lockPath);
+      fs.mkdirSync(lockDir);
       break;
     } catch (error) {
       if (error.code !== "EEXIST") throw error;
-      const age = Date.now() - fs.statSync(lockPath).mtimeMs;
-      if (age > STALE_MS) {
-        fs.rmSync(lockPath, { recursive: true, force: true });
+      const state = lockState(lockDir, { staleMs });
+      if (!state.held) continue;
+      if (state.stale) {
+        removeStale(lockDir);
         continue;
       }
-      if (Date.now() - started > WAIT_MS) {
-        throw new AgsError(`Timed out waiting for report lock: ${lockPath}`);
+      if (Date.now() - started > waitMs) {
+        throw new AgsError(`Lock held by ${describeHolder(state.owner)}: ${lockDir}`);
       }
       await new Promise((resolve) => setTimeout(resolve, 15));
     }
   }
+  fs.writeFileSync(path.join(lockDir, "owner.json"), `${JSON.stringify({ command, pid: process.pid, startedAt: new Date().toISOString() })}\n`);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    fs.rmSync(lockDir, { recursive: true, force: true });
+  };
+}
+
+export async function acquireLocks(lockDirs, command, options) {
+  const releases = [];
+  const releaseAll = () => {
+    while (releases.length) releases.pop()();
+  };
+  try {
+    for (const lockDir of lockDirs.filter(Boolean)) releases.push(await acquireLock(lockDir, command, options));
+  } catch (error) {
+    releaseAll();
+    throw error;
+  }
+  return releaseAll;
+}
+
+export function operationLocks({ hostRoot = null, agsRoot = null } = {}) {
+  return [hostRoot ? hostLockPath(hostRoot) : null, agsRoot ? agsLockPath(agsRoot) : null].filter(Boolean);
+}
+
+export async function withLock(lockDir, command, fn, options) {
+  return withLocks([lockDir], command, fn, options);
+}
+
+export async function withLocks(lockDirs, command, fn, options) {
+  const release = await acquireLocks(lockDirs, command, options);
   try {
     return await fn();
   } finally {
-    fs.rmSync(lockPath, { recursive: true, force: true });
+    release();
   }
 }
 
