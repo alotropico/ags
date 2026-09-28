@@ -16,6 +16,7 @@
 - **`--all` mutation flows and batch updates.**
 - **Host rollout from `version bump`.** Offer updates for registered hosts after a release; report each host's result and its rerun command.
 - **`ags reporting on|off|status`,** if editing `reporting` by hand proves awkward.
+- **Reject stray positional arguments.** `ags host install --enable a,b,c` from PowerShell passes `b` and `c` as separate arguments, and AGS silently ignores them. Fail with a usage error on unexpected positionals instead (seen in Run 2 on Watcher).
 - **`--key=value` flags.** Accept `--flag=value` next to `--flag value`, if users actually type that form.
 - **Markdown link detection.** Handle reference links, angle-bracket links and link-like text inside code examples in catalog link validation, if selected material uses them. Fix observed false positives and missed links before considering a Markdown parser.
 
@@ -104,4 +105,5 @@
 ## Guidance
 
 - **Proto-rules.** `docs/v3-proto-rules.md`, with 51 proto-rules and diagnostic signals, is planned for V3, after the Run 2 consolidation. It covers the state-management and code-quality rules. `3.0.0` needs config migrations first.
+- **Host fact verification.** Check the repository facts a host states in `AGENTS.md` (trunk, verification scripts, pinned package majors) against the repository, as Watcher's former `verify-profile.mjs` did. Its layout checks are covered by `ags doctor`; the fact checks have no AGS home yet.
 - **Deeper TanStack and Mantine guidance,** building on the consolidated Run 2 content rather than reconciling variants again.

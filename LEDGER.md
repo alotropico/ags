@@ -272,3 +272,170 @@ Dispositions, exactly one per row:
 | 10 | `when` conditions (`any`, `package`) | `v1-final:catalog.yaml`, `ui-library-css`, `when` | AGS | `catalog.yaml` `when`; `scripts/lib/packages.mjs` (detection) | Spec 12.2 |
 | 11 | `includes` companions | `v1-final:catalog.yaml`, `ui-library-css` and `css-authoring-conventions`, `includes` | AGS | `catalog.yaml` `includes` | Spec 12.4 |
 | 12 | `source` provenance field for third-party skills | `v1-final:scripts/lib/catalog.mjs`, `SKILL_FIELDS` | Backlog | `BACKLOG.md`, Third-party skills, "Import" | |
+
+## Run 2: Watcher backup
+
+Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-144501-prepare/` (taken from Watcher commit `d40179a`), named relative to that folder. Destinations prefixed "Watcher" are paths in the Watcher repository. `Migrate later` rows wait for the Run 2 consolidation (step 4) and are resolved in place.
+
+### Before prepare: Graphify and Fallow
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Graphify output folder `graphify-out/` and its `.gitignore` block | Watcher `59dd875`, `graphify-out/`, `.gitignore` graphify block | Removed | None | Graphify left Watcher (Appendix G); the tool returns only through `BACKLOG.md`, Tools |
+| 2 | Graphify merge driver: `.gitattributes` line and `merge.graphify.driver`, `merge.graphify.name` in local git config | Watcher `59dd875`, `.gitattributes`; local git config | Removed | None | Graphify left Watcher; the name was removed through cleanup finding 8 (`traces.md`) |
+| 3 | Graphify git hooks `post-commit` and `post-checkout` that rebuild `graphify-out/` in the background | Watcher `.git/hooks/post-commit`, `.git/hooks/post-checkout` | Removed | None | Graphify-only content; they recreated `graphify-out/` after every commit. Copies in AGS `.tmp/records/2026-09-28-watcher-graphify-hooks/` |
+| 4 | Repository-level Fallow install: `fallow` dependency, `.fallow/`, `.tmp/fallow-*` folders, `.fallowrc.json` `$schema` | Watcher `59dd875`, `package.json`, `.fallowrc.json` | Removed | None | Fallow is used globally, not per repository (Appendix G); `.fallowrc.json` stays as host tool configuration |
+| 5 | Fallow dead-code cleanup report | Watcher `59dd875`, `fallow-recursive-dead-code-cleanup-report.md` | Host | Watcher `.tmp/records/fallow-recursive-dead-code-cleanup-report.md` | A local record, not guidance |
+
+### AGENTS.md.bak
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Entry framing: `documentation/` is shared durable knowledge for humans and agents | `AGENTS.md.bak`, introduction | Host | Watcher `AGENTS.md`, "Watcher" | |
+| 2 | `.agents/` as the AGS-owned layer; generated adapters are pointers | `AGENTS.md.bak`, introduction | Removed | None | Superseded by the AGS block and managed files (spec 10) |
+| 3 | Precedence list | `AGENTS.md.bak`, "Precedence" | Removed | None | The AGS block's precedence line and `core` state it |
+| 4 | Generated fact block and its sync markers | `AGENTS.md.bak`, "Generated facts" | Host | Watcher `AGENTS.md`, "Repository profile" | Facts kept; the `agent:sync` markers are gone with the generator |
+| 5 | Landmines 1 to 5 and 7 | `AGENTS.md.bak`, "Landmines" | Host | Watcher `AGENTS.md`, "Known pitfalls" | |
+| 6 | Landmine 6: query Graphify before broad exploration | `AGENTS.md.bak`, "Landmines" 6 | Removed | None | Graphify left Watcher |
+| 7 | Routing table | `AGENTS.md.bak`, "Routing" | Removed | None | The AGS block indexes host rules; documentation pointers moved to "Documentation" (row 9) |
+| 8 | Skills table | `AGENTS.md.bak`, "Skills (on demand)" | Removed | None | Native skill discovery under `.agents/skills/` |
+| 9 | Documentation pointers (architecture, styling, UI, dev environment) | `AGENTS.md.bak`, "Routing" | Host | Watcher `AGENTS.md`, "Documentation" | |
+| 10 | Done means `yarn type-check && yarn lint` | `AGENTS.md.bak`, "Hygiene" 1 | Host | Watcher `AGENTS.md`, "Commands"; `checks.type`, `checks.lint` in `.agents/ags.yaml` | |
+| 11 | Run `yarn agent:verify` when changing agent docs | `AGENTS.md.bak`, "Hygiene" 1 | Removed | None | The verifier is gone (`_agents/scripts/verify-profile.mjs` rows); `ags doctor` checks the AGS layout |
+| 12 | Finishing a task is not a commit; commit, push, open merge requests only when asked | `AGENTS.md.bak`, "Hygiene" 1 and 2 | Host | Watcher `AGENTS.md`, "Working here" | Applies to every task: one line |
+| 13 | Scratch writes go to `.tmp/` | `AGENTS.md.bak`, "Hygiene" 3 | AGS | `rules/tmp-conventions.md` | |
+| 14 | Keep `tmp/` ignored as a safety net, do not use it | `AGENTS.md.bak`, "Hygiene" 3 | Host | Watcher `AGENTS.md`, "Working here" | |
+| 15 | Touch only needed lines; no drive-by refactors; do not mix formatting and behavior; soft cap of 300 lines | `AGENTS.md.bak`, "Hygiene" 4 to 6 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 16 | Skim code idioms, state topology and `documentation/ui.md` before such work | `AGENTS.md.bak`, "Hygiene" 7 | Removed | None | Host rule descriptions in the AGS block route this |
+| 17 | Validate at system boundaries; no defensive checks on internal paths | `AGENTS.md.bak`, "Hygiene" 8 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 18 | TODOs cite a ticket or plan | `AGENTS.md.bak`, "Hygiene" 9 | Migrate later | Watcher `.agents/rules/code-idioms.md`, "Changes"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 19 | Candidate learnings pointer | `AGENTS.md.bak`, "Hygiene" 10 | Host | Watcher `AGENTS.md`, "Working here"; `.agents/local/candidates.md` | |
+| 20 | Machine-local notes in `.agents/guidance/local.md` | `AGENTS.md.bak`, "Hygiene" 11 | Removed | None | Old guidance system; `.agents/local/` holds host notes (spec 11.6) |
+| 21 | Suggest recording pilot feedback in `PILOT-OBSERVATIONS.md` | `AGENTS.md.bak`, "Hygiene" 12 | Removed | None | The pilot ended with the AGS install; the log is kept as a record (`_agents/stewardship/PILOT-OBSERVATIONS.md` row) |
+
+### CLAUDE.md.bak
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Pointer from `CLAUDE.md` to `AGENTS.md` | `CLAUDE.md.bak` | Removed | None | Claude Code 2.1.281 (checked in Run 2 step 1.2) reads `AGENTS.md` |
+
+### _agents/README.md, _agents/guidance/README.md, _agents/guidance/local.example.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Tree map of `.agents/` and its roles | `_agents/README.md`, "Tree" | Removed | None | The AGS layout replaces it (spec 10) |
+| 2 | `documentation/` is a first-class source, not absorbed into guidance | `_agents/README.md`; `_agents/guidance/README.md`, "Shared repository knowledge" | Host | Watcher `AGENTS.md`, "Watcher" | |
+| 3 | Non-AGS scripts stay under `scripts/` | `_agents/README.md` | Removed | None | Describes the old tree; `scripts/` is plain repository code |
+| 4 | Setup with `agent:sync`, `agent:verify`, `agent:migrate` | `_agents/README.md`, "Setup"; `_agents/guidance/README.md`, "After clone", "Scripts" | Removed | None | The scripts are gone; `ags host install` and `ags doctor` replace them |
+| 5 | Guidance layout table | `_agents/guidance/README.md`, "Layout" | Removed | None | The AGS block indexes host rules |
+| 6 | Machine-local notes template | `_agents/guidance/local.example.md` | Removed | None | `.agents/local/` replaces it (spec 11.6) |
+
+### _agents/guidance/repository-profile.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Fact block (trunk, verification, React, TypeScript, TanStack Query, build, API hooks only, testing) | "Fact block" | Host | Watcher `AGENTS.md`, "Repository profile", "Commands" | |
+| 2 | "Last verified" SHA and machine-verification markers | Introduction | Removed | None | The verifier is gone; host fact verification is `Backlog` (`_agents/scripts/` row 6) |
+| 3 | Verified premises 1 to 3 and 5 (Vite and Express monolith, TanStack v5, Vitest outside baseline, barrels) | "Verified premises" | Host | Watcher `AGENTS.md`, "Repository profile", "Commands" | |
+| 4 | Verified premise 4 and "Graphify ownership" | "Verified premises" 4, "Graphify ownership" | Removed | None | Graphify left Watcher |
+| 5 | Adapter landmines | "Adapter landmines" | Host | Watcher `AGENTS.md`, "Known pitfalls" | Same list as `AGENTS.md.bak` row 5; landmine 6 removed there |
+| 6 | Tooling pins (Yarn, Vite, Express, Prettier, ESLint) | "Tooling pins" | Host | Watcher `AGENTS.md`, "Repository profile", "Commands" | |
+
+### _agents/guidance/git-conventions.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Subject shape `Type: Scope, summary`, type list, examples; not Conventional Commits; no Jira | "Subject line" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 2 | Dividing commits | "Dividing commits" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 3 | Required body | "Body (required)" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 4 | What never goes in | "What never goes in" | Migrate later | Watcher `.agents/rules/git-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 5 | Scratch diffs under the clone's `tmp/` | "Scratch diffs" | Removed | None | Contradicts `tmp-conventions`; `write-commit-diff` writes under `.tmp/scratch/` (consolidation rule 1) |
+| 6 | Trunk `main` | "Trunk" | Host | Watcher `.agents/rules/git-conventions.md`; `git.mainBranch` in `.agents/ags.yaml` | |
+| 7 | Ship pointer with the GitLab merge request URL | "Ship" | Migrate later | Watcher `.agents/rules/git-conventions.md`, "Trunk and merge requests"; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 8 | Commit range diffs pointer | "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md` | Native skill discovery routes it |
+
+### _agents/guidance/code-idioms.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Component structure example and ordering | "Component structure" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 2 | Types | "Types" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 3 | Imports (relative client imports, `@shared`, server `.js` imports) | "Imports" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 4 | Callbacks and hooks | "Callbacks and hooks" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 5 | State ladder, no mirrored server state, no prop drilling, ask before Context | "State ladder" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 6 | Client API boundary and naming | "Client API" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 7 | Components and UI | "Components and UI" | Migrate later | Watcher `.agents/rules/code-idioms.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 8 | Vitest outside baseline; colocated tests | "Testing" | Host | Watcher `AGENTS.md`, "Commands"; `.agents/rules/code-idioms.md`, "Testing" | |
+
+### _agents/guidance/state-topology.md, _agents/guidance/state/README.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Record labels, the fifteen fields, the method | `state-topology.md`, "Record labels", "The fifteen fields", "Method" | Migrate later | Watcher `.agents/rules/state-topology.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 2 | Watcher ownership snapshot and modal route codec | `state-topology.md`, "Watcher ownership snapshot" | Host | Watcher `.agents/rules/state-topology.md` | |
+| 3 | Optional topology records | `state-topology.md`, "Records"; `state/README.md` | Host | Watcher `.agents/local/state/README.md` | |
+
+### _agents/guidance/diagnostics.md, _agents/guidance/server.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Diagnostics mode: enable, in-app log, reading `[wdiag]`, probes, retire procedure, implementation map | `diagnostics.md` | Host | Watcher `.agents/rules/diagnostics.md` | |
+| 2 | Express layout, endpoints, entities, operation logs, file operations, imports, after-change steps | `server.md` | Host | Watcher `.agents/rules/server.md` | |
+
+### _agents/guidance/candidates.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Forward drift and explicit non-candidates | "Forward drift", "Explicit non-candidates" | Host | Watcher `.agents/local/candidates.md` | |
+| 2 | Candidates-list format and how candidates mature | "How candidates mature" | Migrate later | Watcher `.agents/local/candidates.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+
+### _agents/skills/
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `css-authoring-conventions`: concepts the installed skill states | `skills/css-authoring-conventions/SKILL.md`, "Declarations", "Selectors and naming", "Markup and components", "Style-related APIs" | AGS | `skills/css-authoring-conventions/SKILL.md` | |
+| 2 | `css-authoring-conventions`: Watcher documents, shell primitives, `src/client/components`, density, `ButtonTheme`, `Portal` | same file, "Authority" and Watcher-named bullets | Host | Watcher `.agents/local/css-authoring-conventions.md` | |
+| 3 | `css-authoring-conventions`: preserve global marker classes; floating surfaces layer above their owner | same file, "Selectors and naming", "Markup and components" | Migrate later | Watcher `.agents/local/css-authoring-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 4 | `css-cleanup`: grep audit, confirm, remove, verify | `skills/css-cleanup/SKILL.md` | AGS | `skills/css-cleanup/SKILL.md` | |
+| 5 | `css-cleanup`: no audit script in `package.json`; importers under `src/` | same file | Host | Watcher `.agents/local/css-cleanup.md` | |
+| 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | Migrate later | Watcher `.agents/local/css-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 7 | `css-theme-tokens` Watcher variant | `skills/css-theme-tokens/SKILL.md` | Migrate later | Watcher `.agents/skills/watcher-css-theme-tokens/SKILL.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 8 | `git-cleanup`: trigger, scope, fetch and prune, stale-based, confirm before delete, preview of unpushed work | `skills/git-cleanup/SKILL.md` | AGS | `skills/git-cleanup/SKILL.md` | |
+| 9 | `git-cleanup`: remote, `origin/main`, 30 days, `master` and `develop`, `backup-` prefix | same file, "Config" | Host | Watcher `.agents/local/git-cleanup.md` | |
+| 10 | `git-cleanup`: three levels (gone upstreams, stale locals, preview only) | same file, "Orchestration", "Level 1" to "Level 3" | Migrate later | Watcher `.agents/local/git-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 11 | `graphify` skill | `skills/graphify/SKILL.md` | Backlog | `BACKLOG.md`, Tools, "Tools catalog and `ags tools`" | Graphify left Watcher |
+| 12 | `plan-work`: skeleton, decision log, done when, skip tiny fixes | `skills/plan-work/SKILL.md` | AGS | `skills/plan-work/SKILL.md` | |
+| 13 | `plan-work`: naming `YYMMDD-snake_case` and `.cursor/plans/` drafts | same file, "Naming", "Location and lifecycle" | Removed | None | `tmp-conventions` sets `.tmp/plans/YYYY-MM-DD-kebab-slug.md` (consolidation rule 1) |
+| 14 | `plan-work`: promote durable notes when done (to `.agents/archive/`, now `documentation/`) | same file, "Location and lifecycle" 3 | Host | Watcher `.agents/local/plan-work.md` | The archive folder left with the old tree |
+| 15 | `plan-work`: the five-file threshold, when-to-plan list, review drafts in merge requests or tickets | same file, "Trigger", "When to plan", "Location and lifecycle" 1 | Migrate later | Watcher `.agents/local/plan-work.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 16 | `ship` Watcher variant | `skills/ship/SKILL.md` | Migrate later | Watcher `.agents/rules/git-conventions.md`, "Trunk and merge requests" (summary); consolidation, step 4 | Waits for the Run 2 consolidation; `ship` stays disabled until 2.1.0 |
+| 17 | `write-commit-diff`: last N and range modes, `.tmp` output, report the path not the content | `skills/write-commit-diff/SKILL.md` | AGS | `skills/write-commit-diff/SKILL.md`; `skills/write-commit-diff/scripts/write-commit-diff.mjs` (`commits`, `range`) | |
+| 18 | `write-commit-diff`: trigger phrases (generate, create, make a diff of commits, export a range, last N) | same file, "Trigger" | Migrate later | Not held; the Run 2 round-trip edit, step 2.1 | Waits for the round-trip promotion |
+| 19 | `write-commit-diff`: script instead of pasted or hand-rolled diffs; ask once on an ambiguous range; file naming; reply with the commits; not for ordinary `git diff` | same file, "Procedure", "Do not" | Migrate later | Watcher `.agents/local/write-commit-diff.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 20 | `write-commit-diff`: output `.tmp/<name>.diff` | same file | Removed | None | `tmp-conventions` puts scratch output under `.tmp/scratch/` |
+| 21 | `write-last-n-diff.ps1`, `write-range-diff.ps1`: PowerShell implementations | `skills/write-commit-diff/*.ps1` | Removed | None | Superseded by the Node script; their `commits` and `range` behavior is row 17 |
+| 22 | `write-range-diff.ps1`: `-Repo` other checkout and `-OutInRepo` | `skills/write-commit-diff/write-range-diff.ps1` | Removed | None | The AGS script runs in the repository it writes to; run it from the other checkout instead |
+
+### _agents/archive/, _agents/stewardship/
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | History curation rule (five records, no living documents) | `archive/README.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/README.md` | Kept as a record |
+| 2 | Agent Skills discovery migration record | `archive/agent-skills-discovery-migration.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/` | |
+| 3 | Front-end architecture pause handoff | `archive/frontend-architecture-pause.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/`; summary in `.agents/rules/state-topology.md` | |
+| 4 | Pilot observations log and its recording rules | `stewardship/PILOT-OBSERVATIONS.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
+| 5 | Steward handoff: why the guidance system exists | `stewardship/STEWARD-HANDOFF.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
+| 6 | Meta discovery (`isMeta`, `COSMOS_META`) | `stewardship/meta.md` | Removed | None | AGS replaces Meta discovery (P13) |
+| 7 | Machine-local notes: no browser-use CDP; Playwright with headless Chromium | `guidance/local.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/guidance/local.md` | Machine-local; the browser concept is `Backlog` with `windows-browser-use` (Phase E) |
+
+### _agents/scripts/, _cursor/
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Adapter generator | `scripts/generate-adapters.mjs` | Removed | None | The AGS block replaces generated adapters |
+| 2 | LLM snapshot script | `scripts/snapshot-llm-system.mjs` | Removed | None | `ags snapshot` replaces it |
+| 3 | Leftover mover | `scripts/migrate-local.mjs` | Removed | None | The AGS cutover (prepare) replaces it |
+| 4 | Scripts README and diff helper usage | `scripts/README.md` | Removed | None | The scripts are gone; diff usage lives in `skills/write-commit-diff/SKILL.md` |
+| 5 | Profile verifier: layout checks | `scripts/verify-profile.mjs` | Removed | None | Superseded by `ags doctor` (P12) |
+| 6 | Profile verifier: repository facts checked against the repository | `scripts/verify-profile.mjs` | Backlog | `BACKLOG.md`, Guidance, "Host fact verification" | No AGS home yet (P12) |
+| 7 | Generated Cursor pointer rule | `_cursor/rules/00-watcher-generated.mdc` | Removed | None | The AGS block supersedes it; its landmines are in Watcher `AGENTS.md` |
