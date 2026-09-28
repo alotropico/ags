@@ -427,7 +427,9 @@ async function skillsCommand(action, flags, list) {
 function checkCommand(flags) {
   expectFlags(flags, ["route", "only", "help"]);
   const which = csv(flags.only);
-  const results = runChecks(CANONICAL_ROOT, resolveRoute(routeOf(flags)), { which: which.length ? which : undefined });
+  const hostRoot = resolveRoute(routeOf(flags));
+  const { settings } = verifyRegistered(CANONICAL_ROOT, hostRoot);
+  const results = runChecks(hostRoot, settings.checks || {}, { which: which.length ? which : undefined });
   for (const result of results) {
     if (result.status === "not-configured") console.log(`${result.name}: not configured`);
     else console.log(`${result.name}: ${result.manager || ""} ${result.script || result.command || ""} exit ${result.exitCode ?? ""} ${result.status}`.replace(/\s+/g, " ").trim());

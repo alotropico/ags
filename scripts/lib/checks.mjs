@@ -1,4 +1,3 @@
-import { verifyRegistered } from "./host.mjs";
 import {
   detectPackageManager,
   isPackageScriptKey,
@@ -10,9 +9,7 @@ import { AgsError } from "./util.mjs";
 
 const ORDER = ["type", "lint", "prettier"];
 
-export function runChecks(root, hostRoot, { which = ORDER } = {}) {
-  const { settings } = verifyRegistered(root, hostRoot);
-  const checks = settings.checks || {};
+export function runChecks(hostRoot, checks = {}, { which = ORDER } = {}) {
   const requested = ORDER.filter((name) => which.includes(name));
   const unknown = which.filter((name) => !ORDER.includes(name));
   if (unknown.length) throw new AgsError(`Unknown check category: ${unknown.join(", ")}`);
