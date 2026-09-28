@@ -395,7 +395,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | --- | --- | --- | --- | --- | --- |
 | 1 | `css-authoring-conventions`: concepts the installed skill states | `skills/css-authoring-conventions/SKILL.md`, "Declarations", "Selectors and naming", "Markup and components", "Style-related APIs" | AGS | `skills/css-authoring-conventions/SKILL.md` | |
 | 2 | `css-authoring-conventions`: Watcher documents, shell primitives, `src/client/components`, density, `ButtonTheme`, `Portal` | same file, "Authority" and Watcher-named bullets | Host | Watcher `.agents/local/css-authoring-conventions.md` | |
-| 3 | `css-authoring-conventions`: preserve global marker classes; floating surfaces layer above their owner | same file, "Selectors and naming", "Markup and components" | Migrate later | Watcher `.agents/local/css-authoring-conventions.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
+| 3 | `css-authoring-conventions`: preserve global marker classes; floating surfaces layer above their owner | same file, "Selectors and naming", "Markup and components" | AGS | `skills/css-authoring-conventions/SKILL.md`, "Selectors and naming" (marker classes), "Markup and composition" (floating surfaces) | |
 | 4 | `css-cleanup`: grep audit, confirm, remove, verify | `skills/css-cleanup/SKILL.md` | AGS | `skills/css-cleanup/SKILL.md` | |
 | 5 | `css-cleanup`: no audit script in `package.json`; importers under `src/` | same file | Host | Watcher `.agents/local/css-cleanup.md` | |
 | 6 | `css-cleanup`: prefer keep over break; check nested selectors, `composes`, marker classes | same file | Migrate later | Watcher `.agents/local/css-cleanup.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
