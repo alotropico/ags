@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertSnapshotTarget, buildZip, isOperationalCanonicalPath, isStandardSensitivePath, sha256 } from "./lib/snapshot.mjs";
-import { AgsError, CANONICAL_ROOT, git } from "./lib/util.mjs";
+import { AgsError, AGS_ROOT, git } from "./lib/util.mjs";
 
 export function ignoredCanonicalPaths(root, files) {
   if (!files.length) return new Set();
@@ -83,7 +83,7 @@ function flag(name) {
 const invoked = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 if (invoked) {
   const outIndex = process.argv.indexOf("--out");
-  const result = writeCanonicalSnapshot(CANONICAL_ROOT, {
+  const result = writeCanonicalSnapshot(AGS_ROOT, {
     only: flag("--only"),
     except: flag("--except"),
     out: outIndex >= 0 ? process.argv[outIndex + 1] : undefined,

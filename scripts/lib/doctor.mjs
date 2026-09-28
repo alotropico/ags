@@ -4,11 +4,11 @@ import { parse } from "yaml";
 import { loadCatalog, selectionErrors, validateCatalog } from "./catalog.mjs";
 import { findHostRoot, loadRegistry, readSettings, syncOne, validateSettings } from "./host.mjs";
 import { crossSkillIds, relativeLinkErrors } from "./links.mjs";
-import { CANONICAL_ROOT, assertCanonicalAccess, assertNoLinkEscape, gitRoot, samePath } from "./util.mjs";
+import { AGS_ROOT, assertCanonicalAccess, assertNoLinkEscape, gitRoot, samePath } from "./util.mjs";
 
 const LEGACY = ["src", "build", "dist", "architecture", "capabilities", "routes", "runtime", "views", "workflows", "hooks", "archive", "stewardship"];
 
-export function doctor(root = CANONICAL_ROOT, route = null) {
+export function doctor(root = AGS_ROOT, route = null) {
   const lines = [];
   const failures = [];
   const major = Number(process.versions.node.split(".")[0]);

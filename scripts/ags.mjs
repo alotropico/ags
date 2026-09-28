@@ -23,7 +23,7 @@ import { installSkill, listSkills, reconcile } from "./lib/skills.mjs";
 import { writeCanonicalSnapshot } from "./snapshot-canonical.mjs";
 import { checkFailed, runChecks } from "./lib/checks.mjs";
 import { writeSnapshot } from "./lib/snapshot.mjs";
-import { AgsError, CANONICAL_ROOT, assertCanonicalAccess, samePath } from "./lib/util.mjs";
+import { AgsError, AGS_ROOT, assertCanonicalAccess, samePath } from "./lib/util.mjs";
 
 function parseArgs(argv) {
   const positionals = [];
@@ -79,7 +79,7 @@ function oneOf(flags, names) {
 async function reportingCommand(action, flags) {
   expectFlags(flags, ["route", "host", "all", "help"]);
   oneOf(flags, ["all", "host", "route"]);
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   if (action !== "on" && action !== "off" && action !== "status") {
     throw new AgsError(`Unknown reporting action: ${action}`);
   }
@@ -118,7 +118,7 @@ async function reportingCommand(action, flags) {
 
 async function reportCommand(kind, flags) {
   expectFlags(flags, kind === "usage" ? ["route", "file", "label", "help"] : ["route", "file", "note", "help"]);
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   const route = routeOf(flags);
   const fileArgs = [].concat(flags.file || []);
   if (kind === "usage") {
@@ -137,7 +137,7 @@ async function reportCommand(kind, flags) {
 function findIsCanonical(route) {
   let dir = path.resolve(route);
   while (true) {
-    if (samePath(dir, CANONICAL_ROOT) && fs.existsSync(path.join(dir, "catalog.yaml"))) return true;
+    if (samePath(dir, AGS_ROOT) && fs.existsSync(path.join(dir, "catalog.yaml"))) return true;
     const parent = path.dirname(dir);
     if (parent === dir) return false;
     dir = parent;
@@ -147,7 +147,7 @@ function findIsCanonical(route) {
 async function main(argv) {
   const { positionals, flags, list } = parseArgs(argv);
   const [group, action, ...rest] = positionals;
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   if (!group || group === "help" || flags.help) {
     console.log("ags doctor | host | skills | reporting | report | snapshot | diff | check");
     return;
@@ -281,7 +281,7 @@ async function hostCommand(action, rest, flags, list) {
   expectFlags(flags, allowed[action] || ["help"]);
   if (action === "sync") oneOf(flags, ["all", "route"]);
   if (action === "repair" || action === "unregister") oneOf(flags, ["host", "route"]);
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   const options = {
     yes: Boolean(flags.yes),
     id: flags.id,
@@ -382,7 +382,7 @@ async function skillsCommand(action, flags, list) {
   };
   expectFlags(flags, allowed[action] || ["help"]);
   if (action === "reconcile") oneOf(flags, ["all", "route"]);
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   if (action === "list") {
     for (const skill of listSkills(root)) console.log(`${skill.id}\t${skill.kind}\t${skill.path}`);
     return;
@@ -428,7 +428,7 @@ function checkCommand(flags) {
   expectFlags(flags, ["route", "only", "help"]);
   const which = csv(flags.only);
   const hostRoot = resolveRoute(routeOf(flags));
-  const { settings } = verifyRegistered(CANONICAL_ROOT, hostRoot);
+  const { settings } = verifyRegistered(AGS_ROOT, hostRoot);
   const results = runChecks(hostRoot, settings.checks || {}, { which: which.length ? which : undefined });
   for (const result of results) {
     if (result.status === "not-configured") console.log(`${result.name}: not configured`);
@@ -440,7 +440,7 @@ function checkCommand(flags) {
 
 function snapshotCommand(action, flags) {
   if (flags.out === true) throw new AgsError("Missing value for --out");
-  const root = CANONICAL_ROOT;
+  const root = AGS_ROOT;
   if (action === "canonical") expectFlags(flags, ["out", "only", "except", "include-standard-excluded", "help"]);
   else expectFlags(flags, ["route", "out", "help"]);
   if (action === "canonical") {
@@ -469,7 +469,7 @@ function snapshotCommand(action, flags) {
 function diffCommand(action, rest, flags) {
   expectFlags(flags, ["route", "help"]);
   const hostRoot = resolveRoute(routeOf(flags));
-  verifyRegistered(CANONICAL_ROOT, hostRoot);
+  verifyRegistered(AGS_ROOT, hostRoot);
   const [name, a, b] = rest;
   let result;
   if (action === "commits") result = writeDiff(hostRoot, name, "commits", a);

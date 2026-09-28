@@ -4,9 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { retargetHosts } from "./lib/host.mjs";
-import { CANONICAL_ROOT } from "./lib/util.mjs";
+import { AGS_ROOT } from "./lib/util.mjs";
 
-const entry = path.join(CANONICAL_ROOT, "scripts", "ags.mjs");
+const entry = path.join(AGS_ROOT, "scripts", "ags.mjs");
 const SHIM_NAMES = ["ags.CMD", "ags.ps1", "ags"];
 
 export function assertSupportedPlatform(platform = process.platform) {
@@ -112,7 +112,7 @@ export function finishInstall({ binDir, scriptPath = entry, replace = false, pla
   const result = installGlobal({ binDir, scriptPath, replace, platform });
   let hosts = { updated: [], failures: [] };
   try {
-    hosts = (retarget || (() => retargetHosts(CANONICAL_ROOT)))();
+    hosts = (retarget || (() => retargetHosts(AGS_ROOT)))();
   } catch (error) {
     hosts = { updated: [], failures: [error.message] };
   }
@@ -158,10 +158,10 @@ if (invoked) {
       binDir,
       scriptPath: flags.script || entry,
       replace: Boolean(flags.replace),
-      retarget: () => retargetHosts(CANONICAL_ROOT),
+      retarget: () => retargetHosts(AGS_ROOT),
     });
     for (const file of result.written) console.log(file);
-    for (const id of result.hosts.updated) console.log(`host ${id} now uses ${CANONICAL_ROOT}`);
+    for (const id of result.hosts.updated) console.log(`host ${id} now uses ${AGS_ROOT}`);
     for (const failure of result.hosts.failures) console.error(failure);
     if (result.hosts.failures.length) process.exitCode = 1;
     const warning = pathWarning(result.binDir, {

@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,7 +7,7 @@ import { parse, stringify } from "yaml";
 
 const LIB_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-export const CANONICAL_ROOT = path.resolve(LIB_DIR, "..", "..");
+export const AGS_ROOT = path.resolve(LIB_DIR, "..", "..");
 
 export class AgsError extends Error {
   constructor(message, { exitCode = 1, written = [] } = {}) {
@@ -95,6 +96,62 @@ export function git(args, cwd, { allow = [0], input } = {}) {
 export function gitRoot(start) {
   const result = git(["rev-parse", "--show-toplevel"], path.resolve(start));
   return path.resolve(result.stdout.trim());
+}
+
+
+export function normalizeText(text) {
+  return String(text).replaceAll("\r\n", "\n");
+}
+
+const UTF8 = new TextDecoder("utf-8", { fatal: true });
+
+export function isBinary(buffer) {
+  if (buffer.includes(0)) return true;
+  try {
+    UTF8.decode(buffer);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+export function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+export function contentBytes(buffer) {
+  if (buffer == null) return null;
+  const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer), "utf8");
+  return isBinary(bytes) ? bytes : Buffer.from(normalizeText(bytes.toString("utf8")), "utf8");
+}
+
+export function contentHash(buffer) {
+  const bytes = contentBytes(buffer);
+  return bytes == null ? null : sha256(bytes);
+}
+
+export function shortHash(hash) {
+  return hash == null ? "-" : String(hash).slice(0, 12);
+}
+
+export function sameContent(left, right) {
+  if (left == null || right == null) return left == null && right == null;
+  return contentHash(left) === contentHash(right);
+}
+
+export function readFileOrNull(file) {
+  try {
+    const stat = fs.lstatSync(file);
+    if (!stat.isFile()) return null;
+    return fs.readFileSync(file);
+  } catch (error) {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") return null;
+    throw error;
+  }
+}
+
+export function fileHash(file) {
+  return contentHash(readFileOrNull(file));
 }
 
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;

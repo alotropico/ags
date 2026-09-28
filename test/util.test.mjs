@@ -2,8 +2,35 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { assertSlug, gitRoot, normalizeIdentity, relativeInside, samePath } from "../scripts/lib/util.mjs";
+import * as util from "../scripts/lib/util.mjs";
+import { assertSlug, contentHash, gitRoot, isBinary, normalizeIdentity, relativeInside, sameContent, samePath, sha256, shortHash } from "../scripts/lib/util.mjs";
 import { REAL_ROOT, makeHostRepo, tempDir } from "./helpers/fixtures.mjs";
+
+test("the AGS root is exported as AGS_ROOT", () => {
+  assert.equal(normalizeIdentity(util.AGS_ROOT), normalizeIdentity(REAL_ROOT));
+  assert.equal("CANONICAL_ROOT" in util, false);
+});
+
+test("text hashes normalize CRLF to LF; binaries compare byte for byte", () => {
+  const lf = Buffer.from("one\ntwo\n");
+  const crlf = Buffer.from("one\r\ntwo\r\n");
+  assert.equal(contentHash(lf), contentHash(crlf));
+  assert.equal(contentHash(lf), sha256("one\ntwo\n"));
+  assert.ok(sameContent(lf, crlf));
+  const binary = Buffer.from([0x61, 0x00, 0x0d, 0x0a]);
+  const binaryLf = Buffer.from([0x61, 0x00, 0x0a]);
+  assert.equal(isBinary(binary), true);
+  assert.notEqual(contentHash(binary), contentHash(binaryLf));
+  assert.equal(contentHash(binary), sha256(binary));
+  const invalid = Buffer.from([0xff, 0xfe, 0x0d, 0x0a]);
+  assert.equal(isBinary(invalid), true);
+  assert.equal(isBinary(Buffer.from("café\r\n")), false);
+  assert.equal(shortHash(contentHash(lf)).length, 12);
+  assert.equal(contentHash(null), null);
+  assert.equal(sameContent(null, null), true);
+  assert.equal(sameContent(lf, null), false);
+});
+
 
 test("path identity, containment, and route resolution", () => {
   assert.equal(samePath("C:/Cosmos/projects/ags", "c:/cosmos/projects/ags"), process.platform === "win32");

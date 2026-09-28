@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
 import path from "node:path";
-import { readText } from "./util.mjs";
+import { normalizeText, readText, sha256, shortHash } from "./util.mjs";
 
 export const BEGIN = "<!-- AGS:BEGIN -->";
 export const END = "<!-- AGS:END -->";
@@ -38,12 +37,12 @@ export function renderBlockBody(template, { strongRules = [], index = [] } = {})
   return body.replace(/\n{3,}/g, "\n\n").replace(/^\n+|\s+$/g, "");
 }
 
-export function contentHash(body) {
-  return createHash("sha256").update(String(body).replaceAll("\r\n", "\n")).digest("hex").slice(0, 12);
+export function blockHash(body) {
+  return shortHash(sha256(normalizeText(body)));
 }
 
 export function renderBlock(version, body) {
-  return `<!-- AGS:BEGIN ${version} ${contentHash(body)} -->\n${body}\n${END}`;
+  return `<!-- AGS:BEGIN ${version} ${blockHash(body)} -->\n${body}\n${END}`;
 }
 
 export function blockLineCount(body) {
