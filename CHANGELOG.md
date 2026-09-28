@@ -1,4 +1,5 @@
 ## Unreleased
+- Promoted from Watcher: `skills/write-commit-diff/SKILL.md`
 
 ## 2.0.0 - 2026-09-28
 - Hosts hold installed copies of released AGS material; AGS is no longer read at runtime.

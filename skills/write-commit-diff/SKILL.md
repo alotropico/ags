@@ -5,7 +5,7 @@ description: Write a git diff to a file under .tmp/scratch/ instead of printing 
 
 # Write a commit diff
 
-Use this skill when a task needs a full diff: drafting commit messages, reviewing changes, or summarizing work. The script writes the diff to a file so it does not flood the conversation.
+Use this skill when a task needs a full diff: drafting commit messages, reviewing changes, or summarizing work. Also use it when the user asks to generate, create or make a diff of commits, export a commit range, or write the last N commits to a file. The script writes the diff to a file so it does not flood the conversation.
 
 ## Command
 
