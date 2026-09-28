@@ -34,6 +34,29 @@ const INSTALL_POINTS = [
   "after-agents-block",
   "after-registry",
 ];
+const UPDATE_POINTS = [
+  "after-host-lock",
+  "after-exclude-backup",
+  "after-exclude-block",
+  "after-backup-first",
+  "after-backup-middle",
+  "after-backup-last",
+  "after-backup-manifest",
+  "after-promotion-first",
+  "after-promotion-middle",
+  "after-promotion-last",
+  "after-notes",
+  "after-ags-yaml",
+  "after-managed-write-first",
+  "after-managed-write-middle",
+  "after-managed-write-last",
+  "after-deletion-first",
+  "after-deletion-middle",
+  "after-deletion-last",
+  "after-agents-block",
+  "after-registry",
+];
+const BUMP_POINTS = ["after-changelog", "after-package-json", "after-commit"];
 
 const LIMIT = 8;
 let active = 0;
@@ -237,9 +260,129 @@ async function installCase(point, { crash = false } = {}) {
   assertLocksReleased(host, ags);
 }
 
+// update
+
+const PROMOTED = [`${REF}/g.md`, `${REF}/n1.md`, `${REF}/n2.md`];
+const UPDATE_DECISIONS = { ".git/info/exclude": "restore", ...Object.fromEntries(PROMOTED.map((rel) => [rel, "promote"])) };
+const EXCLUDE_EDITED = "# keep me\n# AGS:BEGIN\n/.tmpx/\n# AGS:END\n";
+
+async function updateFixture() {
+  const files = { ...sampleMaterial(), "templates/ags.yaml": CONFIG_TEMPLATE };
+  for (const name of ["a", "b", "c", "d", "e", "f", "g"]) files[`skills/plan-work/references/${name}.md`] = `# ${name}\n`;
+  const ags = makeAgsRepo({ catalog: sampleCatalog(), files, tags: ["2.0.0"], cli: true });
+  const host = makeHostRepo();
+  const installed = await confirm(ags, hostArgs("install", host));
+  assert.equal(installed.second.code, 0, installed.second.text);
+  writeFiles(ags, { "skills/plan-work/references/a.md": "# a2\n", "skills/plan-work/references/b.md": "# b2\n", "skills/plan-work/references/c.md": "# c2\n" });
+  for (const name of ["d", "e", "f"]) fs.rmSync(path.join(ags, "skills", "plan-work", "references", `${name}.md`));
+  commitAll(ags, "release 2.0.1");
+  tag(ags, "2.0.1");
+  writeFiles(host, { [`${REF}/g.md`]: "# g host\n", [`${REF}/n1.md`]: "# n1\n", [`${REF}/n2.md`]: "# n2\n" });
+  fs.writeFileSync(path.join(host, ".git", "info", "exclude"), EXCLUDE_EDITED);
+  return { ags, host };
+}
+
+const updateArgs = (host) => hostArgs("update", host, ["--enable", "style"]);
+
+async function updateFinal() {
+  const { ags, host } = await updateFixture();
+  const { second } = await confirm(ags, updateArgs(host), { decide: UPDATE_DECISIONS });
+  assert.equal(second.code, 0, second.text);
+  assert.equal(agsVersionOf(host), "2.0.1");
+  return { host: hostState(host), ags: agsState(ags) };
+}
+
+async function updateCase(point) {
+  const expected = await baseline("update", updateFinal);
+  const { ags, host } = await updateFixture();
+  const args = updateArgs(host);
+  const failed = await confirm(ags, args, { decide: UPDATE_DECISIONS, env: { AGS_TEST_FAULT: `update:${point}` } });
+  assert.equal(failed.second.code, 1, failed.second.text);
+  assert.match(failed.second.text, /Rerun: ags host update .*--to 2\.0\.1/);
+  assert.equal(agsVersionOf(host), "2.0.0");
+  assertLocksReleased(host, ags);
+
+  const rerun = await confirm(ags, args, { decide: UPDATE_DECISIONS });
+  const text = rerun.first.text;
+  const at = UPDATE_POINTS.indexOf(point);
+  const excludeRow = row(text, ".git/info/exclude");
+  if (at < UPDATE_POINTS.indexOf("after-exclude-block")) assert.match(excludeRow, /restore/, text);
+  else assert.equal(excludeRow, "", text);
+  const recorded = rows(text, /record promotion/).length;
+  const promotedBefore = { "after-promotion-first": 1, "after-promotion-middle": 2 }[point];
+  if (promotedBefore) assert.equal(recorded, promotedBefore, text);
+  else if (at >= UPDATE_POINTS.indexOf("after-promotion-last") && point !== "after-registry") assert.equal(recorded, PROMOTED.length, text);
+  else assert.equal(recorded, 0, text);
+  if (point === "after-registry") {
+    assert.equal(row(text, "hosts.yaml"), "", text);
+    for (const rel of PROMOTED) assert.equal(row(text, rel), "", text);
+  }
+  assert.equal(rerun.second.code, 0, rerun.second.text);
+  assert.equal(agsVersionOf(host), "2.0.1");
+  assert.deepEqual(hostState(host), expected.host);
+  assert.deepEqual(agsState(ags), expected.ags);
+  assert.equal(read(ags, "CHANGELOG.md").match(/Promoted from host/g).length, PROMOTED.length);
+  assertLocksReleased(host, ags);
+}
+
+// version bump
+
+function bumpFixture() {
+  return makeAgsRepo({ catalog: sampleCatalog(), files: sampleMaterial(), version: "2.0.0", tags: ["2.0.0"], cli: true, changelog: "## Unreleased\n- A note.\n" });
+}
+
+function releaseState(ags) {
+  return {
+    tree: treeSnapshot(ags, { exclude: ["node_modules", ".tmp", "reports"] }),
+    headTree: git(ags, ["rev-parse", "HEAD^{tree}"]),
+    subject: git(ags, ["log", "-1", "--format=%s"]),
+    commits: git(ags, ["rev-list", "--count", "HEAD"]),
+    tags: git(ags, ["tag", "-l"]),
+    tagType: git(ags, ["cat-file", "-t", "v2.0.1"]),
+    tagMessage: git(ags, ["tag", "-l", "--format=%(contents)", "v2.0.1"]),
+    tagged: git(ags, ["rev-parse", "v2.0.1^{commit}"]) === git(ags, ["rev-parse", "HEAD"]),
+  };
+}
+
+async function bumpFinal() {
+  const ags = bumpFixture();
+  const { second } = await confirm(ags, ["version", "bump", "patch"]);
+  assert.equal(second.code, 0, second.text);
+  return releaseState(ags);
+}
+
+async function bumpCase(point) {
+  const expected = await baseline("bump", bumpFinal);
+  const ags = bumpFixture();
+  const args = ["version", "bump", "patch"];
+  const failed = await confirm(ags, args, { env: { AGS_TEST_FAULT: `bump:${point}` } });
+  assert.equal(failed.second.code, 1, failed.second.text);
+  assert.equal(git(ags, ["tag", "-l", "v2.0.1"]), "");
+  assertLocksReleased(null, ags);
+  if (point === "after-commit") {
+    assert.match(failed.second.text, /Recovery: run ags version bump patch again; it creates the missing tag\./);
+    const rerun = await confirm(ags, args);
+    assert.match(rerun.first.text, /complete the untagged release 2\.0\.1/);
+    assert.equal(row(rerun.first.text, "CHANGELOG.md"), "", rerun.first.text);
+    assert.equal(rerun.second.code, 0, rerun.second.text);
+  } else {
+    assert.match(failed.second.text, /git restore -- CHANGELOG\.md package\.json/);
+    const refused = await cli(ags, args);
+    assert.equal(refused.code, 1, refused.text);
+    assert.match(refused.text, /git restore -- CHANGELOG\.md package\.json/);
+    git(ags, ["restore", "--", "CHANGELOG.md", "package.json"]);
+    const rerun = await confirm(ags, args);
+    assert.equal(rerun.second.code, 0, rerun.second.text);
+  }
+  assert.deepEqual(releaseState(ags), expected);
+  assertLocksReleased(null, ags);
+}
+
 describe("fault points", { concurrency: true }, () => {
   for (const point of PREPARE_POINTS) it(`prepare:${point}`, () => limited(() => prepareCase(point)));
   it("prepare:after-host-lock:crash", () => limited(() => prepareCase("after-host-lock", { crash: true })));
   for (const point of INSTALL_POINTS) it(`install:${point}`, () => limited(() => installCase(point)));
   it("install:after-host-lock:crash", () => limited(() => installCase("after-host-lock", { crash: true })));
+  for (const point of UPDATE_POINTS) it(`update:${point}`, () => limited(() => updateCase(point)));
+  for (const point of BUMP_POINTS) it(`bump:${point}`, () => limited(() => bumpCase(point)));
 });
