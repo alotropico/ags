@@ -3,7 +3,6 @@ import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { retargetHosts } from "./lib/host.mjs";
 import { AGS_ROOT } from "./lib/util.mjs";
 
 const entry = path.join(AGS_ROOT, "scripts", "ags.mjs");
@@ -108,17 +107,6 @@ export function parseInstallArgs(argv) {
   return flags;
 }
 
-export function finishInstall({ binDir, scriptPath = entry, replace = false, platform = process.platform, retarget } = {}) {
-  const result = installGlobal({ binDir, scriptPath, replace, platform });
-  let hosts = { updated: [], failures: [] };
-  try {
-    hosts = (retarget || (() => retargetHosts(AGS_ROOT)))();
-  } catch (error) {
-    hosts = { updated: [], failures: [error.message] };
-  }
-  return { ...result, hosts };
-}
-
 export function installGlobal({ binDir, scriptPath = entry, replace = false, platform = process.platform } = {}) {
   assertSupportedPlatform(platform);
   const target = assertWindowsDir(binDir);
@@ -154,16 +142,12 @@ if (invoked) {
     } else {
     assertSupportedPlatform();
     const binDir = resolveInstallBin({ bin: flags.bin });
-    const result = finishInstall({
+    const result = installGlobal({
       binDir,
       scriptPath: flags.script || entry,
       replace: Boolean(flags.replace),
-      retarget: () => retargetHosts(AGS_ROOT),
     });
     for (const file of result.written) console.log(file);
-    for (const id of result.hosts.updated) console.log(`host ${id} now uses ${AGS_ROOT}`);
-    for (const failure of result.hosts.failures) console.error(failure);
-    if (result.hosts.failures.length) process.exitCode = 1;
     const warning = pathWarning(result.binDir, {
       processPath: process.env.Path || process.env.PATH || "",
       persistedPath: persistedUserPath(),
