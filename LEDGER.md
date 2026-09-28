@@ -371,9 +371,9 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 
 | # | Concept | Source | Disposition | Destination | Rationale |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Record labels, the fifteen fields, the method | `state-topology.md`, "Record labels", "The fifteen fields", "Method" | Migrate later | Watcher `.agents/rules/state-topology.md`; consolidation, step 4 | Waits for the Run 2 consolidation |
-| 2 | Watcher ownership snapshot and modal route codec | `state-topology.md`, "Watcher ownership snapshot" | Host | Watcher `.agents/rules/state-topology.md` | |
-| 3 | Optional topology records | `state-topology.md`, "Records"; `state/README.md` | Host | Watcher `.agents/local/state/README.md` | |
+| 1 | Record labels, the fifteen fields, the method | `state-topology.md`, "Record labels", "The fifteen fields", "Method" | AGS | `rules/state-topology.md` | Watcher's "Last verified SHA" is kept as "names the commit it was last verified against" (rule 4, only Watcher states it) |
+| 2 | Watcher ownership snapshot and modal route codec | `state-topology.md`, "Watcher ownership snapshot" | Host | Watcher `.agents/rules/watcher-state-topology.md` | |
+| 3 | Optional topology records | `state-topology.md`, "Records"; `state/README.md` | Host | Watcher `.agents/local/state/README.md` | Its link points at `watcher-state-topology.md` |
 
 ### _agents/guidance/diagnostics.md, _agents/guidance/server.md
 
@@ -423,7 +423,7 @@ Sources are files in Watcher's prepare backup, `.tmp/ags/backups/2026-09-28-1445
 | --- | --- | --- | --- | --- | --- |
 | 1 | History curation rule (five records, no living documents) | `archive/README.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/README.md` | Kept as a record |
 | 2 | Agent Skills discovery migration record | `archive/agent-skills-discovery-migration.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/` | |
-| 3 | Front-end architecture pause handoff | `archive/frontend-architecture-pause.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/`; summary in `.agents/rules/state-topology.md` | |
+| 3 | Front-end architecture pause handoff | `archive/frontend-architecture-pause.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/archive/`; summary in `.agents/rules/watcher-state-topology.md` | |
 | 4 | Pilot observations log and its recording rules | `stewardship/PILOT-OBSERVATIONS.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
 | 5 | Steward handoff: why the guidance system exists | `stewardship/STEWARD-HANDOFF.md` | Host | Watcher `.tmp/records/2026-09-28-watcher-agents-records/stewardship/` | Record (P13) |
 | 6 | Meta discovery (`isMeta`, `COSMOS_META`) | `stewardship/meta.md` | Removed | None | AGS replaces Meta discovery (P13) |
@@ -677,3 +677,33 @@ Sources: Meta `templates/ags/shared/skills/write-commit-diff/` (`SKILL.md`, `wri
 | 22 | Two copies of the last-N writer (`.agents/scripts/` and the skill folder), prefer `.agents/scripts/` | Meta and D2 `SKILL.md`, "Which script" | Removed | None | One AGS script at `.agents/skills/write-commit-diff/scripts/`; duplicate host copies are superseded (P23) |
 | 23 | Pointer from git conventions to the skill for commit range diffs | HXP `git-conventions.md`, "Commit range diffs" | AGS | `skills/write-commit-diff/SKILL.md` | Native skill discovery routes it |
 | 24 | PowerShell writer implementations, including D2's Windows PowerShell 5.1 `Split-Path` fix and HXP's `Out-File -Encoding utf8` output | Meta `skills/write-commit-diff/*.ps1`, `scripts/write-last-n-diff.ps1`; D2 `skills/write-commit-diff/*.ps1`, `scripts/write-last-n-diff.ps1`; HXP `skills/write-commit-diff/*.ps1` | Removed | None | Superseded implementation artifacts (P23); their modes and behaviors are rows 5 to 16 |
+
+### state-topology
+
+D2 is `C:/Cosmos/projects/work/designer2`, HXP is `C:/Cosmos/projects/work/hxpoc`; both files are `.agents/guidance/state-topology.md` (D2's `.agents/` is untracked, so no revision is given).
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Answer the questions before writing code that changes shared client state; facts represented in more than one medium are in scope | D2 and HXP, opening paragraph | AGS | `rules/state-topology.md`, opening | Scope written generically, with the union of the media the variants name |
+| 2 | D2 scope list: serialized design, feature flags, service Subjects, Zustand stores, window globals | D2, opening paragraph | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
+| 3 | HXP scope list: authentication, permissions, selected application, query cache, remotes, iframes | HXP, opening paragraph | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP fact (P23) |
+| 4 | Link to existing documentation rather than restating it | D2 and HXP, "Prefer links to existing `documentation/` pages" | AGS | `rules/state-topology.md`, opening | `documentation/` generalized to the repository's documentation |
+| 5 | Trivial local UI state inside a single component needs no record | D2, "Scope gate" | AGS | `rules/state-topology.md`, opening | Generic; stated once as out of scope |
+| 6 | Modern work versus legacy-in-place edits, which stay minimal unless ownership is part of the task | D2, "Scope gate" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 scope gate (P23) |
+| 7 | The labels `fact`, `policy`, `inference`, `unresolved` | D2 and HXP, "Record labels" | AGS | `rules/state-topology.md`, "Labels" | "adopted for Designer2" and "adopted by HXP" become "the repository has adopted" |
+| 8 | The fifteen fields, with their examples | D2 and HXP, "The fifteen fields" | AGS | `rules/state-topology.md`, "The fifteen fields" | Examples merged: cookies, window globals, message payloads, interceptors, frames, document version, authorization failure (HXP's 401) |
+| 9 | Records live under the guidance folder's `state/` | D2 and HXP, "The fifteen fields" | AGS | `rules/state-topology.md`, "Records" | Location follows the plan: records are host material in `.agents/local/`, linked from a host rule |
+| 10 | Add a reusable question that generalizes the record | D2 and HXP, "The fifteen fields" | AGS | `rules/state-topology.md`, "The fifteen fields" | |
+| 11 | Method steps: name the fact, writers before readers, every representation, sync and disposal of secondary forms, boot precedence, explicit dependencies, no invented runtime outcomes | D2 and HXP, "Method" 1 to 6 and 8 | AGS | `rules/state-topology.md`, "Method" | |
+| 12 | Where to search for writers; a second representation needs a distinct lifecycle or boundary purpose | HXP, "Method" 2 and 3 | AGS | `rules/state-topology.md`, "Method" 2 and 3 | |
+| 13 | Props are valid at feature boundaries too; cap ownership of composition hooks, including moving code out of JSX | HXP, "Method" 6 and 7 | AGS | `rules/state-topology.md`, "Method" 6 and 7 | Watcher states the same; HXP's fuller wording kept |
+| 14 | Behavior needing a running app, such as module identity, stays `unresolved` until evidence is recorded | D2 and HXP, "Method" 8 | AGS | `rules/state-topology.md`, "Method" 8 | |
+| 15 | Prefer Zustand for new global client state; do not rip out existing services unless asked | D2, "Method" 7 | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 stack policy (P23), not part of the procedure |
+| 16 | Stop and update the record before adding a writer or authority without naming its arbiter | D2 and HXP, worked counter-examples, last paragraph | AGS | `rules/state-topology.md`, "Method", last paragraph | |
+| 17 | Dual read paths: a hook for new code, a window global for legacy code | D2, "Worked counter-example: dual design readers" | AGS | `rules/state-topology.md`, "Counter-examples", "Two read paths" | Generalized |
+| 18 | D2 facts of that example: `useDesign()`, `window.apm.serialized`, the AVS save and AppManager arbiters, the serialized-design record | D2, "Worked counter-example: dual design readers" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
+| 19 | Ownership ceiling: one hook derives the selection, writes permissions and mirrors the selection | HXP, "Worked counter-example: `useMainNavigation`" | AGS | `rules/state-topology.md`, "Counter-examples", "A hook that arbitrates" | Generalized |
+| 20 | HXP facts of that example: `useMainNavigation` lines, `appCode`, `useUserStore`, `useApplicationsStore`, the policy that the URL owns the selected application | HXP, "Worked counter-example: `useMainNavigation`" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP fact and policy (P23) |
+| 21 | D2 documentation links: services, Subjects, save process, repository profile | D2, "Existing documentation" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | D2 fact (P23) |
+| 22 | HXP documentation links: authentication, roles and permissions, module federation, repository profile | HXP, "Existing documentation" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | HXP fact (P23) |
+| 23 | D2 and HXP record indexes (three records each) | D2 and HXP, "Records" | Backlog | `BACKLOG.md`, Hosts, "Phase E sources" | Host indexes; the records themselves are rowed in step 4.14 |

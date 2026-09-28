@@ -8,6 +8,7 @@
 - css-theme-tokens covers any repository's theme tokens, with @platform/ui-library facts as their own part.
 - plan-work consolidates the host variants and Meta's plans rule.
 - write-commit-diff consolidates the host variants; the PowerShell writers are replaced by the script's modes.
+- New opt-in soft rule state-topology: fill a state record before changing shared client state.
 
 ## 2.0.1 - 2026-09-28
 - Promoted from Watcher: `skills/write-commit-diff/SKILL.md`

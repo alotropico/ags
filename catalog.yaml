@@ -7,6 +7,9 @@ rules:
   - id: tmp-conventions
     tier: soft
     install: always
+  - id: state-topology
+    tier: soft
+    install: opt-in
 
 skills:
   - id: plan-work
