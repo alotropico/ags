@@ -1,20 +1,26 @@
 ---
 name: plan-work
-description: Plan ambiguous or cross-cutting work in a durable plan file under .tmp/plans/. Use when a task touches many files, requirements are unclear, or the user asks to plan or record decisions.
+description: Plan ambiguous or cross-cutting work in a durable plan file under .tmp/plans/, with a decision log and a done condition. Use when a task touches more than about five files, requirements are unclear, or the user asks to plan or record decisions.
 ---
 
 # Plan work
 
-**Trigger:** The task touches many files, requirements are ambiguous, or the user asks to plan or record decisions.
+**Trigger:** The task touches more than about five files, requirements are ambiguous, or the user asks to plan or record decisions.
+
+## When to plan
+
+- Multi-file architectural or cross-cutting work.
+- Unclear ownership, acceptance criteria or migration boundaries.
+- A library or tradeoff choice that is not obvious and that future readers need to understand.
 
 Skip a tiny one-file fix with a clear done condition.
 
 ## Where plans go
 
-- Write the plan in this repository at `.tmp/plans/YYYY-MM-DD-kebab-slug.md`, following the `tmp-conventions` rule. A plan with several files becomes a folder `.tmp/plans/YYYY-MM-DD-kebab-slug/`.
+- Write the plan in this repository at `.tmp/plans/YYYY-MM-DD-kebab-slug.md`, following the `tmp-conventions` rule. A plan with supporting files, such as to-dos or open questions, becomes a folder `.tmp/plans/YYYY-MM-DD-kebab-slug/`.
 - `.tmp/` is gitignored. Read plan files by direct path; built-in search may skip them.
 - Do not create plan stores under `.agents/` or `.cursor/`.
-- Host guidance may name another durable location for plans; follow it when it does.
+- When the user or host guidance asks for it, draft the plan where the team reviews it with the change instead, such as a merge request description or a ticket, or in another location they name.
 
 ## Plan skeleton
 
@@ -30,10 +36,17 @@ Skip a tiny one-file fix with a clear done condition.
 ## Done when
 ```
 
-Record a non-obvious decision in the plan as one line. When the work is done, do not leave imperative living-document instructions in tracked guidance.
+Record each non-obvious decision in the plan as you go, one line each: a library pick, a rejected approach, an ownership ruling.
+
+## When the work is done
+
+- Move a plan worth keeping to `.tmp/records/` under its existing name, and a stale one to `.tmp/archive/YYYY-MM/`. Do not edit a record afterwards beyond a short completion note.
+- Promote only durable architectural notes into the repository's tracked documentation, where host guidance names a place for them. Ephemeral to-dos stay out of tracked history.
+- Do not leave imperative living-document instructions in tracked guidance.
 
 ## Done when
 
 - The acceptance criteria in the plan are met.
 - Verification follows the repository's own scripts; use the `check` skill when it is installed. Do not invent a package manager or a script name.
 - The decision log captures anything non-obvious.
+- Work meant to stay local, such as a plan alone, leaves tracked files unchanged.
