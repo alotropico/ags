@@ -44,6 +44,20 @@ export function crossSkillIds(canonicalRoot, fromDirectory, text) {
   return ids;
 }
 
+export function hostLinkTargets(fromHostRel, text) {
+  const out = [];
+  for (const href of markdownHrefs(text)) {
+    if (isExternalHref(href)) continue;
+    if (path.isAbsolute(href) || /^[a-zA-Z]:/.test(href) || href.startsWith("/") || href.startsWith("\\")) {
+      out.push({ href, target: null });
+      continue;
+    }
+    const joined = path.posix.normalize(path.posix.join(path.posix.dirname(fromHostRel), href.replaceAll("\\", "/")));
+    out.push({ href, target: joined === ".." || joined.startsWith("../") ? null : joined });
+  }
+  return out;
+}
+
 export function relativeLinkErrors(root, fromDirectory, text) {
   const errors = [];
   for (const match of text.matchAll(LINK)) {

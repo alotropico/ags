@@ -68,6 +68,50 @@ function copyDir(from, to) {
   }
 }
 
+export const BLOCK_TEMPLATE = "## AGS\n\n{{strongRules}}\n\nRead a rule before work that matches its condition:\n\n{{ruleIndex}}\n";
+
+export function sampleCatalog() {
+  return {
+    format: 2,
+    rules: [
+      { id: "core", tier: "strong", install: "always" },
+      { id: "tmp-conventions", tier: "soft", install: "always" },
+      { id: "style", tier: "soft", install: "opt-in" },
+    ],
+    skills: [
+      { id: "plan-work", install: "always", keywords: ["plan"] },
+      { id: "ui-kit", install: "detected", when: { any: [{ package: "@platform/ui-library" }] }, includes: ["css-rules"] },
+      { id: "css-rules", install: "opt-in", includes: ["css-clean"] },
+      { id: "css-clean", install: "opt-in", params: ["checks.lint"] },
+      { id: "ship", install: "opt-in", params: ["git.mainBranch", "git.ticketPrefix"] },
+    ],
+    settings: [
+      { key: "git.mainBranch", type: "string", required: true, description: "Trunk branch that feature branches start from and merge into." },
+      { key: "git.ticketPrefix", type: "string", default: "", description: "Prefix for ticket ids in branch names and commit subjects. Empty means no ticket part." },
+      { key: "checks.lint", type: "string", default: "", description: "package.json script that runs the linter. Empty means not configured." },
+    ],
+  };
+}
+
+export function skillFile(id, description, body = "") {
+  return `---\nname: ${id}\ndescription: ${description}\n---\n\n# ${id}\n${body}`;
+}
+
+export function sampleMaterial() {
+  return {
+    "templates/agents-block.md": BLOCK_TEMPLATE,
+    "rules/core.md": "- Host settings are in `.agents/ags.yaml`.\n- Host guidance wins on facts and formats.\n",
+    "rules/tmp-conventions.md": "---\ndescription: Creating, moving, or archiving files under .tmp/.\n---\n\n# tmp\n",
+    "rules/style.md": "---\ndescription: Editing style files.\n---\n\n# style\n\nSee [tmp](tmp-conventions.md).\n",
+    "skills/plan-work/SKILL.md": skillFile("plan-work", "Plan work.", "\nSee [guide](references/guide.md).\n"),
+    "skills/plan-work/references/guide.md": "# Guide\n",
+    "skills/ui-kit/SKILL.md": skillFile("ui-kit", "UI kit styling.", "\nUse [rules](../css-rules/SKILL.md).\n"),
+    "skills/css-rules/SKILL.md": skillFile("css-rules", "CSS rules.", "\nThen [clean](../css-clean/SKILL.md).\n"),
+    "skills/css-clean/SKILL.md": skillFile("css-clean", "Clean CSS."),
+    "skills/ship/SKILL.md": skillFile("ship", "Ship a branch.", "\n## Host settings\n\n- `git.ticketPrefix`: with `CORE-`, a branch is `CORE-1234-short-slug`.\n"),
+  };
+}
+
 export function makeAgsRepo({ files = {}, catalog, version = "1.0.0", tags = [], cli = false, changelog = "## Unreleased\n" } = {}) {
   const root = initRepo(path.join(tempDir("ags-src-"), "ags"));
   const base = {

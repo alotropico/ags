@@ -1,12 +1,53 @@
+import { createHash } from "node:crypto";
 import path from "node:path";
-import { catalogById, includedSkillIds, skillAbs } from "./catalog.mjs";
-import { displayPath, readText } from "./util.mjs";
+import { readText } from "./util.mjs";
 
 export const BEGIN = "<!-- AGS:BEGIN -->";
 export const END = "<!-- AGS:END -->";
+export const BLOCK_BUDGET = 40;
+const INDEX_LEAD = "Read a rule before work that matches its condition:";
 
 export function agentsBlock(root) {
   return readText(path.join(root, "templates", "agents-block.md")).replace(/\s+$/, "");
+}
+
+function literalReplace(template, values) {
+  let text = template;
+  for (const [token, value] of Object.entries(values)) {
+    text = text.replaceAll(token, () => value);
+  }
+  return text;
+}
+
+export function indexLine(id, description) {
+  return `- \`.agents/rules/${id}.md\`: ${description}`;
+}
+
+export function renderBlockBody(template, { strongRules = [], index = [] } = {}) {
+  let lines = String(template).replaceAll("\r\n", "\n").replace(/\s+$/, "").split("\n");
+  if (!index.length) {
+    const lead = lines.findIndex((line) => line.trim() === INDEX_LEAD);
+    const slot = lines.findIndex((line) => line.includes("{{ruleIndex}}"));
+    if (lead >= 0 && slot >= lead) lines.splice(lead, slot - lead + 1);
+    else if (slot >= 0) lines.splice(slot, 1);
+  }
+  const body = literalReplace(lines.join("\n"), {
+    "{{strongRules}}": strongRules.map((text) => String(text).replaceAll("\r\n", "\n").trim()).filter(Boolean).join("\n"),
+    "{{ruleIndex}}": index.join("\n"),
+  });
+  return body.replace(/\n{3,}/g, "\n\n").replace(/^\n+|\s+$/g, "");
+}
+
+export function contentHash(body) {
+  return createHash("sha256").update(String(body).replaceAll("\r\n", "\n")).digest("hex").slice(0, 12);
+}
+
+export function renderBlock(version, body) {
+  return `<!-- AGS:BEGIN ${version} ${contentHash(body)} -->\n${body}\n${END}`;
+}
+
+export function blockLineCount(body) {
+  return String(body).split("\n").length + 2;
 }
 
 export function analyzeMarkers(content) {
@@ -49,68 +90,6 @@ export function planAgentsBlockRemoval(existing, block) {
   const next = `${state.before}${state.after}`;
   if (!next.trim()) return { action: "remove block", text: null };
   return { action: "remove block", text: next };
-}
-
-export function renderHostEntry(root, catalog, settings) {
-  const template = readText(path.join(root, "templates", "host-ags.md"));
-  const shown = displayPath(root);
-  const byId = catalogById(catalog);
-  const rules = settings.rules.enabled.length
-    ? settings.rules.enabled.map((id) => ruleLine(root, byId.get(id))).join("\n")
-    : "- none";
-  const skills = settings.skills.enabled.length
-    ? settings.skills.enabled.map((id) => skillLine(root, catalog, byId.get(id))).join("\n")
-    : "- none";
-  const localExceptions = localExceptionBlock(settings);
-  return literalReplace(template, {
-    "{{canonicalRoot}}": shown,
-    "{{rules}}": rules,
-    "{{skills}}": skills,
-    "{{localExceptions}}": localExceptions,
-    "{{operations}}": operationsBlock(settings),
-  }).replace(/\s+$/, "\n");
-}
-
-function literalReplace(template, values) {
-  let text = template;
-  for (const [token, value] of Object.entries(values)) {
-    text = text.replaceAll(token, () => value);
-  }
-  return text;
-}
-
-function localExceptionBlock(settings) {
-  const list = settings.skills?.localExceptions || [];
-  if (!list.length) return "- none";
-  return list.map((item) => `- \`${item.id}\` — host-local exception\n  \`${item.path}\``).join("\n");
-}
-
-function operationsBlock(settings) {
-  const branch = settings.git?.mainBranch;
-  const checks = settings.checks || {};
-  const line = (name) => (checks[name] ? `- checks.${name}: \`${checks[name]}\`` : `- checks.${name}: not configured`);
-  return [
-    branch ? `- git.mainBranch: \`${branch}\`` : "- git.mainBranch: not configured",
-    line("type"),
-    line("lint"),
-    line("prettier"),
-  ].join("\n");
-}
-
-function ruleLine(root, entry) {
-  const file = displayPath(path.join(root, ...entry.path.split("/")));
-  return `- \`${entry.id}\` — ${entry.description}\n  \`${file}\``;
-}
-
-function skillLine(root, catalog, entry) {
-  const file = displayPath(skillAbs(root, entry));
-  const lines = [`- \`${entry.id}\` — ${entry.description}`, `  \`${file}\``];
-  for (const id of includedSkillIds(catalog, [entry.id])) {
-    const child = catalogById(catalog).get(id);
-    if (!child) continue;
-    lines.push(`  - includes \`${child.id}\` \`${displayPath(skillAbs(root, child))}\``);
-  }
-  return lines.join("\n");
 }
 
 export function upsertAgentsBlock(existing, block) {

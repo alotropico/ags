@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { detectEvidence, whenMatches } from "../scripts/lib/catalog.mjs";
+import { detectEvidence, whenMatches } from "../scripts/lib/packages.mjs";
 import { tempDir } from "./helpers/fixtures.mjs";
 
 test("detection predicates: package, lockFile and repoName", () => {

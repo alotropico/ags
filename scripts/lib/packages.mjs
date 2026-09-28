@@ -11,6 +11,36 @@ const LOCKS = [
   ["npm-shrinkwrap.json", "npm"],
 ];
 const SCRIPT_KEY = /^[A-Za-z0-9_.:@/-]+$/;
+export const LOCK_FILES = new Set(["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"]);
+
+export function detectEvidence(hostRoot) {
+  const packages = new Set();
+  const packagePath = path.join(hostRoot, "package.json");
+  let packageJson = false;
+  if (fs.existsSync(packagePath)) {
+    packageJson = true;
+    try {
+      const json = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+      for (const field of ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]) {
+        for (const name of Object.keys(json?.[field] || {})) packages.add(name);
+      }
+    } catch {
+      packageJson = false;
+    }
+  }
+  const locks = new Set([...LOCK_FILES].filter((name) => fs.existsSync(path.join(hostRoot, name))));
+  return { packages, locks, repoName: path.basename(hostRoot).toLowerCase(), packageJson };
+}
+
+export function whenMatches(when, evidence) {
+  if (!when) return true;
+  return when.any.some((clause) => {
+    if (clause.package) return evidence.packages.has(clause.package);
+    if (clause.lockFile) return evidence.locks.has(clause.lockFile);
+    if (clause.repoName) return evidence.repoName === clause.repoName.toLowerCase();
+    return false;
+  });
+}
 
 export function isPackageScriptKey(value) {
   return typeof value === "string" && value.length > 0 && SCRIPT_KEY.test(value) && !value.includes("..");
