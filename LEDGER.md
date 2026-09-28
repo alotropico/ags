@@ -117,6 +117,62 @@ Dispositions, exactly one per row:
 | 13 | Host settings are read from `.agents/ags.yaml`; ask when a value is missing | new in V2 | AGS | `rules/core.md` bullet 1 | Spec 13.3, Appendix A |
 | 14 | Host guidance wins on facts and formats; safety never yields | new in V2 | AGS | `rules/core.md` bullet 2 | Spec 11.6 |
 
+### v1-final:README.md
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | AGS is the local guidance and deterministic command set for coding agents | `v1-final:README.md`, intro, "AGS is the local canonical guidance" | AGS | `README.md`, intro | Reworded: AGS is the source of released material that hosts install as copies (spec 1, 3) |
+| 2 | Windows only | `v1-final:README.md`, intro, "V1 supports Windows only" | AGS | `README.md`, Prerequisites | Portability is `BACKLOG.md`, CLI and platform, "Portable CLI" (spec 22.1) |
+| 3 | Hosts keep a small entry and their own settings | `v1-final:README.md`, intro, "Host repositories keep a small entry" | AGS | `README.md`, Hosts | The entry is the AGS block in `AGENTS.md`; settings are `.agents/ags.yaml` (spec 10.1, 13.1) |
+| 4 | Custom skills live under `skills/<id>/` | `v1-final:README.md`, intro, "Canonical custom and third-party skills" | AGS | `README.md`, Layout | |
+| 5 | Third-party skills live under `skills/<id>/` | `v1-final:README.md`, intro, "Canonical custom and third-party skills" | Backlog | `BACKLOG.md`, Third-party skills, "Import" | |
+| 6 | A `requires-host-location` exception lives only at the host path listed in `.agents/AGS.md` | `v1-final:README.md`, intro, "A registered `requires-host-location` exception" | Removed | None | See `v1-final: removed commands and settings` row 21 |
+| 7 | An AGS skill is never copied into a host as an exception | `v1-final:README.md`, intro, "A canonical skill is never copied" | Removed | None | Reversed: hosts hold installed copies (spec 1) |
+| 8 | Prerequisites: Windows, Node.js 20 or newer, pnpm, Git | `v1-final:README.md`, Prerequisites | AGS | `README.md`, Prerequisites | |
+| 9 | Install from the checkout: `pnpm install`, `pnpm setup`, the global install script, then `ags doctor` | `v1-final:README.md`, Install the `ags` command, first command block | AGS | `README.md`, Install the `ags` command | |
+| 10 | The installer writes `ags.CMD`, `ags.ps1` and `ags` shims that run this tree's `scripts/ags.mjs` | `v1-final:README.md`, Install the `ags` command, "The installer writes" | AGS | `README.md`, Install the `ags` command; `scripts/install-global.mjs` | Spec 22.1 |
+| 11 | `--bin` chooses only the shim directory, not the AGS source root | `v1-final:README.md`, Install the `ags` command, "`--bin` chooses only that shim directory" | AGS | `README.md`, Install the `ags` command | The source-root clause is dropped: no host stores an AGS path (spec 25) |
+| 12 | The shim directory must be on PATH | `v1-final:README.md`, Install the `ags` command, "The directory must be on PATH" | AGS | `README.md`, Install the `ags` command | |
+| 13 | The installer retargets every registered host and returns nonzero when a retarget fails | `v1-final:README.md`, Install the `ags` command, "the installer retargets every registered host" | Removed | None | See `v1-final: removed commands and settings` row 19 |
+| 14 | Example: `--bin` with an explicit directory | `v1-final:README.md`, Install the `ags` command, second command block | AGS | `README.md`, Install the `ags` command | The example uses `$env:USERPROFILE\bin` instead of an absolute path |
+| 15 | Shim directory order without `--bin`: `PNPM_HOME` itself, `pnpm bin -g`, `%LOCALAPPDATA%\pnpm` | `v1-final:README.md`, Install the `ags` command, "Shim directory order" | AGS | `README.md`, Install the `ags` command; `scripts/install-global.mjs` (`resolveInstallBin`) | |
+| 16 | An existing shim that points elsewhere stops the installer; pass `--replace` or another `--bin` | `v1-final:README.md`, Install the `ags` command, "If an existing `ags` shim does not point at this tree" | AGS | `README.md`, Install the `ags` command | |
+| 17 | On a platform other than Windows, the installer exits before writing | `v1-final:README.md`, Install the `ags` command, "On a non-Windows platform" | AGS | `README.md`, Install the `ags` command | |
+| 18 | `pnpm setup` adds the global bin to the user PATH; restart the terminal app, since a new tab keeps the old PATH | `v1-final:README.md`, Install the `ags` command, "`pnpm setup` adds the pnpm global bin directory" | AGS | `README.md`, Install the `ags` command | |
+| 19 | Try the host lifecycle on a throwaway git repository, never on one you care about | `v1-final:README.md`, Temporary host trial | AGS | `README.md`, Hosts, "Try it on a scratch repository" | `--yes` is gone; the trial answers the terminal prompts (`v1-final: removed commands and settings` row 13) |
+| 20 | Selections, usage reporting, Git and check settings live in the host's `.agents/ags.yaml` | `v1-final:README.md`, Host settings, first sentence | AGS | `README.md`, Host settings | Format 2 (spec 13.1) |
+| 21 | `hosts.yaml` stores only the host id, name and path | `v1-final:README.md`, Host settings, "`hosts.yaml` stores only" | AGS | `README.md`, Hosts; `scripts/lib/registry.mjs` | Format 2 also holds ignore and promotion records (spec 16.13) |
+| 22 | Example `git.mainBranch` and `checks.*` values | `v1-final:README.md`, Host settings, YAML block | AGS | `README.md`, Host settings (format 2 example) | |
+| 23 | Check values are `package.json` script names | `v1-final:README.md`, Host settings, "Check values are package script names" | AGS | `README.md`, Host settings; `scripts/lib/config.mjs` | Spec 13.2 |
+| 24 | The package manager comes from `packageManager` or exactly one lock file; scripts run as `<manager>.cmd run <script>` | `v1-final:README.md`, Host settings, "AGS detects `pnpm`, `yarn`, or `npm`" | AGS | `README.md`, Host settings; `skills/check/scripts/run-checks.mjs` | Spec 19.2 |
+| 25 | A Prettier script that writes files is refused | `v1-final:README.md`, Host settings, "It refuses an obvious Prettier write script" | AGS | `scripts/lib/config.mjs`; `skills/check/scripts/run-checks.mjs` | Spec 19.2 |
+| 26 | The installer shows the manager, script name and script body before confirmation | `v1-final:README.md`, Host settings, "The installer shows the manager" | Removed | None | See `v1-final: removed commands and settings` row 16 |
+| 27 | An update keeps existing setting values | `v1-final:README.md`, Host settings, "A core update does not replace existing values" | AGS | `README.md`, Host settings; `scripts/lib/config.mjs` (`mergeConfig`) | Spec 13.6 |
+| 28 | An old full check command is migrated to a script name | `v1-final:README.md`, Host settings, "An old full command is migrated" | Removed | None | See `v1-final: removed commands and settings` row 17 |
+| 29 | `ui-library-css` is installed when `package.json` depends on `@platform/ui-library` | `v1-final:README.md`, Host settings, "`ui-library-css` is the CSS entry point" | AGS | `catalog.yaml` (`install: detected` with `when`) | Spec 12.1, 12.2 |
+| 30 | A Markdown link from one skill to another forces the target into `includes` | `v1-final:README.md`, Host settings, "A Markdown link from one canonical skill" | AGS | `AGENTS.md`, Writing material; `scripts/lib/catalog.mjs` (link validation) | Reworded: a skill links only to its `includes` companions (spec 14.2) |
+| 31 | `ui-library-css` includes `css-authoring-conventions` and `css-theme-tokens`; `css-authoring-conventions` includes `css-cleanup` | `v1-final:README.md`, Host settings, "`ui-library-css` includes" | AGS | `catalog.yaml` (`includes`) | |
+| 32 | Companions stay in the AGS tree | `v1-final:README.md`, Host settings, "Those companions stay canonical" | Removed | None | Companions are installed into the host with their parent (spec 12.4) |
+| 33 | A skill that cannot live in AGS is installed with `--route` as a registered host-local exception, with a warning and a record | `v1-final:README.md`, Host settings, "A skill that truly cannot live in canonical AGS" | Removed | None | Such a skill is a host skill in `.agents/skills/<id>/` (spec 11.6); see `v1-final: removed commands and settings` row 21 |
+| 34 | `ags doctor` checks the AGS tree and, with a host route, that host | `v1-final:README.md`, Commands, `ags doctor` | AGS | `README.md`, Commands | Spec 23 |
+| 35 | `ags host install`, `update`, `list` and `unregister` | `v1-final:README.md`, Commands, `ags host install\|update\|list\|sync\|repair\|unregister` | AGS | `README.md`, Commands and Hosts | Spec 16.4, 16.5, 16.13 |
+| 36 | `ags host sync` and `ags host repair` | `v1-final:README.md`, Commands, `ags host install\|update\|list\|sync\|repair\|unregister` | Removed | None | See `v1-final: removed commands and settings` rows 1–2 |
+| 37 | `ags skills list` | `v1-final:README.md`, Commands, `ags skills list\|install\|reconcile` | AGS | `README.md`, Commands | Spec 22.2 |
+| 38 | `ags skills install` | `v1-final:README.md`, Commands, `ags skills list\|install\|reconcile` | Backlog | `BACKLOG.md`, Third-party skills, "Import" | |
+| 39 | `ags skills reconcile` | `v1-final:README.md`, Commands, `ags skills list\|install\|reconcile` | Removed | None | See `v1-final: removed commands and settings` row 4 |
+| 40 | `ags reporting on\|off\|status` for per-host usage reporting | `v1-final:README.md`, Commands, `ags reporting on\|off\|status` | Backlog | `BACKLOG.md`, CLI and platform, "`ags reporting on\|off\|status`" | |
+| 41 | `ags report usage` appends a usage record | `v1-final:README.md`, Commands, `ags report usage\|changes` | AGS | `README.md`, Commands; `skills/report-usage/SKILL.md` | Records stay in the host (spec 18) |
+| 42 | `ags report changes` appends a change record | `v1-final:README.md`, Commands, `ags report usage\|changes` | Removed | None | See `v1-final: removed commands and settings` row 6 |
+| 43 | `ags check` runs the configured type, lint and Prettier checks | `v1-final:README.md`, Commands, `ags check` | AGS | `README.md`, Commands; `skills/check/scripts/run-checks.mjs` | The command is an alias of the `check` script (spec 19.2) |
+| 44 | `ags snapshot` zips one host's guidance, including its companion skills | `v1-final:README.md`, Commands, `ags snapshot` | AGS | `README.md`, Commands; `scripts/lib/snapshot.mjs` | Spec 20 |
+| 45 | `ags snapshot canonical` zips the AGS checkout, with `--only`, `--except` and `--include-standard-excluded` | `v1-final:README.md`, Commands, `ags snapshot canonical` | Backlog | `BACKLOG.md`, Snapshots, "`ags snapshot source`" | |
+| 46 | `ags diff` modes write a patch under the host `.tmp/`; counts follow first-parent history; the root commit diffs from the empty tree | `v1-final:README.md`, Commands, `ags diff` | AGS | `README.md`, Commands; `skills/write-commit-diff/scripts/write-commit-diff.mjs` | The command is an alias of the script, which writes `.tmp/scratch/<name>.diff` (spec 19.1) |
+| 47 | The AGS `.tmp/` is for AGS maintenance and for files the AGS scripts stage | `v1-final:README.md`, Layout, "Canonical `.tmp` is for AGS maintenance" | AGS | `README.md`, Layout; `AGENTS.md`, .tmp conventions | `.tmp/ags/` is reserved for the command (spec 9.1, 17.2) |
+| 48 | A host plan or other host artifact goes under the host's own `.tmp/` | `v1-final:README.md`, Layout, "A host plan or other host artifact" | AGS | `rules/tmp-conventions.md`; `skills/plan-work/SKILL.md` | |
+| 49 | AGS layout: root files and folders | `v1-final:README.md`, Layout, first text block | AGS | `README.md`, Layout | Spec 9.1 |
+| 50 | Host layout: `AGENTS.md`, `.agents/ags.yaml`, `.agents/local/`, `.tmp/` | `v1-final:README.md`, Layout, "Host:" block | AGS | `README.md`, Hosts | Spec 10.1 |
+| 51 | `.agents/AGS.md` in the host layout | `v1-final:README.md`, Layout, "Host:" block | Removed | None | See `v1-final: removed commands and settings` row 22 |
+
 ### v1-final:templates/agents-block.md
 
 | # | Concept | Source | Disposition | Destination | Rationale |
