@@ -1,0 +1,10 @@
+format: 2
+host:
+reporting: true
+skills:
+  enabled: []
+  disabled: []
+rules:
+  enabled: []
+  disabled: []
+local: {}
