@@ -97,6 +97,7 @@ Dispositions, exactly one per row:
 | 18 | Report AGS edits with `ags report changes` | `v1-final:AGENTS.md`, Changes, command block | Removed | None | Changelog notes and promotion notes replace change reports (spec 15.3) |
 | 19 | Use `ags` for deterministic operations | `v1-final:AGENTS.md`, Deterministic commands | AGS | `AGENTS.md`, Commands | The V1 command list is replaced by the commands of spec 22.2 |
 | 20 | Never invoke files under `scripts/` by path | `v1-final:AGENTS.md`, Deterministic commands, last sentence | AGS | `AGENTS.md`, Commands | |
+| 21 | Custom skills live under `skills/` | `v1-final:AGENTS.md`, Material, "Canonical custom and third-party skills live under `skills/`" | AGS | `AGENTS.md`, Layout (`skills/<id>/`) | |
 
 ### v1-final:rules/core.md
 
@@ -213,6 +214,7 @@ Dispositions, exactly one per row:
 | 13 | Verify with the host `check` skill; never run canonical AGS scripts against the host | `v1-final:skills/css-authoring-conventions/SKILL.md`, Verify | AGS | `skills/css-authoring-conventions/SKILL.md`, Verify ("use the `check` skill when it is installed") | The canonical-scripts clause is dropped with the canonical root (spec 25) |
 | 14 | Read `.agents/ags.yaml` `checks` before deciding no audit exists | `v1-final:skills/css-cleanup/SKILL.md`, "Established command" | AGS | `skills/css-cleanup/SKILL.md`, "Host settings" and "Established command" | Appendix D wording for its `params` |
 | 15 | Verify with the host `check` skill; never fall back to canonical AGS scripts | `v1-final:skills/css-cleanup/SKILL.md`, Verify | AGS | `skills/css-cleanup/SKILL.md`, Verify | The canonical-scripts clause is dropped with the canonical root (spec 25) |
+| 16 | Skills act on "the verified host", checked through AGS before use | `v1-final:skills/check/SKILL.md`, description; `v1-final:skills/git-cleanup/SKILL.md`, "Required host setting"; `v1-final:skills/css-cleanup/SKILL.md`, "Established command" | AGS | `skills/check/SKILL.md`, `skills/git-cleanup/SKILL.md`, `skills/css-cleanup/SKILL.md` ("the repository") | Reworded: skills run inside the host that installed them, with no registry check (spec 6 invariant 2, 19) |
 
 ### v1-final: removed commands and settings
 
@@ -243,3 +245,26 @@ Dispositions, exactly one per row:
 | 23 | Moving host files aside into `.tmp/ags-quarantine/<stamp>/`: `quarantine` | `v1-final:scripts/lib/util.mjs`, `quarantine` | AGS | `scripts/lib/backup.mjs` (backup folders with renaming and a manifest) | Spec 16.1, Appendix E.4 |
 | 24 | Adding `/.tmp/` to the git exclude file: `ensureHostTmpIgnored` | `v1-final:scripts/lib/util.mjs`, `ensureHostTmpIgnored` | AGS | `scripts/lib/render.mjs` (the exclude block) | Spec 16.12 |
 | 25 | `.agents/ags.yaml` and `hosts.yaml` format 1 | `v1-final:scripts/lib/host.mjs`, `validateRegistry` and the settings writer, `format: 1` | AGS | `scripts/lib/config.mjs` and `scripts/lib/registry.mjs` (format 2) | Format 1 is rejected with a message; no V1 hosts exist (spec 13.1, 16.13) |
+| 26 | The host `ags snapshot` collects the selected skills and companions from the AGS tree and adds `resolution.json` | `v1-final:scripts/lib/snapshot.mjs`, `writeSnapshot`, "resolution.json" | Removed | None | The host holds its installed copies; the snapshot zips `AGENTS.md` and `.agents/**` with a manifest (spec 20) |
+| 27 | Snapshot exclusions: the standard sensitive-path list and `.agents/local/.ags-exclude` | `v1-final:scripts/lib/snapshot.mjs`, `excludedRelative`, `localExcluded` | Removed | None | The snapshot holds only `AGENTS.md` and `.agents/**`, which hold guidance and settings (spec 20); see `.tmp/archive/2026-09/ags-future-work-notes.md` row 14 |
+| 28 | Default host snapshot path `.tmp/ags-snapshot.zip` | `v1-final:scripts/ags.mjs`, `snapshotCommand` | AGS | `scripts/lib/snapshot.mjs`: `.tmp/ags/snapshots/<YYYY-MM-DD-HHmmss>.zip` | `.tmp/ags/` is reserved for the command (spec 17.2, 20) |
+| 29 | `ags doctor` finds a host from the working directory or its parents | `v1-final:scripts/ags.mjs`, `main`, "doctor", `findHostUp` | Removed | None | Host checks run when `--route` names the host; without it, `doctor` checks AGS (spec 22.2, 23) |
+| 30 | `ags diff` and `ags check` resolve the host through the registry and run code from the AGS tree | `v1-final:scripts/ags.mjs`, `diffCommand` (`verifyRegistered`), `checkCommand` (`resolveRoute`, `runChecks`) | AGS | `scripts/ags.mjs`: aliases that run the host's installed `write-commit-diff` and `check` scripts | Spec 19, 22.1 |
+| 31 | Install prints "Recommended: ui-library-css includes …" among the offered skills | `v1-final:scripts/lib/host.mjs`, install plan, `plan.recommended` | Removed | None | A detected skill installs with its companions, and a terminal offers the opt-in items (spec 12.1, 12.4, 16.4) |
+
+### v1-final:catalog.yaml
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `format: 1` | `v1-final:catalog.yaml`, `format` | AGS | `catalog.yaml` (`format: 2`); `scripts/lib/catalog.mjs` | Spec 14, 14.2 |
+| 2 | `rules: []`: no rule in the catalog; the core was loaded outside it | `v1-final:catalog.yaml`, `rules` | AGS | `catalog.yaml`, rules `core` (`tier: strong`) and `tmp-conventions` (`tier: soft`) | Spec 14, 14.1 |
+| 3 | The eight skill ids | `v1-final:catalog.yaml`, `skills` | AGS | `catalog.yaml` (same ids) | No id is removed or renamed in `2.0.0` |
+| 4 | `kind: custom` or `third-party` | `v1-final:catalog.yaml`, every skill, `kind` | Removed | None | Every catalog skill installs the same way; third-party import is `BACKLOG.md`, Third-party skills, "Import" (spec 14.1, 30 item 6) |
+| 5 | `path` of each entry | `v1-final:catalog.yaml`, every skill, `path` | Removed | None | Paths derive from ids (spec 14.1, 30 item 6) |
+| 6 | Catalog `description` of each entry | `v1-final:catalog.yaml`, every skill, `description` | AGS | `skills/<id>/SKILL.md` frontmatter `description` | One source per description (spec 11.4, 14.1) |
+| 7 | `default: true` or `false` | `v1-final:catalog.yaml`, every skill, `default` | AGS | `catalog.yaml` `install` (`always`, `detected`, `opt-in`) | `plan-work` became `always`, `ui-library-css` `detected` (spec 12.1) |
+| 8 | `entryPoint: false` makes a skill companion-only, never selected directly | `v1-final:catalog.yaml`, `css-theme-tokens`, `entryPoint`; `v1-final:scripts/lib/catalog.mjs`, `isEntryPoint` | Removed | None | Every skill has an install class; companions come with their parent through `includes`, and a companion of a selected parent cannot be disabled (spec 12.1, 12.4, 14.1) |
+| 9 | `keywords` required on every entry | `v1-final:catalog.yaml`, every skill, `keywords` | AGS | `catalog.yaml` (optional `keywords`, kept for existing ids); `ags skills list` | Spec 14.1, 22.2 |
+| 10 | `when` conditions (`any`, `package`) | `v1-final:catalog.yaml`, `ui-library-css`, `when` | AGS | `catalog.yaml` `when`; `scripts/lib/packages.mjs` (detection) | Spec 12.2 |
+| 11 | `includes` companions | `v1-final:catalog.yaml`, `ui-library-css` and `css-authoring-conventions`, `includes` | AGS | `catalog.yaml` `includes` | Spec 12.4 |
+| 12 | `source` provenance field for third-party skills | `v1-final:scripts/lib/catalog.mjs`, `SKILL_FIELDS` | Backlog | `BACKLOG.md`, Third-party skills, "Import" | |
