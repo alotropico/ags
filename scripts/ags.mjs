@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { parseDecide, parseDecideAll, realTerminal } from "./lib/operation.mjs";
 import { hostInstall, hostList, hostStatus, hostUnregister, hostUpdate, installedPaths } from "./lib/host.mjs";
 import { hostLockPath, reportUsage, USAGE_REL, withLock } from "./lib/reports.mjs";
+import { skillsList } from "./lib/skills.mjs";
 import { writeSnapshot } from "./lib/snapshot.mjs";
 import { readConfig } from "./lib/config.mjs";
 import { hostPrepare } from "./lib/prepare.mjs";
@@ -236,6 +237,15 @@ COMMANDS.set("report usage", {
     const result = await reportUsage({ hostRoot, config, managed: config.reporting === false ? new Set() : installedPaths(agsRoot, hostRoot, config), values: flags.file, label: flags.label });
     terminal.log(result.recorded ? `Recorded usage in ${USAGE_REL}.` : "Reporting is off in .agents/ags.yaml; nothing recorded.");
     return 0;
+  },
+});
+
+COMMANDS.set("skills list", {
+  usage: "",
+  flags: [],
+  run: ({ agsRoot, rest, terminal }) => {
+    if (rest.length) throw usageError(`Unknown command: skills list ${rest.join(" ")}`);
+    return skillsList({ agsRoot, terminal });
   },
 });
 
