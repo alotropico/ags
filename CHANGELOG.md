@@ -1,5 +1,8 @@
 ## Unreleased
 
+## 3.0.0 - 2026-09-29
+- Disposable V3 rehearsal candidate.
+
 ## 2.1.2 - 2026-09-28
 - doctor reports an unanchored tmp/ line in .cursorignore or .cursorindexingignore, which Cursor also applies to .tmp/.
 
