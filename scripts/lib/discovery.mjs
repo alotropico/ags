@@ -150,7 +150,8 @@ export function findings(root) {
   const result = git(["check-ignore", "--no-index", "-v", "--", "AGENTS.md", ".agents/", ".agents/ags.yaml"], root, { allow: [0, 1] });
   for (const line of result.stdout.split(/\r?\n/).filter(Boolean)) {
     const [source, target] = line.split("\t");
-    if (/^.*:\d+:!/.test(source)) continue;
+    const pattern = source.match(/^.*:\d+:(.*)$/)?.[1]?.trim();
+    if (!pattern || pattern.startsWith("!")) continue;
     found.push(`An ignore rule matches ${posix(target)} (${source}). Install refuses while git ignores AGENTS.md or .agents/.`);
   }
   for (const rel of [...SETUP_FOLDERS, ...SETUP_FILES]) {

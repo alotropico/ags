@@ -137,8 +137,8 @@ export function ignoredPaths(hostRoot, rels) {
     .filter(Boolean)
     .map((line) => line.split("\t"))
     .filter(([source]) => {
-      const pattern = source.match(/^.*:\d+:(.*)$/)?.[1];
-      return pattern != null && pattern !== "" && !pattern.startsWith("!");
+      const pattern = source.match(/^.*:\d+:(.*)$/)?.[1]?.trim();
+      return Boolean(pattern) && !pattern.startsWith("!");
     })
     .map(([source, target]) => ({ source, path: posix(target) }));
 }
