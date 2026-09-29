@@ -40,7 +40,8 @@ Dispositions, exactly one per row:
 | 3 | Recover the omitted meta AGS content | `.tmp/archive/2026-09/ags-future-work-notes.md`, "First: recover the omitted meta AGS content", first paragraph | AGS | `docs/v2-spec.md` 28.2, Appendix H | Run 2 consolidation takes every variant, including meta's |
 | 4 | Adopt on a low-risk real host first; HXP shared, D2 personal | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Use real repo tasks, initially a low-risk host" | AGS | `docs/v2-spec.md` 28.2, 28.3 | Watcher is the first host; HXP and D2 wait for Phase E |
 | 5 | Lighten and clean up the combined guidance | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Second: lighten and clean up the combined guidance" | AGS | `docs/v2-spec.md` 11, 28.2 | Tiers keep always-loaded guidance thin; Run 2 consolidates and runs the prose pass |
-| 6 | Proto-rules and selected third-party ideas | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Third: develop the proto-rules and selected third-party ideas" | Backlog | `BACKLOG.md`, Guidance, "Proto-rules" | |
+| 6 | Proto-rules | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Third: develop the proto-rules and selected third-party ideas" | AGS | `docs/v3-proto-rules.md`; `docs/v3-spec.md`, "Content workstreams" | The exploratory rules are now an active V3 design input, not active installed guidance |
+| 6a | Selected third-party ideas | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Third: develop the proto-rules and selected third-party ideas" | Backlog | `BACKLOG.md`, "Third-party skills" | |
 | 7 | Optional committed local copy of guidance in hosts | `.tmp/archive/2026-09/ags-future-work-notes.md`, "Deferred capability: optional committed local fallback copy", first paragraph | AGS | `docs/v2-spec.md` 1, 10 | V2 makes installed copies the only model |
 | 8 | Update and sync compare only; `ags host snapshot refresh` | `.tmp/archive/2026-09/ags-future-work-notes.md`, "When this option exists, ordinary `ags host update`" | Removed | None | Rejected by spec 16.5 and 25: update plans and applies with decisions; sync is removed |
 | 9 | Optional commit of the refreshed copy | `.tmp/archive/2026-09/ags-future-work-notes.md`, "For the optional commit, stage and commit only paths" | Removed | None | Rejected by spec 6 invariant 6: AGS never commits in a host |
@@ -808,7 +809,7 @@ Sources read on 2026-09-28: D2 `.agents/guidance/code-idioms.md` (D2's `.agents/
 | 61 | State ladder: local, lift, store, query cache | Meta `react-state.mdc`, "State ladder" | AGS | `rules/code-idioms.md`, "State" | |
 | 62 | Never mirror server state into a store or local state | Meta `react-state.mdc`, "State ladder" | AGS | `rules/code-idioms.md`, "State" | |
 | 63 | No prop drilling; generic components stay store-agnostic | Meta `react-state.mdc`, "No prop drilling" | AGS | `rules/code-idioms.md`, "State" | |
-| 64 | Pass a value from parent to child only when the parent may modify or override it | Meta `react-state.mdc`, "No prop drilling" | Backlog | `BACKLOG.md`, Guidance, "Proto-rules" | No host variant holds it; proto-rules 1 and 2 cover it (P22) |
+| 64 | Pass a value from parent to child only when the parent may modify or override it | Meta `react-state.mdc`, "No prop drilling" | AGS | `docs/v3-proto-rules.md`, rules 1 and 2; `docs/v3-spec.md`, "Ownership and boundaries" | No host variant holds it; V3 must test and place the portable principle (P22) |
 | 65 | Derived values in render, never a `useState` plus `useEffect` copy; `useMemo` only for measured cost | Meta `react-state.mdc`, "Derived state" | AGS | `rules/code-idioms.md`, "Derived state and effects", "Callbacks and hooks" | |
 | 66 | Effects only for external systems; not for render transforms, event reactions or chained updates | Meta `react-state.mdc`, "Effects" | AGS | `rules/code-idioms.md`, "Derived state and effects" | |
 | 67 | Dedicated components over native elements; note why when one cannot do the job | Meta `react-ui.mdc`, "Dedicated components over vanilla elements" | AGS | `rules/code-idioms.md`, "Components and UI" | |
@@ -945,3 +946,112 @@ Merges and removals of the wording pass (plan step 6.1, P25). Sources are AGS pa
 | 17 | Implement only when the user explicitly asked | `v2.1.0:skills/react-state-transitions/references/refactoring-patterns.md`, "Implement mode" | AGS | `skills/react-state-transitions/SKILL.md`, "Modes" | The reference points to "Modes" instead of restating it |
 | 18 | Do not redeclare what cascade, inheritance or a default already provides; prefer fewer declarations | `v2.1.0:skills/css-authoring-conventions/SKILL.md`, "Declarations" 2 and 3 | AGS | `skills/css-authoring-conventions/SKILL.md`, "Declarations" 2 | Two bullets merged; one exception remains, "unless explicitness has a concrete purpose", which covers a design rule that requires another value |
 | 19 | Never invoke `scripts/` files by path, against rerunning `node scripts/install-global.mjs` after a move | `v2.1.0:AGENTS.md`, "Commands" 1 and 2 | AGS | `AGENTS.md`, "Commands" 1 | Contradiction settled: the installer is the stated exception, as in `README.md`; "Layout" now lists `install-global.mjs` |
+
+## V3: direction inputs
+
+The direction handoff is an external design-conversation record, not an instruction file. These rows dispose of its concepts into the V3 plan, backlog, or removals. The final row records the user's delivery decision made with the V3 spec request.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | The handoff is source material, with firm directions distinguished from experiments and unresolved details | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, status and "How to use these notes" | AGS | `docs/v3-spec.md`, "Purpose and authority" | |
+| 2 | Opt-in machine-readable, split, resumable plans for unusually long execution | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Opt-in plans for long executions" | Backlog | `BACKLOG.md`, "V3 decision-gated experiments", "Opt-in structured plans for unusually long execution" | Kept outside active V3 scope until the stated evidence gate passes |
+| 3 | Prefer native filesystem moves, renames and copies for pure operations, then verify and update references | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Small amount of guidance on terminal and file operations" | AGS | `docs/v3-spec.md`, "Workspace operations" | |
+| 4 | Prefer `rg` for listing and text search when it is available | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Small amount of guidance on terminal and file operations" | AGS | `docs/v3-spec.md`, "Workspace operations" | |
+| 5 | Keep Graphify, Fallow and similar navigation tools conditional on the task | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Small amount of guidance on terminal and file operations" | AGS | `docs/v3-spec.md`, "Workspace operations" and "Architecture review" | |
+| 6 | Headroom integration as a future possibility, not a V3 requirement | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Small amount of guidance on terminal and file operations" | Backlog | `BACKLOG.md`, "Tools", "Headroom or another agent-accessible CLI integration" | Preserve the concrete future trigger without placing negative inventory in the V3 spec |
+| 7 | Prefer logical CSS properties when the dimension is logical | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Modern CSS direction for new work" | AGS | `docs/v3-spec.md`, "Modern CSS" | |
+| 8 | Prefer CSS over JavaScript for behavior CSS expresses cleanly, including relational selectors, container queries and anchor positioning | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Modern CSS direction for new work" | AGS | `docs/v3-spec.md`, "Modern CSS" | |
+| 9 | Gate modern CSS on current Chrome, Firefox and Safari support, with no routine JavaScript fallback after the gate | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Modern CSS direction for new work" | AGS | `docs/v3-spec.md`, "Modern CSS" | |
+| 10 | Loading guidance does not expand the task into whole-file cleanup or broad modernization | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Scope and lean guidance" | AGS | `docs/v3-spec.md`, "Task-local scope" | |
+| 11 | Admit active guidance only when it prevents an observed mistake or expresses a deliberate preference; avoid habitual declarations and impossible-state guards | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Scope and lean guidance" | AGS | `docs/v3-spec.md`, "Active-guidance admission" and "Modern CSS" | |
+| 12 | Keep inactive candidates outside loaded files, with a destination, deferral reason and activation evidence | `C:/Users/Leandro/Downloads/ags-v3-direction-handoff.md`, "Scope and lean guidance" | AGS | `docs/v3-spec.md`, "Deferred-guidance discipline"; `BACKLOG.md`, header and "V3 decision-gated experiments" | |
+| 13 | The proto-rules and diagnostic signals move from a general backlog promise into the active V3 plan | `v2.1.2:BACKLOG.md`, "Guidance", "Proto-rules" | AGS | `docs/v3-spec.md`, "Guidance architecture", "Content requirements", and "Acceptance evidence" | |
+| 14 | V3 is a single carefully planned jump rather than a sequence of intermediate useful releases | User direction, 2026-09-28, V3 spec request | AGS | `docs/v3-spec.md`, "Delivery and cutover contract"; `docs/v3-implementation-plan.md` | |
+| 15 | Cross-major config migrations for removed ids, setting keys, selections and host updates | `v2.1.2:BACKLOG.md`, "Host lifecycle", "Config migrations" | AGS | `docs/v3-spec.md`, "Catalog and host migration" | Adopted as required V3 work because V2 refuses cross-major updates |
+
+## V3: specification revision inputs
+
+The revision handoff was supplied as a user request on 2026-09-28. It refines the first V3 draft without authorizing implementation or release.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | One self-contained normative V3 specification, with execution procedure in a separate derived plan | `C:/Users/Leandro/Downloads/ags-v3-revision-handoff.md`, "Document roles" | AGS | `docs/v3-spec.md`; `docs/v3-implementation-plan.md` | Product commitments and route changes now have distinct homes |
+| 2 | Remove unrelated negative inventory from the V3 specification and keep concrete future possibilities deferred | Same, "Document roles" and "Backlog and source-material check" | AGS | `docs/v3-spec.md`, "Deferred-guidance discipline"; `BACKLOG.md` | The spec states V3 behavior rather than cataloguing unrelated exclusions |
+| 3 | Active guidance and modern CSS remain lean and task-local | Same, "Keep active guidance lean and task-local" | AGS | `docs/v3-spec.md`, "Task-local scope" and "Modern CSS" | Loading guidance does not authorize whole-file cleanup or modernization |
+| 4 | Stable V2 service, exact V3 checkout cutover, local-state preservation, shim switch, and interruption recovery | Same, "Specify the release cutover" | AGS | `docs/v3-spec.md`, "Delivery and cutover contract"; `docs/v3-implementation-plan.md`, "Stable cutover" | Grounded in the absolute-path shim, shared worktree refs, and checkout-local `hosts.yaml` |
+| 5 | Prove routing through the generated index and skill descriptions with four representative tasks | Same, "Prove selective loading" | AGS | `docs/v3-spec.md`, "Selective-loading task matrix"; `docs/v3-implementation-plan.md`, "Selective-loading evaluation" | Measures actual discovery and reads without arbitrary quotas |
+| 6 | Define every changed id's managed-file, selection, ignored-record, and host-note outcome, with direct migration from every released V2 version | Same, "Make migration outcomes unambiguous" | AGS | `docs/v3-spec.md`, "Catalog and host migration"; `docs/v3-implementation-plan.md`, "Implement cross-major migration" | Prevents silent loss and obsolete guidance remaining discoverable |
+| 7 | Numeric signals are task-relevant inspection prompts, not automatic architecture work | Same, "Keep diagnostic signals within the requested task" | AGS | `docs/v3-spec.md`, "Diagnostic signals"; `docs/v3-proto-rules.md`, signal preconditions | Reconciles proto signals with V2's 300-line wording and task scope |
+| 8 | Structured resumable plans remain a decision-gated experiment while ordinary planning stays lightweight | Same, "Backlog and source-material check" | Backlog | `BACKLOG.md`, "V3 decision-gated experiments" | Existing entry already carries destination, deferral reason, and activation evidence |
+| 9 | Source snapshots, AGS-root cross-host operations, material word statistics, and Headroom remain findable future topics | Same, "Backlog and source-material check" | Backlog | `BACKLOG.md`, "Snapshots", "CLI and platform", "Reporting", and "Tools" | Each item now has a likely home and evidence trigger |
+
+## V3: planning-artifact skills
+
+These rows record the user's 2026-09-29 clarification of planning artifacts. They add V3 skill commitments without implementing them in released V2.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | An ordinary plan is an execution procedure and does not create a separate specification by default | User direction, 2026-09-29 | AGS | `docs/v3-spec.md`, "Specifications, plans, and deferred inventories"; `docs/v3-implementation-plan.md`, material surface | Preserves the existing `plan-work` default and keeps simple planning light |
+| 2 | A dedicated specification skill writes self-contained commitments, constraints, open decisions, and acceptance evidence | Same | AGS | `docs/v3-spec.md`, `write-spec`; `docs/v3-implementation-plan.md`, material surface | Separates normative design from implementation route |
+| 3 | A dedicated backlog skill maintains deduplicated inactive candidates with a future home, deferral reason, and reconsideration evidence | Same | AGS | `docs/v3-spec.md`, `manage-backlog`; `docs/v3-implementation-plan.md`, material surface | Prevents deferred work from leaking into active guidance or specifications |
+| 4 | An opt-in thorough planning workflow completes the specification first, then derives a separate plan and uses backlog handling for real deferrals | Same | AGS | `docs/v3-spec.md`, `spec-first-plan`; `docs/v3-implementation-plan.md`, material surface | Encodes the useful separation demonstrated by the V3 documents without changing the default plan |
+| 5 | Ask which artifact the user wants when plan, spec, backlog, or combined workflow is materially ambiguous | Same | AGS | `docs/v3-spec.md`, "Entry points and selective loading" and planning-artifact routing matrix | Clarification is appropriate only when the answer changes the deliverable |
+| 6 | Machine-readable splitting and resumption remain separate from the committed spec-first content workflow | Same | Backlog | `BACKLOG.md`, "V3 decision-gated experiments", "Opt-in structured plans for unusually long execution" | Keeps unproven execution machinery out of the V3 skill commitment |
+
+## V3: proto-rule disposition
+
+Catalog freeze on 2026-09-29 assigns every numbered concept in `docs/v3-proto-rules.md` one active home. The source remains evidence, not installed material.
+
+| # | Concept | Source | Disposition | Destination | Rationale |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Narrowest correct owner | `docs/v3-proto-rules.md`, 1 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 2 | Consumers read authoritative shared context directly | Same, 2 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 3 | Consumer policy remains beside the consumer | Same, 3 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 4 | A split creates coherent owners and a smaller contract | Same, 4 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 5 | Do not split for line count | Same, 5 | AGS | `rules/code-idioms.md`, "Changes"; `rules/ownership-boundaries.md`, "Extract and reuse" | Diagnostic trigger and boundary decision have separate non-overlapping homes |
+| 6 | Wrappers must not conceal the same oversized contract | Same, 6 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 7 | Hooks expose consumer capability, not internals | Same, 7 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 8 | Coupled facts use explicit valid states and guarded transitions | Same, 8 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 9 | State names express external truth and actions | Same, 9 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 10 | One state per meaningful truth/action combination | Same, 10 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 11 | Merge or preserve phases according to certainty and actions | Same, 11 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 12 | Indeterminate outcomes remain distinct | Same, 12 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 13 | Map outcomes to evidence and safe next actions | Same, 13 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 14 | Retry resolves remaining uncertainty | Same, 14 | AGS | `rules/async-state.md`, "Model truth and actions" | |
+| 15 | Stale work loses authority | Same, 15 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 16 | Synchronous event guard where render is too late | Same, 16 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 17 | Effects synchronize external systems | Same, 17 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 18 | Structured cancellation before counters; identities for overlap | Same, 18 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 19 | Named reload actions start at their owner | Same, 19 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 20 | Resource layers own identity and invalidation reloads | Same, 20 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 21 | Do not imitate a query framework for a small effect | Same, 21 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 22 | Effect-only functions are not automatically abstractions | Same, 22 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 23 | Services own I/O mechanics and invariant normalization | Same, 23 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 24 | Resource layers own cached resource lifecycle | Same, 24 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 25 | Features own interaction and presentation policy | Same, 25 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 26 | Acquire high, observe low, present at the UI boundary | Same, 26 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 27 | Transform at the highest universally true layer | Same, 27 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 28 | Repeated resource concerns belong in the shared resource layer | Same, 28 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 29 | Do not make services UI-session resource owners | Same, 29 | AGS | `rules/resource-boundaries.md`, "Layer ownership" | |
+| 30 | Extract the stable center instead of adding modes | Same, 30 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 31 | Search for reuse below named units | Same, 31 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 32 | Reuse requires aligned behavior, ownership, and lifecycle | Same, 32 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 33 | Flags and modes indicate a wrong shared boundary | Same, 33 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 34 | Coherent reason to change, not duplicate line count | Same, 34 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 35 | Extract invariants before repurposing a unit | Same, 35 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 36 | Prefer a small stable center and coherent consumers | Same, 36 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 37 | Compatibility duplication is explicit and bounded | Same, 37 | AGS | `rules/ownership-boundaries.md`, "Extract and reuse" | |
+| 38 | Named option for one policy dimension | Same, 38 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 39 | Avoid policy dimensions encoded in sibling method names | Same, 39 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 40 | Inspect mechanism-policy fusion before widening APIs | Same, 40 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 41 | Preserve distinctions in the underlying operation | Same, 41 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 42 | Empty result and failed request differ | Same, 42 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 43 | Options objects instead of positional policy booleans | Same, 43 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 44 | Options must not disguise unrelated operations | Same, 44 | AGS | `rules/resource-boundaries.md`, "API policy" | |
+| 45 | Conditional mounting can define a fresh session | Same, 45 | AGS | `skills/react-state-transitions/references/refactoring-patterns.md`, "Keyed or newly mounted session" | React-specific target pattern |
+| 46 | Field mapping local; cross-field coordination at common owner | Same, 46 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 47 | Shared policy moves to a neutral feature owner | Same, 47 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 48 | Derive one coherent value from jointly nullable facts | Same, 48 | AGS | `rules/async-state.md`, "Guard transitions" | |
+| 49 | Related descendant facts do not imply lifting | Same, 49 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 50 | Repeated custom-hook calls imply independent instances or observation | Same, 50 | AGS | `rules/ownership-boundaries.md`, "Place responsibility" | |
+| 51 | Event-boundary and operation-boundary defense in depth | Same, 51 | AGS | `rules/async-state.md`, "Guard transitions" | |

@@ -6,6 +6,7 @@ import { CONFIG_REL, missingRequired, readConfig, validateConfig } from "./confi
 import { harnessTmpEntries } from "./discovery.mjs";
 import { classifyUpdate, collisions, hostRules, ignoredPaths, registryState, releaseInputs, renderHostBlock, usageRecordCount } from "./host.mjs";
 import { hostLinkTargets } from "./links.mjs";
+import { workingMigrationErrors } from "./migrations.mjs";
 import { detectEvidence } from "./packages.mjs";
 import { loadRegistry } from "./registry.mjs";
 import { analyzeBlock, BLOCK_KEY, budgetWarning, inspectExclude, tmpIgnored } from "./render.mjs";
@@ -129,6 +130,7 @@ export function doctorAgs(agsRoot = AGS_ROOT) {
     out.errors.push(...errors.map((line) => `catalog.yaml: ${line}`));
     if (!errors.length) out.info.push(`Catalog: ${catalog.rules.length} rules, ${catalog.skills.length} skills`);
   });
+  attempt(out, () => out.errors.push(...workingMigrationErrors(agsRoot)));
   attempt(out, () => {
     const first = readChangelog(agsRoot).replaceAll("\r\n", "\n").split("\n").find((line) => line.trim());
     if (first?.trim() !== UNRELEASED) out.errors.push(`CHANGELOG.md must start with ${UNRELEASED}.`);

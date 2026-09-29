@@ -12,7 +12,7 @@ AGS is the source repository for reusable agent guidance: rules, skills, setting
 
 - `AGENTS.md`: this guide. `README.md`: human overview and command reference.
 - `CHANGELOG.md`: Unreleased notes and released versions. `LEDGER.md`: concept ledger. `BACKLOG.md`: deferred work.
-- `docs/`: design records (`v2-spec.md`, `v2-meta-inventory.md`, `v3-proto-rules.md`).
+- `docs/`: design records (`v2-spec.md`, `v2-meta-inventory.md`, `v3-spec.md`, `v3-implementation-plan.md`, `v3-proto-rules.md`).
 - `package.json`: version, bin `ags`, engines, dependencies. `catalog.yaml`: rules, skills, settings.
 - `rules/<id>.md`: strong and soft rules. `skills/<id>/`: `SKILL.md`, optional `scripts/`, `references/`, `assets/`.
 - `templates/`: `agents-block.md`, `ags.yaml`. `scripts/`: `ags.mjs`, `install-global.mjs` and `lib/`. `test/`: `node --test` suites.
@@ -64,6 +64,6 @@ Every rewrite, removal or migration of guidance adds rows to `LEDGER.md` in the 
 - Use `ags` for deterministic operations. Never invoke files under `scripts/` by path, except the installer below.
 - The global `ags` runs this working tree through shims. After moving this directory, rerun `node scripts/install-global.mjs`.
 
-## Plan of record
+## V3 records
 
-`docs/v2-spec.md` is authoritative until Run 2 ends; after that, `README.md`, this file and the code are. Deferred work lives in `BACKLOG.md`.
+`docs/v3-spec.md` governs V3 product and architecture decisions; `docs/v3-implementation-plan.md` derives the execution route. Until `3.0.0` is released, `README.md`, this file and the released code are authoritative for current behavior; `docs/v2-spec.md` is the V2 design record. Deferred work lives in `BACKLOG.md`.

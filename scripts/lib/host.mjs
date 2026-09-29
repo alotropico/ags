@@ -24,6 +24,7 @@ import {
 import { appendUnreleasedNote, gitOperationInProgress } from "./version.mjs";
 import { CONFIG_REL, configText, mergeConfig, missingRequired, newConfig, parseSets, readConfig, setAgsVersion, validateConfig, writeSelection } from "./config.mjs";
 import { detectEvidence } from "./packages.mjs";
+import { migrationChain } from "./migrations.mjs";
 import { normalizePlan, planDigest, planItem, removeFileAt, runOperation, verifyWrites, writeFileAt } from "./operation.mjs";
 import { applyExclude, applyMoves, backupExcludeInto, cleanupPrompt, hostConfigState, inspectSetup, prepareItems, resolveHost, setupNotes } from "./prepare.mjs";
 import { analyzeBlock, BLOCK_KEY, buildIndex, EXCLUDE_KEY, inspectExclude, placeBlock, renderAgsBlock } from "./render.mjs";
@@ -476,6 +477,7 @@ export function registryState(agsRoot, hostRoot, hostId) {
 
 export function updateTarget(agsRoot, installed, to) {
   const versions = releaseVersions(agsRoot);
+  if (!versions.includes(installed)) throw new AgsError(`The host's agsVersion ${installed} is not a release of this AGS.`);
   if (to != null) {
     if (!VERSION_PATTERN.test(to)) throw new AgsError(`--to must be X.Y.Z: ${to}`, { exitCode: 2 });
     if (!versions.includes(to)) throw new AgsError(`No release ${to}. Releases: ${versions.join(", ") || "none"}.`);
@@ -483,9 +485,8 @@ export function updateTarget(agsRoot, installed, to) {
   const major = installed.split(".")[0];
   const target = to ?? versions.filter((version) => version.split(".")[0] === major).at(-1);
   if (!target) throw new AgsError(`No release with major version ${major}.`);
-  if (target.split(".")[0] !== major) throw new AgsError(`Updating from ${installed} to ${target} crosses a major version; V2 has no migrations.`);
   if (compareVersions(target, installed) < 0) throw new AgsError(`Downgrades are refused: the host is at ${installed}, the target is ${target}.`);
-  if (!versions.includes(installed)) throw new AgsError(`The host's agsVersion ${installed} is not a release of this AGS.`);
+  if (target.split(".")[0] !== major) migrationChain(agsRoot, installed, target);
   return target;
 }
 
@@ -649,6 +650,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       if (hostId != null && hostId !== id) throw new AgsError(`Registry host ${hostId} resolves to ${displayPath(hostRoot)}, whose .agents/ags.yaml says host ${id}.`);
       const from = String(config.data.agsVersion);
       const version = updateTarget(agsRoot, from, to);
+      const migrations = migrationChain(agsRoot, from, version);
       const { catalog: catalogI, source: sourceI } = releaseInputs(agsRoot, from);
       const { catalog, source } = releaseInputs(agsRoot, version);
       const setMap = parseSets(op.sets, catalog);
@@ -706,6 +708,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
         reg,
         records,
         recordsChanged,
+        migrations,
       };
     },
     plan(state) {
@@ -726,6 +729,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       else if (state.reg.action === "path") items.push(planItem({ path: REGISTRY_KEY, kind: "registry", action: `move ${state.hostId} to ${posix(hostRoot)}` }));
       else if (state.recordsChanged) items.push(planItem({ path: REGISTRY_KEY, kind: "registry", action: "drop stale records" }));
       const notes = [selectionSummary(state.selection)];
+      if (state.migrations.length) notes.push(`Migration: ${state.migrations.map((item) => `${item.fromMajor}->${item.toMajor}`).join(", ")}.`);
       if (state.classified.inProgress) notes.push(`Promotion is not offered: AGS has a ${state.classified.inProgress} in progress.`);
       for (const rel of state.classified.pending) notes.push(`Promoted, pending release: ${rel}`);
       for (const rel of state.classified.skipped) notes.push(`Ignored: ${rel}`);

@@ -1,6 +1,6 @@
 # AI code quality proto-rules
 
-Status: exploratory source material for future TypeScript, React, SPA, hook, service, state-management, design-system, planning, and review skills.
+Status: exploratory source material for `docs/v3-spec.md`, not active guidance. Nothing in this file activates a review, widens a task, or overrides the specification's task-local scope. The V3 specification governs how these concepts are tested, partitioned, deferred, or removed.
 
 These rules describe preferred directions, not automatic violations. Repository evidence and concrete lifecycle requirements may justify exceptions. When an exception is made, the agent should identify the competing concern rather than silently ignoring the rule.
 
@@ -122,7 +122,7 @@ These rules describe preferred directions, not automatic violations. Repository 
 
 ## Diagnostic signals, not hard limits
 
-Crossing a signal requires inspection, not automatic extraction.
+These optional signals apply only when a requested review or refactor covers the unit, or when a signal is relevant to the current defect. They do not activate architecture review during an ordinary task. Crossing a signal within that authorized scope invites inspection, not automatic extraction.
 
 | Measure | Review signal | Strong signal | Primary question |
 | --- | ---: | ---: | --- |
@@ -143,7 +143,7 @@ Exclude generated code, declarations, fixtures, static data, and deliberate re-e
 
 ## Required response to a signal
 
-When a signal is crossed:
+When a signal is relevant within an authorized review, refactor, or defect investigation:
 
 1. Inventory state, effects, dependencies, derived values, UI regions, policies, and reasons to change.
 2. Identify the smallest coherent owners already present in the behavior.
@@ -175,4 +175,3 @@ Stop and request architectural direction when a proposed improvement would requi
 - Introducing a generic abstraction without at least two verified compatible consumers.
 - Resolving an indeterminate external outcome through an invented assumption.
 - Trading a known local imperfection for a substantially larger migration.
-

@@ -7,17 +7,39 @@ rules:
   - id: tmp-conventions
     tier: soft
     install: always
+  - id: workspace-operations
+    tier: soft
+    install: always
   - id: code-idioms
     tier: soft
     install: opt-in
   - id: state-topology
     tier: soft
     install: opt-in
+  - id: ownership-boundaries
+    tier: soft
+    install: opt-in
+  - id: async-state
+    tier: soft
+    install: opt-in
+  - id: resource-boundaries
+    tier: soft
+    install: opt-in
 
 skills:
   - id: plan-work
     install: always
-    keywords: [plan, planning, architecture]
+    keywords: [plan, planning, execution]
+  - id: write-spec
+    install: opt-in
+    keywords: [spec, specification, requirements, contract]
+  - id: manage-backlog
+    install: opt-in
+    keywords: [backlog, defer, deferred, later, triage]
+  - id: spec-first-plan
+    install: opt-in
+    includes: [write-spec, manage-backlog]
+    keywords: [thorough, spec, specification, plan, design]
   - id: write-commit-diff
     install: always
   - id: report-usage
@@ -63,6 +85,9 @@ skills:
   - id: react-state-transitions
     install: opt-in
     keywords: [react, state, effects, transitions, refactor]
+  - id: architecture-review
+    install: opt-in
+    keywords: [architecture, review, ownership, boundaries, async, resources]
 
 settings:
   - key: git.mainBranch

@@ -1,8 +1,8 @@
 # AGS backlog
 
 - Status: live, tracked in git. It replaces the first backlog file, archived at `.tmp/archive/2026-09/2026-09-27-ags-backlog.md`.
-- Scope: work deferred from AGS V2. Nothing here is part of V2 unless it moves into the spec, `docs/v2-spec.md`.
-- Use: after Run 2, usage-driven additions pick from this list, each released as its own minor version with tests. Concept-ledger rows with the disposition `Backlog` point at the headings and entries here.
+- Scope: work deferred from released AGS or explicitly outside the active V3 plan. V3 work is governed by `docs/v3-spec.md`; an item adopted there is no longer merely backlog.
+- Use: preserve work that has a concrete future trigger, destination, or decision point. Concept-ledger rows with the disposition `Backlog` point at the headings and entries here. Inactive guidance stays here rather than in files agents normally load.
 - Location: tracked as `BACKLOG.md` at the AGS root, next to `LEDGER.md`, since Run 1 step 1 (spec 28.1).
 
 ## CLI and platform
@@ -13,7 +13,7 @@
   - The `check` script's `.cmd` handling is Windows-only.
   - Related concerns from the direction handoff (section 13): OS detection, terminal and shell differences, path handling, finding install locations.
 - **`ags host uninstall`.** Remove managed files and the AGS block, backing up host changes.
-- **`--all` mutation flows and batch updates.**
+- **AGS-root operations across registered hosts.** Extend today's one-host `--host` routing with read-only aggregate status/doctor first, then confirmed `--all` mutation flows only if repeated coordinated maintenance justifies them. Likely home: CLI routing, registry iteration, and host-operation summaries. Revisit after two real multi-host operations where separate commands cause material repetition, missed hosts, or inconsistent decisions.
 - **Host rollout from `version bump`.** Offer updates for registered hosts after a release; report each host's result and its rerun command.
 - **`ags reporting on|off|status`,** if editing `reporting` by hand proves awkward.
 - **Reject stray positional arguments.** `ags host install --enable a,b,c` from PowerShell passes `b` and `c` as separate arguments, and AGS silently ignores them. Fail with a usage error on unexpected positionals instead (seen in Run 2 on Watcher).
@@ -28,7 +28,6 @@
 - **Local-only hosts,** for D2. A reserved key `mode: tracked | local-only`. Install proposes a value from git state. `doctor` checks it: tracked but not committed is a warning; tracked but ignored is an error; local-only gets a prominent notice that the host loses guidance in fresh clones, worktrees and cloud agents, and cannot share it.
 - **Installed-id record.** Store each host's installed ids in the registry, so a host item that uses an AGS id is never mistaken for AGS material.
 - **`--worktree` installs.** Install unreleased AGS content into one host to try it before a release. The host is stamped `X.Y.Z+dev`, and the next release replaces it. Until then, the testing loop is: edit in the host, promote the change on the next AGS run, release.
-- **Config migrations** (`migrations/<version>.mjs`). Required before `3.0.0`: V2 refuses updates across a major version, so a major release must bring its own explicit configuration and host migration path. It retires removed ids and setting keys from host selections and `ags.yaml`, and allows the cross-major update. Build them with the first breaking change, at the latest with the V3 proto-rules.
 - **Separate git folder per host** (`--git-dir` instance repositories that give real merges and history). Parked; revisit if promotions become frequent.
 - **Linked worktrees and submodules as hosts.** V2's lifecycle commands refuse a repository whose git directory is not `.git` at its root. Support needs a registry identity per worktree, records per checkout, and a lock shared across worktrees for the common exclude file, which lies outside a linked worktree's root.
 - **Automatic renaming of colliding host items.** In V2, a collision between a new AGS id and a host rule or host skill stops install or update before any write and prints the exact rename to `<host id>-<id>`; the user renames by hand and reruns. A later version could offer the rename as a confirmed plan item that moves the file or folder, updates the skill's `name`, and backs up the original.
@@ -41,10 +40,20 @@
 
 - **Usage collection** (`ags report collect`, and during update). Rename the host spool into a batch, append its records to `reports/usage/YYYY-MM.jsonl` in AGS with id deduplication, then delete the batch. Add the host name from the registry, and map host paths to source paths. Test concurrent writes.
 - **Usage analysis.** Once records are collected: concise structured events, clearer semantics for the usage levels, compact per-run summaries, and cross-run analysis. No telemetry runtime or reporting-level framework.
+- **Material and loading word-count statistics.** Report words by tier, item, install selection, and generated entry surface without turning counts into quality limits. Likely home: a read-only material/report command plus doctor context. Revisit when catalog growth makes lean-loading review difficult or when the four-task V3 loading matrix shows that word volume obscures routing defects.
+
+## V3 decision-gated experiments
+
+- **Opt-in structured plans for unusually long execution.** "Resumable plan" is a provisional name. This would go in `plan-work` or a new companion skill plus a deterministic standard-library script. It is deferred because normal planning should stay light and AGS has not yet shown that extra structure improves execution enough to pay for itself.
+  - This is distinct from V3's committed `spec-first-plan` content workflow. A spec-first plan separates normative decisions from execution procedure; this experiment would add machine-readable splitting, progress, and resumption mechanics.
+  - Proposed flow: write a standardized machine-readable Markdown plan; validate it; split it into focused step files carrying only necessary shared context; execute one step with the lightest practical context; record progress and checks mechanically; prepare a concise handoff for the next step.
+  - Open design: exact Markdown format, step size and dependencies, common context, failures, amendments, resumption, and which host mechanism can create a genuinely fresh context.
+  - Activation evidence: at least two substantive tasks where context exhaustion or interruption causes material rework, followed by a pilot showing that the structured form resumes more reliably or with materially less context than an ordinary plan.
+  - Non-promise: a strong model designing the plan and a less expensive model executing steps is a hypothesis, not an acceptance criterion.
 
 ## Snapshots
 
-- **`ags snapshot source [--out <zip>]`.** Archive the AGS source material for review; it replaces V1's `snapshot canonical`.
+- **Source/canonical review snapshot (`ags snapshot source [--out <zip>]`).** Archive tracked AGS source material for handoff or independent review; it replaces V1's `snapshot canonical` without restoring the V1 live-canonical model. Likely home: the existing snapshot library and command routing. Revisit when a real review needs a portable AGS-source artifact that a Git ref or repository copy cannot supply cleanly.
 - **ZIP64.** Unnecessary for guidance-sized snapshots. If a snapshot approaches ZIP limits, first fail visibly rather than write an invalid archive; implement ZIP64 only for a real case.
 
 ## Tools
@@ -60,6 +69,7 @@
   - Inputs for the Graphify steps: Watcher's former `graphify` skill and Meta's `templates/rules/graphify.mdc` (spec Appendix H).
 - **Tool management.** Let AGS install, update or enable Graphify and Fallow globally, and report their versions.
 - **Graphify agentic runs.** LLM-backed extraction, community labeling, and Graphify's own skill (`graphify install`).
+- **Headroom or another agent-accessible CLI integration.** Evaluate a harness-facing integration only if it exposes a stable workflow that ordinary terminal tools and available app surfaces do not already cover. Likely home: the tools catalog or a harness-specific opt-in skill, not always-loaded guidance. Revisit after repeated host work demonstrates a concrete missing capability and a measurable benefit; it is not a V3 commitment.
 
 ## Third-party skills
 
@@ -114,8 +124,6 @@
 
 ## Guidance
 
-- **Proto-rules.** `docs/v3-proto-rules.md`, with 51 proto-rules and diagnostic signals, is planned for V3, after the Run 2 consolidation. It covers the state-management and code-quality rules. `3.0.0` needs config migrations first.
-  - From Meta `react-state.mdc`: pass a value from parent to child only when the parent may modify or override it (proto-rules 1 and 2).
 - **Host fact verification.** Check the repository facts a host states in `AGENTS.md` (trunk, verification scripts, pinned package majors) against the repository, as Watcher's former `verify-profile.mjs` did (D2 and HXP still have copies). Its layout checks are covered by `ags doctor`; the fact checks have no AGS home yet.
 - **`write-commit-diff` script output.** The PowerShell writers it replaced printed the covered commits (`git log --oneline`) and, for a range, the commit count; the skill now has the agent list them. Printing them from the script would save a step. Optionally, a `--repo <path>` option could diff another checkout while writing into the current repository's `.tmp/scratch/`, which the old `-Repo` switch did; today the script writes into the repository it diffs. Both are script changes for a later minor release.
 - **Deeper TanStack and Mantine guidance,** building on the consolidated Run 2 content rather than reconciling variants again.

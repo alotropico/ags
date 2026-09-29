@@ -1,11 +1,13 @@
 ---
 name: plan-work
-description: Plan ambiguous or cross-cutting work in a durable plan file under .tmp/plans/, with a decision log and a done condition. Use when a task touches more than about five files, requirements are unclear, or the user asks to plan or record decisions.
+description: Create an execution procedure for ambiguous or cross-cutting work in .tmp/plans/, with decisions and a done condition. Use for an ordinary request to plan implementation. Do not create a separate specification unless the user asks for one.
 ---
 
 # Plan work
 
 **Trigger:** The task touches more than about five files, requirements are ambiguous, or the user asks to plan or record decisions.
+
+An ordinary plan is an execution procedure for an understood objective. It may record assumptions, but it does not create a separate specification or conduct a general backlog sweep. If the requested artifact could materially mean a specification, a deferred inventory, or a spec-first plan, ask one concise question instead of silently choosing.
 
 ## When to plan
 
@@ -36,6 +38,8 @@ Skip a tiny one-file fix with a clear done condition.
 ```
 
 Record each non-obvious decision in the plan as you go, one line each: a library pick, a rejected approach, an ownership ruling.
+
+If the work reveals a genuine deferral, use the `manage-backlog` skill when it is installed. Do not turn non-goals or rejected approaches into backlog entries automatically.
 
 ## When the work is done
 

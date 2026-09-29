@@ -40,6 +40,15 @@ Unused-class audit: [`css-cleanup`](../css-cleanup/SKILL.md). To normalize theme
 - Avoid an unnecessary wrapper when a fragment or an existing element already provides the layout, semantics, accessibility, styling, and event behavior.
 - Floating surfaces such as popovers, menus, and tooltips must layer above their owner. Use the host's portal component and its z-index tokens; do not invent one-off large `z-index` values.
 
+## Modern CSS
+
+- Prefer logical properties when the dimension is logically block or inline and the host does not require a physical side.
+- Prefer CSS over JavaScript when CSS expresses the behavior more simply and maintainably. Consider relational selectors, container queries, and anchor positioning when they remove script or coupling.
+- Verify the exact feature and variant against the host's browser policy. When the host defines none, target current Chrome, Firefox, and Safari.
+- Do not add a routine JavaScript fallback once the selected feature is supported across that target unless product or host requirements call for one.
+- Apply modernization only to new or task-touched styles and markup. A broader rewrite requires an explicit refactor request.
+- Add a declaration only for a demonstrated layout or behavior need; modern syntax is not a reason to prescribe habitual boilerplate.
+
 ## Component boundaries
 
 - When adding style-related props such as `theme`, `variant`, or `size`, reuse or derive them from existing exported types for the same concept, including the UI library's types. Do not duplicate an equivalent enum or string union.

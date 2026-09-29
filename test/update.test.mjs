@@ -228,20 +228,31 @@ test("update: a collision with an id new at T stops before any write with the re
   assert.doesNotMatch(ok.text, /extra\/SKILL\.md/);
 });
 
-test("update: target resolution picks the latest release of the major, refuses downgrades and other majors, and refuses an interrupted install", async () => {
+test("update: target resolution defaults within the major, admits a declared cross-major migration, refuses gaps and downgrades, and refuses an interrupted install", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();
   await install(ags, host);
   release(ags, "2.1.0", { files: { "skills/plan-work/references/a.md": "# a2\n" } });
-  release(ags, "3.0.0", { files: { "skills/plan-work/references/a.md": "# a3\n" } });
+  release(ags, "3.0.0", { files: {
+    "skills/plan-work/references/a.md": "# a3\n",
+    "migrations/2-to-3.json": `${JSON.stringify({ format: 1, fromMajor: 2, toMajor: 3, sourceVersions: ["2.0.0", "2.1.0"], idTransforms: [] }, null, 2)}\n`,
+  } });
   const first = await update(ags, host, { dryRun: true });
   assert.match(first.text, /from 2\.0\.0 to 2\.1\.0/);
-  await assert.rejects(update(ags, host, { to: "3.0.0" }), /crosses a major version/);
+  const major = await update(ags, host, { to: "3.0.0", dryRun: true });
+  assert.equal(major.code, 0, major.text);
+  assert.match(major.text, /Migration: 2->3/);
   await decided(ags, host, {}, { to: "2.1.0" });
   await assert.rejects(update(ags, host, { to: "2.0.0" }), /Downgrades are refused/);
   const fresh = makeHostRepo({ files: { ".agents/ags.yaml": "format: 2\nhost: fresh\n" } });
   await assert.rejects(update(ags, fresh), /interrupted install.*ags host install/);
   await assert.rejects(update(ags, makeHostRepo()), /no AGS installation/);
+
+  const without = agsFixture();
+  const blocked = makeHostRepo();
+  await install(without, blocked);
+  release(without, "3.0.0");
+  await assert.rejects(update(without, blocked, { to: "3.0.0" }), /no complete migration chain exists/);
 });
 
 test("update: an unregistered installed host gets a register item; a moved host gets a path update; another entry holding the path stops", async () => {

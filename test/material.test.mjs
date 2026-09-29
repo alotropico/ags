@@ -17,11 +17,18 @@ test("material: the working-tree catalog is format 2 and all material passes val
   assert.deepEqual(catalog.rules.map((entry) => [entry.id, entry.tier, entry.install]), [
     ["core", "strong", "always"],
     ["tmp-conventions", "soft", "always"],
+    ["workspace-operations", "soft", "always"],
     ["code-idioms", "soft", "opt-in"],
     ["state-topology", "soft", "opt-in"],
+    ["ownership-boundaries", "soft", "opt-in"],
+    ["async-state", "soft", "opt-in"],
+    ["resource-boundaries", "soft", "opt-in"],
   ]);
   assert.deepEqual(catalog.skills.map((entry) => entry.id), [
     "plan-work",
+    "write-spec",
+    "manage-backlog",
+    "spec-first-plan",
     "write-commit-diff",
     "report-usage",
     "ui-library-css",
@@ -34,6 +41,7 @@ test("material: the working-tree catalog is format 2 and all material passes val
     "commit-granular",
     "start-branch",
     "react-state-transitions",
+    "architecture-review",
   ]);
   assert.deepEqual(catalog.settings.map((setting) => setting.key), ["git.mainBranch", "git.ticketPrefix", "checks.type", "checks.lint", "checks.prettier"]);
 });

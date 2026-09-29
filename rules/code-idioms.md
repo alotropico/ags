@@ -13,7 +13,7 @@ Craft defaults for code. "Changes" applies to any code; the later sections are T
 - Delete dead code instead of commenting it out.
 - A `TODO` cites a ticket or a plan; otherwise do the work, plan it, or drop the note.
 - Validate at system boundaries: user input, HTTP, the file system, IPC. Trust internal calls and framework guarantees; no defensive null checks on internal paths.
-- Soft cap of about 300 lines per file. Past it, extract cohesive pieces. An existing oversized file is exempt until a task substantially edits it.
+- A source file around 300 lines may deserve inspection when the task already changes it substantially. Size is not a violation: extract only when the work exposes coherent owners or lifecycles and the new contract is meaningfully smaller.
 - Before writing a utility, hook, helper or component, search the repository for an existing one. Add a dependency only after saying why the existing dependencies and the standard library cannot do the job, and let the package manager pick the latest version.
 - Never commit `.env` files or other secrets.
 - In legacy areas, make the smallest change, match the surrounding style, and import modern components rather than extending legacy patterns. Do not apply these idioms to legacy code the task does not edit.
@@ -55,7 +55,7 @@ export function ProjectForm({ onSave, projectId }: Props) {
 - Combine imports from the same module. With the automatic JSX runtime, do not import React only for JSX. When no formatter decides line breaks, put an import of three or more names on one line per name.
 - Inside a component: hooks, then handlers, then render.
 - Prefer named exports for components and utilities.
-- Keep rendering in components. Move reusable computation and workflow logic into hooks and utilities at the narrowest scope that uses them; pure helpers go in the repository's utilities folder or the feature's `utils/`.
+- Keep rendering in components. Put reusable computation at the narrowest scope that uses it; follow `ownership-boundaries` when the task changes contracts or ownership.
 - Use an options object when named arguments make a call clearer.
 
 ## Types
@@ -84,60 +84,20 @@ const { data: models = [] } = useModels();
 - Use `useCallback` or `useMemo` only when a measured cost, a dependency array or a memoized child needs a stable value.
 - Collection and entity handlers take the full updated value (`onChange`), not a set of `onAdd` and `onDelete` callbacks.
 
-## Feature composition hooks
+## Architecture routing
 
-When a screen needs digested data plus a few actions, prefer a feature-level composition hook. It reads the repository's data hooks, route parameters and owned stores or services, derives what the screen shows, and returns that with method-like actions. Components consume the result.
-
-```typescript
-function useOrdersFeature() {
-    const { customerId } = useParams();
-    const { data: orders = [] } = useOrders(customerId);
-    const updateOrder = useUpdateOrder();
-
-    const rows = toOrderRows(orders);
-
-    const handleStatusChange = (id: string, enabled: boolean) => {
-        updateOrder.mutate({ enabled, id });
-    };
-
-    return { handleStatusChange, rows };
-}
-
-function OrdersTable() {
-    const { handleStatusChange, rows } = useOrdersFeature();
-
-    return (/* render rows; call handleStatusChange on toggle */);
-}
-```
-
-- A composition hook coordinates one owned workflow. It must not silently arbitrate between unrelated sources of truth merely to reduce prop count, and it does not replace props at reusable boundaries (see "State").
-
-## State
-
-1. Local `useState`: the default, including transient UI state such as the row being edited or focus.
-2. Lift to the parent: only when a sibling needs it.
-3. A client store, such as Zustand: cross-feature client state.
-4. The query cache, such as React Query: server-sourced data.
-
-- Never mirror server state into a store or local state; read it from the query hook wherever it is needed.
-- Components do not call the network directly; they go through the repository's data hooks, stores or services.
-- No prop drilling of data a component can read from a store, query, router or other hook. Reusable shared and presentational components are the exception: they stay store-agnostic and take data and callbacks through props.
-- Ask before introducing a new React Context; prefer the existing store or query cache. Do not add `window` globals.
-- Never mutate state in place.
-
-## Derived state and effects
-
-- Derive a value in render when it shares the component's lifecycle and is cheap. Do not store a copy with `useState` and `useEffect`.
-- Use `useEffect` to synchronize with external systems: subscriptions, the DOM, timers, the network. Do not use it to transform data for render, to react to an event that belongs in the handler that caused it, or to chain state updates.
-- A secondary representation, such as an edit buffer, form state, a debounced draft or a mirror across a boundary, is fine when it has its own lifecycle or interaction purpose. State its authority, synchronization direction, write boundary, reset rule and conflict policy.
-- When shared state ownership or synchronization between features is involved, follow the `state-topology` rule when it is installed.
+- For shared client state, establish authority, readers, writers, lifecycle, and synchronization with `state-topology` when installed.
+- For changed component, hook, or module ownership and contracts, follow `ownership-boundaries` when installed.
+- For non-trivial asynchronous transitions, retries, cancellation, or stale work, follow `async-state` when installed.
+- For service APIs, cached resources, normalization, and invalidation, follow `resource-boundaries` when installed.
+- Never mutate state in place. Do not add a new React Context, application-wide store, query mechanism, or `window` global without architectural direction.
 
 ## Components and UI
 
 - Reuse ladder, climbed in order: the repository's UI library if it has one, then its shared components, then the feature's components. Do not add a wrapper when an earlier rung already covers the need.
 - Use a dedicated component over a raw `<button>`, `<input>`, `<select>` or `<a>`. When it cannot do the job, say why.
 - Before inventing props or styles, read the component's type definitions and use its built-in props, such as variant, size or spacing. No inline styles. For stylesheets, classes and tokens, use the `css-authoring-conventions` skill when it is installed.
-- Async views render explicit loading, error and empty states: no blank flashes, no silently swallowed failures, and loading does not freeze the rest of the UI.
+- Async views expose the states the product can meaningfully distinguish; use `async-state` for uncertain or overlapping workflows.
 - Interactive elements are keyboard-reachable and focusable, inputs have labels, and images have `alt`. Do not put click handlers on non-interactive elements when a button works.
 - List keys are stable, never the array index when items can be reordered, inserted or removed. Virtualize or paginate lists that can grow into the hundreds.
 

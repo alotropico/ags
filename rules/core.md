@@ -1,5 +1,5 @@
 - Host settings are in `.agents/ags.yaml`. Use values exactly as written; if a value a task needs is missing, ask the user.
 - Host guidance wins on facts and formats: `AGENTS.md` outside this block, host rules, and `.agents/local/` override AGS defaults. AGS safety constraints never yield.
 - Before using a skill, read `.agents/local/<skill-name>.md` if it exists; it refines the skill for this repository.
-- AGS installs its skills and rules into `.agents/skills/` and `.agents/rules/`. Keep repository-specific differences in host guidance; any edit to an AGS file is shown to the user at the next AGS run.
-- If the `ags` command is available, record guidance usage after substantive work with the `report-usage` skill.
+- AGS owns its installed files. Keep repository-specific differences in host guidance; edits to AGS files are reviewed on update. After substantive work, use `report-usage` when available.
+- Apply guidance to the requested task and the code it must touch. Reading guidance never authorizes unrelated cleanup, modernization, review, or refactoring.

@@ -2,7 +2,7 @@
 
 AGS is the source repository for reusable agent guidance: rules, skills, settings definitions and small deterministic helpers. A release is an annotated git tag `vX.Y.Z`. `ags host install` and `ags host update` copy the selected material of a release into a host repository. Hosts hold copies; nothing reads this repository at runtime.
 
-Hosts may edit what they received. The next update reviews each edit, and an edit can be promoted back into AGS. See `AGENTS.md` for working on AGS, `CHANGELOG.md` for releases, `LEDGER.md` for where rewritten guidance went, `BACKLOG.md` for deferred work, and `docs/v2-spec.md` for the design record.
+Hosts may edit what they received. The next update reviews each edit, and an edit can be promoted back into AGS. See `AGENTS.md` for working on AGS, `CHANGELOG.md` for releases, `LEDGER.md` for where rewritten guidance went, `BACKLOG.md` for deferred work, `docs/v2-spec.md` for the V2 design record, `docs/v3-spec.md` for the V3 specification, and `docs/v3-implementation-plan.md` for its execution plan.
 
 ## Prerequisites
 
@@ -164,7 +164,7 @@ README.md            human overview and command reference
 CHANGELOG.md         Unreleased notes and released versions
 LEDGER.md            concept ledger
 BACKLOG.md           deferred work
-docs/                design records: v2-spec.md, v2-meta-inventory.md, v3-proto-rules.md
+docs/                design records: V2 spec/inventory, V3 spec/implementation plan/proto-rules
 package.json         version, bin `ags`, engines, dependencies
 pnpm-lock.yaml       dependency lock file
 catalog.yaml         rules, skills, settings
