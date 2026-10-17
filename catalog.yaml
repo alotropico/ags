@@ -1,0 +1,131 @@
+format: 2
+
+rules:
+  - id: core
+    tier: strong
+    install: always
+  - id: tmp-conventions
+    tier: soft
+    install: always
+  - id: workspace-operations
+    tier: soft
+    install: always
+  - id: code-idioms
+    tier: soft
+    install: opt-in
+    includes: [typescript-react]
+  - id: state-topology
+    tier: soft
+    install: opt-in
+  - id: ownership-boundaries
+    tier: soft
+    install: opt-in
+  - id: async-state
+    tier: soft
+    install: opt-in
+  - id: resource-boundaries
+    tier: soft
+    install: opt-in
+
+skills:
+  - id: ags-sweep
+    install: opt-in
+    keywords: [tmp, sweep, archive]
+  - id: ags-graphify
+    install: opt-in
+    keywords: [graph, graphify, structure]
+  - id: plan-work
+    install: always
+    keywords: [plan, planning, execution]
+  - id: write-spec
+    install: opt-in
+    keywords: [spec, specification, requirements, contract]
+  - id: manage-backlog
+    install: opt-in
+    keywords: [backlog, defer, deferred, later, triage]
+  - id: spec-first-plan
+    install: opt-in
+    includes: [write-spec, manage-backlog]
+    keywords: [thorough, spec, specification, plan, design]
+  - id: write-commit-diff
+    install: always
+  - id: report-usage
+    install: always
+  - id: ui-library-css
+    install: detected
+    when:
+      any:
+        - package: "@platform/ui-library"
+    includes: [css-authoring-conventions, css-theme-tokens]
+    keywords: [css, ui, theme, tokens]
+  - id: css-authoring-conventions
+    install: opt-in
+    includes: [css-cleanup]
+    keywords: [css, scss, styles, styling]
+  - id: css-cleanup
+    install: opt-in
+    params: [checks.type, checks.lint, checks.prettier]
+    keywords: [css, cleanup, unused, modules, audit, variables]
+  - id: css-theme-tokens
+    install: opt-in
+    keywords: [css, theme, tokens]
+  - id: git-cleanup
+    install: opt-in
+    params: [git.mainBranch]
+    keywords: [git, branches, cleanup]
+  - id: ship
+    install: opt-in
+    includes: [commit-granular, start-branch]
+    params: [git.mainBranch, git.ticketPrefix]
+    keywords: [ship, push, publish, review]
+  - id: check
+    install: opt-in
+    params: [checks.type, checks.lint, checks.prettier]
+    keywords: [check, typecheck, lint, prettier]
+  - id: commit-granular
+    install: opt-in
+    keywords: [commit, commits, git]
+  - id: start-branch
+    install: opt-in
+    params: [git.mainBranch, git.ticketPrefix]
+    keywords: [branch, ticket, git]
+  - id: react-state-transitions
+    install: opt-in
+    keywords: [react, state, effects, transitions, refactor]
+  - id: architecture-review
+    install: opt-in
+    keywords: [architecture, review, ownership, boundaries, async, resources]
+  - id: typescript-react
+    install: opt-in
+    keywords: [typescript, react, hooks, components, client]
+  - id: web-platform-first
+    install: opt-in
+    keywords: [html, css, layout, native, browser]
+  - id: web-accessibility
+    install: opt-in
+    keywords: [accessibility, keyboard, focus, forms, aria]
+  - id: systematic-debugging
+    install: opt-in
+    keywords: [debug, bug, failure, investigation]
+
+settings:
+  - key: git.mainBranch
+    type: string
+    required: true
+    description: Trunk branch that feature branches start from and merge into.
+  - key: git.ticketPrefix
+    type: string
+    default: ""
+    description: Prefix for ticket ids in branch names and merge request titles. Empty means no ticket part.
+  - key: checks.type
+    type: string
+    default: ""
+    description: package.json script that runs the type check. Empty means not configured.
+  - key: checks.lint
+    type: string
+    default: ""
+    description: package.json script that runs the linter. Empty means not configured.
+  - key: checks.prettier
+    type: string
+    default: ""
+    description: package.json script that checks formatting without writing files. Empty means not configured.

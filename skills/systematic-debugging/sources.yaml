@@ -1,0 +1,11 @@
+format: 1
+sources:
+  - url: "https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/systematic-debugging/SKILL.md"
+    revision: "8ca22dba9a94f28898bbce59f2537ff4d87c747d"
+    sourcePath: "skills/systematic-debugging/SKILL.md"
+    localPath: "SKILL.md"
+    use: "adapted"
+    retrieved: "2026-10-05"
+    license: "MIT"
+    notices: ["LICENSE-superpowers.txt"]
+recommendations: ["Accepted reproduction, boundary tracing, falsifiable hypothesis, discriminating test, cause fix and verification.","Omitted pack mandates, fixed retry counts, mandatory TDD/subagents/worktrees and broad scans."]

@@ -1,0 +1,11 @@
+format: 1
+sources:
+  - url: "https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/verification-before-completion/SKILL.md"
+    revision: "8ca22dba9a94f28898bbce59f2537ff4d87c747d"
+    sourcePath: "skills/verification-before-completion/SKILL.md"
+    localPath: "SKILL.md; references/behavioral-evidence.md"
+    use: "adapted"
+    retrieved: "2026-10-05"
+    license: "MIT"
+    notices: ["LICENSE-superpowers.txt"]
+recommendations: ["Accepted evidence before claims and bounded actual-change verification.","Preserved static helper/settings/statuses; omitted universal full commands/suites before every utterance."]
