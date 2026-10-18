@@ -5,11 +5,14 @@ Rules, skills, and small deterministic helpers for coding agents. Installed into
 [What it does](#what-it-does) · [Written for](#written-for) · [Quick start](#quick-start) · [Documentation](docs/README.md)
 
 ```
-AGS checkout                          host repository
-rules/  skills/  catalog.yaml         AGENTS.md
-        │                             .agents/ags.yaml
-        │   ags host install          .agents/rules/
-        └── release tag vX.Y.Z ─────▶ .agents/skills/
+┌────────────────────┐    ags host install    ┌────────────────────┐
+│    AGS checkout    │   release tag vX.Y.Z   │  host repository   │
+├────────────────────┤  ───────────────────▶  ├────────────────────┤
+│ rules/             │                        │ AGENTS.md          │
+│ skills/            │                        │ .agents/ags.yaml   │
+│ catalog.yaml       │                        │ .agents/rules/     │
+└────────────────────┘                        │ .agents/skills/    │
+                                              └────────────────────┘
 ```
 
 The `ags` command copies the selection you confirm. It copies it from an annotated release tag, into the host's main worktree. After that, the agent reads the host copy. Invoking an `ags` helper still runs code from this checkout.
