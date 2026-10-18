@@ -1,6 +1,6 @@
 # Documentation
 
-Usage reference for AGS. The [README](../README.md) is the short version: what it does, which projects it is written for, and the install path.
+Usage reference for AGS's CLI, shared guidance, host management, integrations, and reporting. The [README](../README.md) covers the purpose, project fit, quick start, and planned companion UI.
 
 ```
 install the command  →  install a host  →  work in the host  →  update from a release
@@ -8,7 +8,7 @@ install the command  →  install a host  →  work in the host  →  update fro
 
 ## Start
 
-▸ [Install the command](install-command.md) — Windows and macOS setup, PATH, moving the checkout.
+▸ [Install the command](install-command.md) — Windows setup, untested macOS instructions, PATH, moving the checkout.
 
 ▸ [Install a host](install-host.md) — picker, plans, confirmation, exit codes, a disposable trial.
 

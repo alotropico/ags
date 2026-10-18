@@ -10,4 +10,4 @@ Use the actual change and its completion claim to choose bounded evidence. An ex
 | Performance | Same scenario/environment before and after, observed cost measure and limits; do not infer speed from code appearance. |
 | Documentation/formatting | Review changed content/diff and appropriate direct lightweight checks. |
 
-Record command/tool, scope/state, observed result and limitation. Report `passed`, `failed`, `not run` or `blocked`; a missing tool or target environment is not a pass. Fix demonstrated failures within the task's authorization and repeat checks only when changes or unresolved concerns justify it. Do not substitute type/lint/format evidence for behavioral evidence.
+Record command/tool, scope/state, observed result and limitation. Report `passed`, `failed`, `not run` or `blocked`; a missing tool or target environment is not a pass. Fix demonstrated failures within the task's authorization and apply the main skill's Shared verification rule to reuse and reruns. Do not substitute type/lint/format evidence for behavioral evidence.

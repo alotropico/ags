@@ -4,9 +4,11 @@ description: Changing shared client state, such as stores, selectors, caches, UR
 
 # State topology
 
-Before writing code that changes shared client state, answer the questions below for each fact the change touches. Shared client state includes URL state, stores, query caches, local and session storage, cookies, and any fact represented in more than one place, such as a hook, a window global, a message payload or a persisted copy. Trivial local UI state inside a single component is out of scope.
+Shared client state includes URL state, stores, query caches, local and session storage, cookies, and any fact represented in more than one place, such as a hook, a window global, a message payload or a persisted copy. Trivial local UI state inside a single component is out of scope.
 
-Link to the repository's existing documentation rather than restating it.
+Before changing shared client state, use the fifteen fields below as the full investigation and reference model. For a new fact or an explicit comprehensive topology review, apply Method within the agreed scope. For an established fact, use Bounded changes below. Changes to authority, writers, mirrors, persistence, conflict rules, or lifecycle require tracing the relationships they introduce or affect, regardless of diff size; they do not automatically require restating unrelated fields.
+
+Link unchanged authoritative material instead of copying it.
 
 ## Labels
 
@@ -35,9 +37,22 @@ Each answer carries one label:
 14. **Defects:** known traps, each labelled accurately.
 15. **Agent must know:** the one-line rule or policy that prevents the common failure.
 
-End the record with one reusable question that generalizes it to similar facts.
+End the record with one reusable question that generalizes it to similar facts. That question belongs to a full record.
+
+## Bounded changes
+
+For an established fact with a bounded change, consult the relevant existing record and the current code, then document only the relationships or fields the change actually affects. This does not require fifteen printed answers or a generalized question.
+
+- An existing record is a navigation aid, not proof that its contents are still accurate. Verify the portions relied upon. Do not reopen every unrelated writer and lifecycle merely to restate them. When a relied-upon portion disagrees with current code, correct the record or mark that portion `unresolved`. Do not reuse it unchanged.
+- Link unchanged authoritative material instead of copying it. Update an affected existing record in place where appropriate. A bounded adjustment does not require a new standalone document or a full table.
+- If no useful record exists, investigate enough of the affected flow to establish the actual owner, the relevant readers and writers, and the lifecycle or synchronization behavior this change needs. A missing record alone does not require mapping the whole application.
+- A new authority, writer, mirror, persistence path, conflict rule, or lifecycle change requires tracing the relationships it introduces or affects. A persisted mirror needs its synchronization, boot precedence, invalidation, conflicts, and relevant disposal. Do not treat those semantics as already settled merely because the diff is small. Adding a reader of an existing selector can cite the owner record and explain the new reader.
+- Preserve `fact`, `policy`, `inference`, and `unresolved`. Do not invent runtime conclusions.
+- Do not add an unnamed competing writer or authority. Scope reduction must not conceal unresolved arbitration. If the change would add one without naming its arbiter, stop and update that fact's record first.
 
 ## Method
+
+Use this method for a full investigation. A bounded change stays in Bounded changes above.
 
 1. Name the fact in one sentence.
 2. Find the writers first, then the readers. Search for setters, store creation, route writes, persistence calls and query-cache writes.
@@ -58,4 +73,4 @@ If a change would add another writer or authority for a fact without naming its 
 
 ## Records
 
-Fill a record only when the evidence supports it; leave out fields you would have to guess. A filled record names the commit it was last verified against. Records are repository facts: keep them in the host's `.agents/local/`, for example `.agents/local/state/`, and link them from a host rule that also holds the repository's scope list and examples.
+Fill a full record only when the evidence supports it and the investigation needs one; leave out fields you would have to guess. A filled record names the commit it was last verified against. Records are repository facts: keep them in the host's `.agents/local/`, for example `.agents/local/state/`, and link them from a host rule that also holds the repository's scope list and examples. Update an affected record in place. Do not add bookkeeping beyond that existing location and verified-commit convention.

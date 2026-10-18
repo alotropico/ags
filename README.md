@@ -1,81 +1,78 @@
 # AGS
 
-Rules, skills, and small deterministic helpers for coding agents. Installed into a Git repository, then left there.
+AGS centralizes coding-agent guidance and workflows across repositories. Its CLI distributes rules and skills, provides deterministic tools, and records usage.
 
-[What it does](#what-it-does) · [Written for](#written-for) · [Quick start](#quick-start) · [Documentation](docs/README.md)
+Adapt shared defaults per project and bring reusable improvements back into AGS.
 
-```
+[Capabilities](#what-ags-provides) · [How it works](#how-it-works) · [Project fit](#project-fit) · [Quick start](#quick-start) · [Documentation](docs/README.md)
+
+```text
 ┌────────────────────┐    ags host install    ┌────────────────────┐
-│    AGS checkout    │   release tag vX.Y.Z   │  host repository   │
-├────────────────────┤  ───────────────────▶  ├────────────────────┤
+│    AGS checkout    │  ------------------->  │  host repository   │
+├────────────────────┤   release tag vX.Y.Z   ├────────────────────┤
 │ rules/             │                        │ AGENTS.md          │
 │ skills/            │                        │ .agents/ags.yaml   │
 │ catalog.yaml       │                        │ .agents/rules/     │
-└────────────────────┘                        │ .agents/skills/    │
-                                              └────────────────────┘
+│                    │                        │ .agents/skills/    │
+└────────────────────┘                        └────────────────────┘
+          ^                                             │
+          └────── promote reusable improvements ────────┘
 ```
 
-The `ags` command copies the selection you confirm. It copies it from an annotated release tag, into the host's main worktree. After that, the agent reads the host copy. Invoking an `ags` helper still runs code from this checkout.
+## What AGS provides
 
----
+| Capability | What it gives you |
+| --- | --- |
+| **Shared guidance** | Rules, skills, and project settings for planning, implementation, review, debugging, validation, and shipping. |
+| **Host management** | A registry of repositories, installed versions, local changes, reviewed updates, backups, and promotion of reusable improvements. |
+| **Deterministic tools** | CLI helpers for checks, Git exports, snapshots, and temporary-file cleanup. |
+| **Optional integrations** | Suggestions and setup for compatible third-party skills and tools, based on the project's packages and available executables. |
+| **Usage reporting** | Optional records of meaningful actions and outcomes, collected across hosts into local reports. |
 
-## What it does
+Integrations include Mantine 9 form material, TanStack skills, Fallow, ast-grep, and Graphify. `ags skill add` installs third-party skills through the skills CLI; their updates remain with that backend. See [Integrations](docs/integrations.md) and [Reporting](docs/reporting.md).
 
-Three pieces, kept apart:
+> **🚧 Planned companion UI**
+>
+> The planned app would visualize hosts, usage, and workflows, and let you edit both canonical AGS material and individual hosts' guidance and settings.
 
-| Piece | Where it lives | When it matters |
-| --- | --- | --- |
-| ◆ **Source** | This Git checkout, with its release tags | Install, update, and `ags` itself |
-| ◆ **Host copy** | The project's `AGENTS.md` and `.agents/` | Every agent session in that project |
-| ◆ **Helpers** | The `ags` command | Checks, diffs, snapshots, usage records |
+## How it works
 
-◆ **Rules** are standing instructions. Strong rules are inlined into `AGENTS.md` and apply on every task. Soft rules are files the agent opens when the task touches that topic.
+A **host** is a repository receiving AGS guidance. The `ags` command copies the selection you confirm from an annotated release tag into that host's main worktree.
 
-◆ **Skills** are procedures for a kind of work: a plan, a commit series, a React change, a CSS edit, an accessibility pass.
+Each host keeps its settings in `.agents/ags.yaml` and its guidance in `AGENTS.md`, `.agents/rules/`, and `.agents/skills/`:
 
-◆ **Helpers** are code. `ags check`, `ags diff`, and `ags git-changes` do a fixed job and write a fixed result.
+- **Rules** are standing instructions. Strong rules appear in `AGENTS.md` for every task; agents open soft rules when a task touches their topic.
+- **Skills** are procedures for a kind of work: a plan, a commit series, a React change, a CSS edit, or an accessibility pass.
 
-You choose what is copied. The catalog marks each rule and skill `always`, `detected`, or `opt-in`. A later update brings a newer release across and reviews edits you made to the installed copy. Promotion can carry a reusable edit back into this checkout.
+The catalog classifies material as `always`, `detected`, or `opt-in`. Updates bring newer releases across and review edits to installed copies. Reusable changes can be **promoted back into AGS**; project instructions and local notes keep host-specific guidance alongside shared defaults. See [Configuration](docs/configuration.md).
 
-Installation writes files and leaves the commit to you. `ags host update --commit` is the one host command that commits, and it commits only the paths that update wrote or deleted.
+Agents read the host's installed files. The CLI runs code from the AGS checkout, so uncommitted source edits affect the command immediately; guidance reaches hosts through a release and install or update.
 
----
+Installation leaves the commit to you. `ags host update --commit` is the only host command that commits; it commits only the paths written or deleted by that update. Details: [Host contract](docs/host-contract.md).
 
-## Written for
+## Project fit
 
-Any Git repository on its main worktree can be a host. Linked worktrees, submodules, and this checkout itself are refused. The **catalog text** is written for a narrower kind of project. Read it that way when you choose skills.
+AGS is **opinionated and frontend first**. Its bundled guidance favors:
 
-### ◈ Application
+- **Application code:** TypeScript, including backend code; React components and hooks, including JavaScript; CSS/SCSS, CSS modules, and theme tokens. Client-state guidance covers stores, selectors, caches, URLs, storage, and async work.
+- **Web UI:** Semantic HTML, native browser behavior, and accessibility on the interaction being changed. Projects using `@platform/ui-library` receive detected CSS guidance with its companions.
+- **Development workflow:** Git with a trunk branch, feature branches, optional ticket prefixes, small commits, and merge requests. Checks run the project's `package.json` scripts for types, lint, and formatting through npm, Yarn, or pnpm; Prettier checks must not write files.
 
-TypeScript, frontend or backend. React components and hooks, including JavaScript React. CSS and SCSS, CSS modules, and theme tokens. Web UI that prefers semantic HTML, native browser behavior, and accessibility on the interaction you are changing. Shared client state: stores, selectors, caches, the URL, storage, and async work.
+Other stacks can use planning, specifications, Git, shipping, debugging, and temporary-file guidance while leaving stack-specific skills unselected. `ags skills list` shows the choices. You can also build a different guidance system on AGS's centralization framework, adapting the catalog while retaining host management, versioned distribution, and reporting.
 
-One skill is selected by package detection. If `package.json` depends on `@platform/ui-library`, UI-library CSS guidance can be installed with its CSS companions.
-
-### ◈ Repository
-
-A Node package whose checks are `package.json` scripts: a typecheck, a linter, and a Prettier check that does not write files. `ags check` runs them through npm, Yarn, or pnpm, whichever the project already uses.
-
-Git with a trunk branch, feature branches, an optional ticket prefix, small commits, and a merge request when you ask to ship.
-
-### ◈ Agent
-
-A harness that loads `AGENTS.md` and `.agents/rules/` and `.agents/skills/`. That is the layout this tree is written against. Cursor is the harness those paths match directly. Claude Code can receive optional per-skill aliases under `.claude/skills/`; turning that on is a reviewed host update, and a file on disk still has to be loaded by that harness. Details: [Harnesses](docs/harnesses.md).
-
-### ◈ Machine
-
-**Windows** is the verified platform. **Apple Silicon macOS** is provisional (zsh or `/bin/sh`). Linux and mobile are outside the supported contract. Setup for both supported platforms: [Install the command](docs/install-command.md).
-
-### ◈ When the project is another stack
-
-Planning, specifications, commits, branches, shipping, debugging, diff export, and temporary-file rules apply in other repositories too. For those hosts, leave the TypeScript, React, client-state, CSS, and web skills unselected. `ags skills list` shows each id and its install class. Optional setup can also offer Mantine 9 form material, TanStack skills, Fallow, ast-grep, and Graphify when those tools are already present: [Integrations](docs/integrations.md).
-
----
+| Environment | Support and requirements |
+| --- | --- |
+| **Repositories** | Git main worktrees. Linked worktrees, submodules, separate Git directories, and the AGS checkout itself are refused. |
+| **Agent harnesses** | Must load `AGENTS.md`, `.agents/rules/`, and `.agents/skills/`. Cursor matches this layout. Claude Code can receive optional skill aliases under `.claude/skills/`; verify loading in your harness. [Harness details](docs/harnesses.md). |
+| **Windows** | Supported and verified. PowerShell examples below. |
+| **macOS** | Experimental and untested. Implementation targets Apple Silicon with zsh or `/bin/sh`. [Setup instructions](docs/install-command.md#macos). |
+| **Linux and mobile** | Outside the supported contract. |
 
 ## Quick start
 
-Requires **Node.js 20+**, **pnpm**, **Git**, and this checkout with its release tags. The command runs the working tree you installed it from. Installed guidance comes from release tags. Uncommitted edits in this checkout affect the command, and they reach a host only after a release.
+Requires **Node.js 20+**, **pnpm**, **Git**, and this checkout with its release tags.
 
-### 1 · Command
+### 1. Install the command
 
 From this checkout, in PowerShell:
 
@@ -85,9 +82,9 @@ node .\scripts\install-global.mjs
 ags doctor
 ```
 
-The installer's bin directory has to be on `PATH`. If `ags` is not found, run `pnpm setup`, restart the terminal, and rerun the installer. PATH, `--bin`, moving the checkout, and macOS: [Install the command](docs/install-command.md).
+The installer's bin directory must be on `PATH`. If `ags` is not found, run `pnpm setup`, restart the terminal, and rerun the installer. Custom paths, moving the checkout, and macOS: [Install the command](docs/install-command.md).
 
-### 2 · Host
+### 2. Install into a host
 
 Point at the project's main worktree:
 
@@ -97,47 +94,39 @@ ags host install --route "C:/projects/my-app"
 ags host status --route "C:/projects/my-app"
 ```
 
-The picker uses **Up/Down** to move, **Space** to toggle, and **Enter** to continue. **Esc** cancels and writes nothing. `[+]` marks a required companion skill. Existing agent setup is backed up first.
+Use <kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>Space</kbd> to toggle, and <kbd>Enter</kbd> to confirm. <kbd>Esc</kbd> cancels without writing. `[+]` marks a required companion skill. Existing agent setup is backed up first.
 
-Supply any required settings when asked. A typical required value is `git.mainBranch`. Full selection, confirmation, and a throwaway trial: [Install a host](docs/install-host.md).
+Supply required settings such as `git.mainBranch` when asked. Selection, confirmation, and a disposable trial: [Install a host](docs/install-host.md).
 
-### 3 · Agent
+### 3. Open your agent
 
-Open the host in the harness. Confirm that it loads `AGENTS.md`, `.agents/rules/`, and `.agents/skills/`. Installation and activation are separate.
+Open the host in your agent harness and confirm it loads the installed instructions and skills. Installation alone does not establish activation; see [Harnesses](docs/harnesses.md).
 
-### 4 · A short session
+### 4. Work across repositories
 
-From the host root:
-
-```powershell
-ags host status
-ags check --only "type,lint"
-ags host update --dry-run
-```
+Run host commands from the host root, or target a repository with `--route` or a registered `--host`:
 
 | Need | Command |
 | --- | --- |
+| Registered hosts and installed versions | `ags host list` |
 | Versions, local edits, settings, warnings | `ags host status` |
-| Configured type, lint, and Prettier checks | `ags check` |
+| Configured type, lint, and Prettier checks | `ags check` (or `--only "type,lint"`) |
 | A file list or a patch, in any Git repo | `ags git-changes` |
 | A diff file under `.tmp/scratch/` | `ags diff` |
 | A reviewed update plan | `ags host update --dry-run` |
+| Collect usage from all registered hosts | `ags report collect --all` |
 
-`git-changes` and `diff` work with or without an AGS install. Parameters for any command: `ags help <command>`.
-
----
+`git-changes` and `diff` work with or without an AGS install. Use `ags setup` in a project to review compatible integrations, and `ags help <command>` for parameters.
 
 ## Documentation
 
-The pages under [`docs/`](docs/README.md) are the detailed reference. This file stays the front door.
+The [documentation index](docs/README.md) leads to the full usage reference.
 
-| | |
+| Topic | Reference |
 | --- | --- |
 | **Install** | [Command](docs/install-command.md) · [Host](docs/install-host.md) |
-| **Shape the copy** | [Catalog](docs/catalog.md) · [Configuration](docs/configuration.md) |
-| **Day to day** | [Commands](docs/commands.md) · [Git exports](docs/git-exports.md) |
-| **Files and safety** | [Host contract](docs/host-contract.md) · [Harnesses](docs/harnesses.md) |
-| **Around the edges** | [Integrations](docs/integrations.md) · [Snapshots](docs/snapshots.md) · [Reporting](docs/reporting.md) |
+| **Customize** | [Catalog](docs/catalog.md) · [Configuration](docs/configuration.md) |
+| **Daily use** | [Commands](docs/commands.md) · [Git exports](docs/git-exports.md) |
+| **Host behavior** | [Host contract](docs/host-contract.md) · [Harnesses](docs/harnesses.md) |
+| **Tools and records** | [Integrations](docs/integrations.md) · [Snapshots](docs/snapshots.md) · [Reporting](docs/reporting.md) |
 | **This repository** | [Releases](docs/releases.md) · [AGENTS.md](AGENTS.md) · [CHANGELOG.md](CHANGELOG.md) |
-
-── ◈ ──

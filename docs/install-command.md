@@ -2,7 +2,7 @@
 
 [Index](README.md) · [Install a host](install-host.md)
 
-Requires **Node.js 20+**, **pnpm**, **Git**, and the AGS Git checkout with its release tags. Windows is verified. Apple Silicon macOS is provisional. Linux and mobile are outside the supported contract.
+Requires **Node.js 20+**, **pnpm**, **Git**, and the AGS Git checkout with its release tags. Windows is supported and verified. Apple Silicon macOS support is experimental and untested. Linux and mobile are outside the supported contract.
 
 The command runs working-tree code immediately. Installed guidance comes from release tags. `ags version` and `ags doctor` report state; they do not certify that the working tree matches a release. Host lifecycle requires Git history. A copied ZIP or package is not enough.
 
@@ -44,7 +44,7 @@ Check resolution with `Get-Command ags -All` (PowerShell) or `where.exe ags` (CM
 
 ## macOS
 
-Provisional verification targets Apple Silicon, zsh or `/bin/sh`, and default or case-sensitive local filesystems. Intel needs separate evidence.
+The untested macOS implementation targets Apple Silicon, zsh or `/bin/sh`, and default or case-sensitive local filesystems. Intel needs separate validation.
 
 From the Git checkout with its release history:
 
