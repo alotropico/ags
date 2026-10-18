@@ -10,10 +10,10 @@ AGS is the source repository for reusable agent guidance: rules, skills, setting
 
 ## Layout
 
-- `AGENTS.md`: this guide. `README.md`: human overview and command reference.
+- `AGENTS.md`: this guide. `README.md`: what AGS is, which projects it is written for, and the short install path. `docs/README.md`: index of the usage reference.
 - `CHANGELOG.md`: unreleased notes and released versions.
 - `package.json`: version, bin `ags`, engines, dependencies. `catalog.yaml`: rules, skills, settings.
-- `rules/<id>.md`: strong and soft rules. `skills/<id>/`: `SKILL.md`, optional `scripts/`, `references/`, `assets/`.
+- `docs/`: usage reference. `rules/<id>.md`: strong and soft rules. `skills/<id>/`: `SKILL.md`, optional `scripts/`, `references/`, `assets/`.
 - `templates/`: `agents-block.md`, `ags.yaml`. `scripts/`: `ags.mjs`, `install-global.mjs` and `lib/`. `test/`: `node --test` suites.
 - Machine-local and gitignored: `LEDGER.md` (concept ledger), `hosts.yaml` (registry), `hosts/<id>.json` (current observed state), `reports/` (run logs and collected/compact usage), `.tmp/` (`.tmp/ags/locks/` holds the AGS locks).
 
