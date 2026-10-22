@@ -2,56 +2,85 @@ format: 2
 
 rules:
   - id: core
+    summary: Host settings, task scope, and verification
     tier: strong
     install: always
   - id: tmp-conventions
+    summary: Organize temporary working files
     tier: soft
     install: always
   - id: workspace-operations
+    summary: Move, copy, and navigate project files
     tier: soft
     install: always
   - id: code-idioms
+    summary: TypeScript and React coding conventions
     tier: soft
-    install: opt-in
+    install: detected
+    when:
+      any: [{ signal: javascript }]
     includes: [typescript-react]
   - id: state-topology
+    summary: Keep shared state and data flow clear
     tier: soft
-    install: opt-in
+    install: detected
+    when:
+      any: [{ signal: web-ui }]
   - id: ownership-boundaries
+    summary: Define ownership and reuse boundaries
     tier: soft
-    install: opt-in
+    install: detected
+    when:
+      any: [{ signal: code }]
   - id: async-state
+    summary: Coordinate async state and lifecycles
     tier: soft
-    install: opt-in
+    install: detected
+    when:
+      any: [{ signal: code }]
   - id: resource-boundaries
+    summary: Define API and resource boundaries
     tier: soft
-    install: opt-in
+    install: detected
+    when:
+      any: [{ signal: code }]
 
 skills:
   - id: ags-sweep
-    install: opt-in
+    summary: Review and archive temporary files
+    install: always
     keywords: [tmp, sweep, archive]
   - id: ags-graphify
-    install: opt-in
+    summary: Explore code relationships with Graphify
+    install: detected
+    when:
+      any: [{ capability: graphify }]
     keywords: [graph, graphify, structure]
   - id: plan-work
+    summary: Plan work that needs decisions
     install: always
     keywords: [plan, planning, execution]
   - id: write-spec
+    summary: Write requirements and contracts
     install: opt-in
     keywords: [spec, specification, requirements, contract]
   - id: manage-backlog
+    summary: Track deferred work
     install: opt-in
     keywords: [backlog, defer, deferred, later, triage]
   - id: spec-first-plan
+    summary: Write a specification, then a plan
     install: opt-in
     includes: [write-spec, manage-backlog]
     keywords: [thorough, spec, specification, plan, design]
   - id: write-commit-diff
+    summary: Export Git changes for review
     install: always
   - id: report-usage
+    summary: Record guidance use and outcomes
     install: always
   - id: ui-library-css
+    summary: Use the detected UI library styles
     install: detected
     when:
       any:
@@ -59,53 +88,93 @@ skills:
     includes: [css-authoring-conventions, css-theme-tokens]
     keywords: [css, ui, theme, tokens]
   - id: css-authoring-conventions
-    install: opt-in
+    summary: Apply CSS and SCSS conventions
+    install: detected
+    when:
+      any: [{ signal: stylesheets }]
     includes: [css-cleanup]
     keywords: [css, scss, styles, styling]
   - id: css-cleanup
+    summary: Audit and remove unused CSS
     install: opt-in
     params: [checks.type, checks.lint, checks.prettier]
     keywords: [css, cleanup, unused, modules, audit, variables]
   - id: css-theme-tokens
-    install: opt-in
+    summary: Use theme tokens consistently
+    install: detected
+    when:
+      any: [{ signal: stylesheets }]
     keywords: [css, theme, tokens]
   - id: git-cleanup
-    install: opt-in
+    summary: Review and clean stale Git branches
+    install: detected
+    when:
+      any: [{ signal: git }]
     params: [git.mainBranch]
     keywords: [git, branches, cleanup]
   - id: ship
-    install: opt-in
+    summary: Commit, push, and prepare review
+    install: detected
+    when:
+      any: [{ signal: git-remote }]
     includes: [commit-granular, start-branch]
     params: [git.mainBranch, git.ticketPrefix]
     keywords: [ship, push, publish, review]
   - id: check
-    install: opt-in
+    summary: Run project verification checks
+    install: detected
+    when:
+      any: [{ signal: checks }]
     params: [checks.type, checks.lint, checks.prettier]
     keywords: [check, typecheck, lint, prettier]
   - id: commit-granular
-    install: opt-in
+    summary: Create focused, separate commits
+    install: detected
+    when:
+      any: [{ signal: git }]
     keywords: [commit, commits, git]
   - id: start-branch
-    install: opt-in
+    summary: Create a branch for new work
+    install: detected
+    when:
+      any: [{ signal: git }]
     params: [git.mainBranch, git.ticketPrefix]
     keywords: [branch, ticket, git]
   - id: react-state-transitions
-    install: opt-in
+    summary: Review React state transitions
+    install: detected
+    when:
+      any: [{ signal: react }]
     keywords: [react, state, effects, transitions, refactor]
   - id: architecture-review
-    install: opt-in
+    summary: Review structure and ownership
+    install: detected
+    when:
+      any: [{ signal: code }]
     keywords: [architecture, review, ownership, boundaries, async, resources]
   - id: typescript-react
-    install: opt-in
+    summary: Apply TypeScript and React practices
+    install: detected
+    when:
+      any: [{ signal: typescript }, { signal: react }]
     keywords: [typescript, react, hooks, components, client]
   - id: web-platform-first
-    install: opt-in
+    summary: Prefer native web capabilities
+    install: detected
+    when:
+      any: [{ signal: web-ui }]
     keywords: [html, css, layout, native, browser]
   - id: web-accessibility
-    install: opt-in
+    summary: Build accessible web interactions
+    install: detected
+    when:
+      any: [{ signal: web-ui }]
     keywords: [accessibility, keyboard, focus, forms, aria]
   - id: systematic-debugging
-    install: opt-in
+    summary: Find a cause before fixing a bug
+    install: detected
+    when:
+      any: [{ signal: code }]
     keywords: [debug, bug, failure, investigation]
 
 settings:

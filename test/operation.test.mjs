@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { backupFiles, backupName, createBackupFolder, readManifest, writeManifest } from "../scripts/lib/backup.mjs";
-import { AGENT_LINE, bindDecisions, faultPoints, formatPlan, normalizePlan, parseDecide, planDigest, planItem, runOperation, verifyWrites, writeFileAt } from "../scripts/lib/operation.mjs";
+import { AGENT_LINE, bindDecisions, faultPoints, formatInteractivePlan, formatPlan, normalizePlan, parseDecide, planDigest, planItem, runOperation, verifyWrites, writeFileAt } from "../scripts/lib/operation.mjs";
 import { agsLockPath, hostLockPath, operationLocks } from "../scripts/lib/reports.mjs";
 import { contentHash, readFileOrNull } from "../scripts/lib/util.mjs";
 import * as catalogLib from "../scripts/lib/catalog.mjs";
@@ -400,4 +400,27 @@ test("the plan table is compact and shows short hashes", () => {
   const plan = normalizePlan({ header: { title: "t" }, items: [planItem({ path: "a.txt", kind: "managed", action: "add", hashes: { S: "f".repeat(64) } })] });
   const lines = formatPlan(plan, "d".repeat(12));
   assert.deepEqual(lines, ["t", "Path   Kind     Action  S", `a.txt  managed  add     ${"f".repeat(12)}`, `Digest: ${"d".repeat(12)}`]);
+});
+
+test("interactive previews wrap full paths, hide hashes and retain per-file decisions and details", () => {
+  const longPath = `.agents/skills/example/${"nested/".repeat(12)}file.mjs`;
+  const plan = normalizePlan({ header: { operation: "install", host: "example", location: "C:/projects/example", to: "1.0.0", selection: { rules: ["core"], skills: ["example"] }, settings: { "git.mainBranch": "main" } }, items: [planItem({ path: longPath, kind: "managed", action: "add", hashes: { S: "f".repeat(64) } }), planItem({ path: "AGENTS.md", kind: "block", choices: ["restore"] })] });
+  const lines = formatInteractivePlan(plan, "d".repeat(12), { columns: 40 });
+  assert.ok(lines.every(line => line.length < 40));
+  assert.match(lines.join("\n"), /Choose: restore/);
+  assert.doesNotMatch(lines.join("\n"), /ffffffffffff/);
+  assert.match(formatInteractivePlan(plan, "d".repeat(12), { columns: 40, details: true }).join("\n"), /file\.mjs/);
+});
+
+test("interactive confirmations accept s and empty to stop, and D shows details before y", async () => {
+  const { host, ags } = scratch();
+  for (const answer of ["s", ""]) {
+    const terminal = fakeTerminal([answer]);
+    assert.equal(await runOperation(syntheticOp(host, ags), { terminal }), 0);
+    assert.equal(fs.existsSync(path.join(host, "a.txt")), false);
+  }
+  const terminal = fakeTerminal(["d", "y"]);
+  assert.equal(await runOperation(syntheticOp(host, ags), { terminal }), 0);
+  assert.match(terminal.lines.join("\n"), /File Details/);
+  assert.equal(fs.readFileSync(path.join(host, "a.txt"), "utf8"), "A\n");
 });

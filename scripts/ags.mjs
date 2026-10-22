@@ -137,7 +137,7 @@ COMMANDS.set("host prepare", {
 COMMANDS.set("host install", {
   example: 'ags host install --route "C:/projects/my-app" --id my-app',
   description: "Install the latest release into a host or resume installation.",
-  details: "Fresh interactive installs offer a checkbox picker for optional skills/rules: arrows move, Space toggles, Enter continues, Esc cancels. Simple terminals accept numbered choices. Explicit --enable/--disable flags skip the picker; the resulting installation plan still needs confirmation.",
+  details: "Fresh interactive installs show recommended rules and skills for this host, then optional rules and skills you can enable. Both menus use the Installing AGS heading. Defaults and detected recommendations start checked. Up/Down navigates and Space selects/deselects. Enter or Space on Select All/Select None applies the action and stays in the menu; Enter on an item advances. Esc stops. Simple terminals accept numbered choices. Explicit --enable/--disable flags skip the menus. Confirmation accepts [Y] Yes, [S] Stop (the default), or [D] Details.",
   usage: "[--route .] [--id <id>] [--name <name>] [--enable <ids>] [--disable <ids>] [--set key=value ...] [--no-official-skills] [--include-nested] [--dry-run] [--plan <digest>]",
   flags: ["route", "id", "name", "enable", "disable", "set", "include-nested", "no-official-skills", ...OPERATION_FLAGS],
   run: ({ agsRoot, flags, terminal, command }) => {
@@ -490,7 +490,7 @@ const FLAG_HELP = {
   name: "--name <name>  Host display name.",
   enable: "--enable <ids>  Enable comma-separated catalog ids; repeatable.",
   disable: "--disable <ids>  Disable comma-separated catalog ids; repeatable.",
-  set: "--set <key>=<value>  Set a declared host setting or integrations.claudeSkills boolean; repeatable.",
+  set: "--set <key>=<value>  Set a declared host setting or supported integration boolean; repeatable.",
   "include-nested": "--include-nested  Include nested agent setups in the backup.",
   commit: "--commit  After a successful update, commit only the host paths it wrote or deleted as \"AGS: update <host> <from> -> <to>\".",
   "dry-run": "--dry-run  Preview the operation without applying changes.",
@@ -512,6 +512,7 @@ function commandHelp(name, spec) {
   return [
     `ags ${name}${spec.usage ? ` ${spec.usage}` : ""}`,
     spec.description,
+    ...(name.startsWith("host ") && !COMMANDS.has(name.slice(5)) ? [`Outside the AGS checkout, ags ${name.slice(5)} is an alias for this command.`] : []),
     ...(spec.details ? [spec.details] : []),
     "",
     parameters.length ? `Parameters ([] in usage means optional):\n${parameters.map((parameter) => `  ${parameter}`).join("\n")}` : "No command-specific parameters.",
@@ -521,17 +522,30 @@ function commandHelp(name, spec) {
   ].join("\n");
 }
 
-function helpText() {
+function helpText(hostAliases = false) {
   const names = [...COMMANDS.keys()].sort();
   const width = Math.max(0, ...names.map((name) => name.length));
-  return names.length ? `Usage: ags <command>\nCommands:\n${names.map((name) => `  ${name.padEnd(width)}  ${COMMANDS.get(name).description}`).join("\n")}\n\nRun ags help <command> for its description, parameters and an example.\nExample: ags help host install (also available as ags host install --help).` : "Usage: ags <command>";
+  const aliases = hostAliases ? names.filter(name => name.startsWith("host ") && !COMMANDS.has(name.slice(5))).map(name => `  ${name.slice(5).padEnd(width)}  Alias for ${name}.`) : [];
+  return names.length ? `Usage: ags <command>\nCommands:\n${names.map((name) => `  ${name.padEnd(width)}  ${COMMANDS.get(name).description}`).join("\n")}${aliases.length ? `\n\nHost aliases (outside the AGS checkout):\n${aliases.join("\n")}` : ""}\n\nRun ags help <command> for its description, parameters and an example.\nExample: ags help host install (also available as ags host install --help).` : "Usage: ags <command>";
 }
 
-export function findCommand(positionals) {
+function outsideAgsCheckout(invocationCwd, agsRoot) {
+  let current = fs.realpathSync.native(invocationCwd);
+  for (;;) {
+    if (samePath(current, agsRoot)) return false;
+    const parent = path.dirname(current);
+    if (parent === current) return true;
+    current = parent;
+  }
+}
+
+export function findCommand(positionals, { hostAliases = false } = {}) {
   const two = positionals.slice(0, 2).join(" ");
   if (positionals.length >= 2 && COMMANDS.has(two)) return { name: two, spec: COMMANDS.get(two), rest: positionals.slice(2) };
   const one = positionals[0];
   if (COMMANDS.has(one)) return { name: one, spec: COMMANDS.get(one), rest: positionals.slice(1) };
+  const hostCommand = `host ${one}`;
+  if (hostAliases && COMMANDS.has(hostCommand)) return { name: hostCommand, spec: COMMANDS.get(hostCommand), rest: positionals.slice(1) };
   return null;
 }
 
@@ -545,6 +559,7 @@ export async function main(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT
   }
   const { positionals, flags } = parseArgs(argv);
   run.flags = flags;
+  const hostAliases = outsideAgsCheckout(invocationCwd, agsRoot);
   const groups = new Set(["host", "skills", "skill", "report", "tmp"]);
   const group = positionals[0] === "help" ? positionals[1] : positionals[0];
   if (groups.has(group) && positionals.length === (positionals[0] === "help" ? 2 : 1)) {
@@ -555,16 +570,15 @@ export async function main(argv, { terminal = realTerminal(), agsRoot = AGS_ROOT
   if (!positionals.length || positionals[0] === "help") {
     run.params = positionals.slice(1);
     if (run.params.length) {
-      const name = run.params.join(" ");
-      const spec = COMMANDS.get(name);
-      if (!spec) throw usageError(`Unknown command: ${name}. Run ags help to list commands.`);
-      terminal.log(commandHelp(name, spec));
+      const found = findCommand(run.params, { hostAliases });
+      if (!found || found.rest.length) throw usageError(`Unknown command: ${run.params.join(" ")}. Run ags help to list commands.`);
+      terminal.log(commandHelp(found.name, found.spec));
     } else {
-      terminal.log(helpText());
+      terminal.log(helpText(hostAliases));
     }
     return 0;
   }
-  const found = findCommand(positionals);
+  const found = findCommand(positionals, { hostAliases });
   if (!found) throw usageError(`Unknown command: ${positionals.join(" ")}`);
   run.command = found.name;
   run.params = found.rest;

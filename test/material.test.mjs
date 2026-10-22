@@ -18,11 +18,11 @@ test("material: the working-tree catalog is format 2 and all material passes val
     ["core", "strong", "always"],
     ["tmp-conventions", "soft", "always"],
     ["workspace-operations", "soft", "always"],
-    ["code-idioms", "soft", "opt-in"],
-    ["state-topology", "soft", "opt-in"],
-    ["ownership-boundaries", "soft", "opt-in"],
-    ["async-state", "soft", "opt-in"],
-    ["resource-boundaries", "soft", "opt-in"],
+    ["code-idioms", "soft", "detected"],
+    ["state-topology", "soft", "detected"],
+    ["ownership-boundaries", "soft", "detected"],
+    ["async-state", "soft", "detected"],
+    ["resource-boundaries", "soft", "detected"],
   ]);
   assert.deepEqual(catalog.skills.map((entry) => entry.id), [
     "ags-sweep",

@@ -26,31 +26,62 @@ function restored(tty, raw = false) {
   assert.equal(tty.input.listenerCount("keypress"), 0);
   assert.equal(tty.input.listenerCount("end"), 0);
   assert.equal(tty.output.listenerCount("resize"), 0);
-  assert.ok(tty.text().endsWith("\x1b[?25h\x1b[?1049l"));
+  if (process.platform === "win32") {
+    assert.ok(tty.text().endsWith("\x1b[J\x1b[?25h"));
+    assert.doesNotMatch(tty.text(), /\x1b\[\?1049[hl]/);
+  } else assert.ok(tty.text().endsWith("\x1b[?25h\x1b[?1049l"));
 }
 
 test("picker decodes native key sequences, toggles both ways and returns catalog order", async () => {
   const tty = terminal();
   const pending = pickItems(options, tty);
-  await tty.press("\x1b[B \x1b[B \x1b[A \x1b[H ");
+  await tty.press("\x1b[B \x1b[B \x1b[A \x1b[H\x1b[B\x1b[B ");
   await tty.press("\r");
   assert.deepEqual(await pending, ["skill-0", "skill-2"]);
   restored(tty);
 });
 
 test("picker scrolls, wraps navigation, selects all, clears and marks automatic companions", async () => {
-  const tty = terminal();
+  const tty = terminal({ rows: 14 });
   const pending = pickItems({ ...options, included: selected => selected.includes("skill-0") ? ["skill-1"] : [] }, tty);
   await tty.press(" ");
-  assert.match(tty.text(), /\[\+\] skill-1/);
-  await tty.press("\x1b[A");
-  assert.match(tty.text(), /9\/9: Description 8/);
+  assert.match(tty.text(), /\[X\] skill-1/);
+  assert.doesNotMatch(tty.text(), /\[\+\]/);
+  await tty.press("\x1b[H\x1b[A");
+  assert.match(tty.text(), /Description 8/);
   await tty.press("\x1b[B");
-  assert.match(tty.text(), /1\/9: Description 0/);
-  await tty.press("a");
-  assert.match(tty.text(), /9 explicit/);
-  await tty.press("n\r");
+  await tty.press(" ");
+  assert.match(tty.text(), /9 selected/);
+  await tty.press("\x1b[B \x1b[B\r");
   assert.deepEqual(await pending, []);
+  restored(tty);
+});
+
+test("picker keeps defaults, locks required companions, and ignores removed bulk shortcuts", async () => {
+  const tty = terminal({ rows: 24 });
+  const pending = pickItems({ ...options, initial: ["skill-0"], included: ids => ids.includes("skill-0") ? ["skill-1"] : [] }, tty);
+  await tty.press("\x1b[B ");
+  assert.match(tty.text(), /Deselect the parent first/);
+  await tty.press("an\r");
+  assert.deepEqual(await pending, ["skill-0"]);
+  restored(tty);
+});
+
+test("Enter applies bulk actions without advancing and Select None preserves required items", async () => {
+  const tty = terminal();
+  const pending = pickItems({ ...options, choices: choices.map((choice, index) => ({ ...choice, locked: index === 0 })), initial: ["skill-2"] }, tty);
+  let settled = false;
+  pending.then(() => { settled = true; });
+  await tty.press("\x1b[H\r");
+  assert.equal(settled, false);
+  assert.match(tty.text(), /9 selected/);
+  await tty.press("\x1b[B\r");
+  assert.equal(settled, false);
+  assert.match(tty.text(), /1 selected/);
+  assert.match(tty.text(), /\[Enter \/ Space\] Apply Action/);
+  await tty.press("\x1b[B\r");
+  assert.deepEqual(await pending, ["skill-0"]);
+  assert.match(tty.text(), /\[Enter\] Next/);
   restored(tty);
 });
 
@@ -60,7 +91,7 @@ test("picker handles resize and descriptions cannot emit control sequences or wr
   tty.output.columns = 40; tty.output.rows = 10;
   tty.output.emit("resize");
   assert.doesNotMatch(tty.text(), /\x1b\[31m|\x1b\[0m/);
-  const frame = tty.text().split("\x1b[2J").at(-1);
+  const frame = tty.text().split(process.platform === "win32" ? "\x1b[J" : "\x1b[2J").at(-1);
   assert.ok(frame.split("\n").length <= 10);
   assert.match(frame, /\.\.\./);
   await tty.press("\r");

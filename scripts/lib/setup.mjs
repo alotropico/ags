@@ -15,14 +15,14 @@ export function officialOffers(root, config = {}, capabilities = detectCapabilit
   const offers = [];
   // This upstream skill explicitly declares mantine-9 in its description.
   const mantine = installedPackage(root, "@mantine/form");
-  if (capabilities.skills && /^9\./.test(mantine?.json.version ?? "") && !existing.has("mantine-form")) offers.push({ skill: "mantine-form", source: "https://github.com/mantinedev/skills/tree/222191c6b15d1ae2c02051a285f47230777be513", library: `@mantine/form@${mantine.json.version}` });
+  if (capabilities.skills && config.integrations?.mantineForm !== false && /^9\./.test(mantine?.json.version ?? "") && !existing.has("mantine-form")) offers.push({ skill: "mantine-form", source: "https://github.com/mantinedev/skills/tree/222191c6b15d1ae2c02051a285f47230777be513", library: `@mantine/form@${mantine.json.version}` });
   if (capabilities.skills && capabilities.fallow && config.integrations?.fallow !== false && !existing.has("fallow")) offers.push({ skill: "fallow", source: "fallow-rs/fallow-skills" });
   if (capabilities.skills && capabilities["ast-grep"] && config.integrations?.astGrep !== false && !existing.has("ast-grep")) offers.push({ skill: "ast-grep", source: "ast-grep/agent-skill" });
   return offers;
 }
 
 export function nativeIntentState(root, config = {}, capabilities = detectCapabilities(root)) {
-  const native = config.integrations?.officialSkills === false ? [] : nativeTanStackPackages(root);
+  const native = config.integrations?.officialSkills === false || config.integrations?.tanstackSkills === false ? [] : nativeTanStackPackages(root);
   const packageFile = path.join(root, "package.json");
   const packageCurrent = fs.existsSync(packageFile) ? fs.readFileSync(packageFile, "utf8") : null;
   const packageJson = packageCurrent && native.length ? JSON.parse(packageCurrent) : {};

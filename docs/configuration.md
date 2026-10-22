@@ -50,9 +50,11 @@ local: {}
 
 `agsVersion` in the example is illustrative. Lifecycle commands maintain the real value.
 
-`--set` accepts catalog-declared settings and exactly one optional boolean, `integrations.claudeSkills`. Edit other reserved preferences, including `reporting` and the rest of `integrations`, by hand.
+`--set` accepts catalog-declared settings and the optional integration booleans `integrations.officialSkills`, `integrations.fallow`, `integrations.astGrep`, `integrations.mantineForm`, `integrations.tanstackSkills`, and `integrations.claudeSkills`. The installation menu records per-integration choices using these preferences. Edit other reserved preferences, including `reporting`, by hand.
 
 Strings are stored verbatim. `key=` sets an empty string. Booleans are `true` or `false`. A missing required value prompts, or exits 3 when there is no TTY.
+
+New setting keys can use detected values: `git.mainBranch` from an unambiguous local Git default, and check settings from one recognized, non-writing script per category. The preview shows these values. Existing settings, including intentionally empty check settings, and explicit `--set` values are preserved. Detection never fetches a remote or runs the scripts.
 
 Updates change an existing value only for `agsVersion` or an explicit `--set`. A same-major update keeps format 2, settings, comments, selections, the reporting preference, local notes, ignore and promotion records, and project-owned files.
 

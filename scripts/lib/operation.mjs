@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
-import { canPickItems, pickItems } from "./selection.mjs";
+import { stripVTControlCharacters } from "node:util";
+import { canPickItems, pickItems, selectionHeading } from "./selection.mjs";
 import { acquireLocks } from "./reports.mjs";
 import { AgsError, contentHash, insidePath, posix, readFileOrNull, sha256, shortHash, writeAtomic } from "./util.mjs";
 
@@ -74,8 +75,65 @@ export function formatPlan(plan, digest) {
   return lines;
 }
 
-export function showPlan(terminal, plan, digest) {
-  for (const line of formatPlan(plan, digest)) {
+function wrapLine(value, columns) {
+  const text = stripVTControlCharacters(String(value)).replace(/[\x00-\x1f\x7f-\x9f]/g, " ");
+  const result = [];
+  let remaining = text;
+  while (remaining) {
+    let used = 0, end = 0, space = -1;
+    for (const character of remaining) {
+      const width = character.codePointAt(0) > 0xff ? 2 : 1;
+      if (used + width > columns) break;
+      used += width; end += character.length;
+      if (character === " " && end > 4) space = end;
+    }
+    if (end === remaining.length) { result.push(remaining); break; }
+    if (space > 4) end = space;
+    result.push(remaining.slice(0, end).trimEnd());
+    remaining = `    ${remaining.slice(end).trimStart()}`;
+  }
+  return result.length ? result : [""];
+}
+
+export function formatInteractivePlan(plan, digest, { columns = 80, details = false } = {}) {
+  const lines = [];
+  const selection = plan.header.selection;
+  if (plan.header.operation === "install") {
+    lines.push(...selectionHeading({ heading: "Installing AGS", title: "Review the installation plan" }, columns), `Release: ${plan.header.to}`, `Host: ${plan.header.host}`, `Location: ${plan.header.location || ""}`);
+  } else if (plan.header.title) lines.push(plan.header.title);
+  for (const note of plan.header.notes || []) if (!note.startsWith("Selection: ")) lines.push(note);
+  if (!plan.items.length) lines.push("Nothing to do.");
+  else {
+    if (selection) for (const [name, ids] of [["Rules", selection.rules], ["Skills", selection.skills]]) {
+      lines.push("", `${name} (${ids.length})`);
+      for (const id of ids) lines.push(`  ${id}`);
+    }
+    const settings = Object.entries(plan.header.settings || {});
+    if (settings.length) {
+      lines.push("", "Host Settings");
+      for (const [key, value] of settings) lines.push(`  ${key} = ${JSON.stringify(value)}`);
+    }
+    const external = plan.items.filter(item => ["official skill", "native skills", "native skill permissions"].includes(item.kind));
+    if (external.length) {
+      lines.push("", "External Integrations");
+      for (const item of external) lines.push(`  ${item.path}`, `    ${item.action || `Choose: ${item.choices.join(" / ")}`}${item.detail ? ` (${item.detail})` : ""}`);
+    }
+    const compactInstall = plan.header.operation === "install" && !details;
+    lines.push("", details ? "File Details" : "Changes");
+    for (const item of plan.items) {
+      if (external.includes(item)) continue;
+      if (compactInstall && item.kind === "managed" && !item.choices) continue;
+      lines.push(`  ${item.path}`, `    ${item.choices ? `Choose: ${item.choices.join(" / ")}` : item.action || "-"}${item.detail ? ` (${item.detail})` : ""}`);
+    }
+    if (compactInstall) lines.push("  Guidance files are installed under .agents/. [D] Details shows every path.");
+  }
+  lines.push("", `Digest: ${digest}`);
+  return lines.flatMap(line => wrapLine(line, Math.max(12, columns - 1)));
+}
+
+export function showPlan(terminal, plan, digest, options = {}) {
+  const lines = terminal.interactive ? formatInteractivePlan(plan, digest, { columns: terminal.columns ?? 80, ...options }) : formatPlan(plan, digest);
+  for (const line of lines) {
     if (line.startsWith("Warning: ")) terminal.warn(line);
     else terminal.log(line);
   }
@@ -161,6 +219,7 @@ export function realTerminal() {
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
   return {
     interactive,
+    get columns() { return process.stdout.columns ?? 80; },
     selectMany: canPickItems() ? pickItems : undefined,
     async question(prompt) {
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -191,7 +250,7 @@ async function askDecisions(terminal, plan, decisions) {
     for (;;) {
       const answer = String(await terminal.question(`${item.path} (${item.kind}${item.detail ? `, ${item.detail}` : ""}): ${item.choices.join(", ")}; add " all" for the same answer on all remaining; or stop: `)).trim().toLowerCase();
       const [choice, all] = answer.split(/\s+/);
-      if (choice === "stop") return STOP;
+      if (choice === "stop" || choice === "s") return STOP;
       if (item.choices.includes(choice) && (all === undefined || all === "all")) {
         decisions.set(item.path, choice);
         if (all === "all") sameForAll = choice;
@@ -201,10 +260,11 @@ async function askDecisions(terminal, plan, decisions) {
     }
   }
   for (;;) {
-    const answer = String(await terminal.question("Apply this plan? yes or stop: ")).trim().toLowerCase();
+    const answer = String(await terminal.question("Apply this plan? [Y] Yes / [S] Stop / [D] Details (Default: Stop): ")).trim().toLowerCase();
     if (answer === "yes" || answer === "y") return decisions;
-    if (answer === "stop" || answer === "no" || answer === "n") return STOP;
-    terminal.warn("Answer yes or stop.");
+    if (["", "s", "stop", "no", "n"].includes(answer)) return STOP;
+    if (answer === "d" || answer === "details") { showPlan(terminal, plan, planDigest(plan), { details: true }); continue; }
+    terminal.warn("Answer [Y] Yes, [S] Stop, or [D] Details.");
   }
 }
 

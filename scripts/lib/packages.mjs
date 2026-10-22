@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { AgsError } from "./util.mjs";
 import { detectCapabilities } from "./capabilities.mjs";
+import { projectEvidence } from "./detection.mjs";
 
 const MANAGERS = ["pnpm", "yarn", "npm"];
 const LOCKS = [
@@ -18,10 +19,12 @@ export function detectEvidence(hostRoot) {
   const packages = new Set();
   const packagePath = path.join(hostRoot, "package.json");
   let packageJson = false;
+  let scripts = {};
   if (fs.existsSync(packagePath)) {
     packageJson = true;
     try {
       const json = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+      if (json?.scripts && typeof json.scripts === "object" && !Array.isArray(json.scripts)) scripts = json.scripts;
       for (const field of ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]) {
         for (const name of Object.keys(json?.[field] || {})) packages.add(name);
       }
@@ -30,7 +33,7 @@ export function detectEvidence(hostRoot) {
     }
   }
   const locks = new Set([...LOCK_FILES].filter((name) => fs.existsSync(path.join(hostRoot, name))));
-  return { packages, locks, repoName: path.basename(hostRoot).toLowerCase(), packageJson, capabilities: detectCapabilities(hostRoot) };
+  return { packages, locks, ...projectEvidence(hostRoot, packages, scripts), repoName: path.basename(hostRoot).toLowerCase(), packageJson, capabilities: detectCapabilities(hostRoot) };
 }
 
 export function whenMatches(when, evidence) {
@@ -39,6 +42,8 @@ export function whenMatches(when, evidence) {
     if (clause.package) return evidence.packages.has(clause.package);
     if (clause.lockFile) return evidence.locks.has(clause.lockFile);
     if (clause.repoName) return evidence.repoName === clause.repoName.toLowerCase();
+    if (clause.signal) return evidence.signals?.has(clause.signal) === true;
+    if (clause.capability) return Boolean(evidence.capabilities?.[clause.capability]);
     return false;
   });
 }

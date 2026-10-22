@@ -8,6 +8,7 @@ import { AgsError, validBranchName } from "./util.mjs";
 export const CONFIG_REL = ".agents/ags.yaml";
 const TO_STRING = { flowCollectionPadding: false, lineWidth: 0 };
 const VERSION = /^\d+\.\d+\.\d+$/;
+const INTEGRATIONS = new Set(["officialSkills", "fallow", "astGrep", "mantineForm", "tanstackSkills", "claudeSkills"]);
 
 export function configPath(hostRoot) {
   return path.join(hostRoot, ".agents", "ags.yaml");
@@ -64,7 +65,7 @@ export function validateConfig(data, catalog, { hostRoot } = {}) {
   if (data.integrations != null) {
     if (!isObject(data.integrations)) errors.push("integrations must be a mapping");
     else for (const [key, value] of Object.entries(data.integrations)) {
-      if (!["officialSkills", "fallow", "astGrep", "claudeSkills"].includes(key) || typeof value !== "boolean") errors.push(`integrations.${key} must be a supported boolean preference`);
+      if (!INTEGRATIONS.has(key) || typeof value !== "boolean") errors.push(`integrations.${key} must be a supported boolean preference`);
     }
   }
   for (const group of ["skills", "rules"]) {
@@ -182,7 +183,7 @@ export function parseSets(values, catalog) {
     if (eq <= 0) throw new AgsError(`--set expects key=value: ${raw}`, { exitCode: 2 });
     const key = raw.slice(0, eq);
     const text = raw.slice(eq + 1);
-    const setting = key === "integrations.claudeSkills" ? { key, type: "boolean" } : declared.get(key);
+    const setting = key.startsWith("integrations.") && INTEGRATIONS.has(key.slice(13)) ? { key, type: "boolean" } : declared.get(key);
     if (!setting) {
       const reserved = RESERVED_KEYS.has(key.split(".")[0]);
       throw new AgsError(reserved ? `--set does not edit reserved keys; edit .agents/ags.yaml by hand: ${key}` : `--set key is not a declared setting: ${key}`, { exitCode: 2 });
@@ -240,7 +241,7 @@ export function writeSelection(doc, group, list, ids) {
   doc.setIn([group, list], node);
 }
 
-export function mergeConfig(doc, catalog, { skillIds = [], sets = new Map() } = {}) {
+export function mergeConfig(doc, catalog, { skillIds = [], sets = new Map(), suggested = new Map() } = {}) {
   const declared = settingByKey(catalog);
   const data = doc.toJS() ?? {};
   const added = new Set();
@@ -250,10 +251,10 @@ export function mergeConfig(doc, catalog, { skillIds = [], sets = new Map() } = 
       if (added.has(key)) continue;
       const setting = declared.get(key);
       if (sets.has(key)) ensureSetting(doc, setting, sets.get(key));
-      else if (settingValue(data, key) === undefined) ensureSetting(doc, setting, Object.hasOwn(setting, "default") ? setting.default : "");
+      else if (settingValue(data, key) === undefined) ensureSetting(doc, setting, suggested.has(key) ? suggested.get(key) : Object.hasOwn(setting, "default") ? setting.default : "");
       added.add(key);
     }
   }
-  for (const [key, value] of sets) if (!added.has(key)) ensureSetting(doc, key === "integrations.claudeSkills" ? { key, description: "Opt in to managed per-skill Claude directory aliases." } : declared.get(key), value);
+  for (const [key, value] of sets) if (!added.has(key)) ensureSetting(doc, key.startsWith("integrations.") ? { key, description: key === "integrations.claudeSkills" ? "Opt in to managed per-skill Claude directory aliases." : "Host preference for this optional integration." } : declared.get(key), value);
   return doc;
 }

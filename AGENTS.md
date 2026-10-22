@@ -23,6 +23,7 @@ AGS is the source repository for reusable agent guidance: rules, skills, setting
 - Ids match `[a-z0-9]+(-[a-z0-9]+)*`, at most 64 characters, unique across rules and skills. Paths derive from ids.
 - Install classes: `always`, `detected` (requires `when`), `opt-in`. `includes` lists companion skills on skills or soft rules; strong rules cannot include companions. Selection expands one skill closure without adding companions to explicit enabled lists; an explicitly disabled required child is an error. `params` lists the setting keys a skill reads.
 - Skill frontmatter: `name` equals the id; `description` at most 1024 characters. Soft rules: one `description` line of at most 160 characters.
+- Catalog entries may have a one-line `summary` of at most 100 characters for installation menus. Detection clauses support package, lockFile, repoName, signal, and capability predicates.
 - Strong rules have no frontmatter and at most 5 non-empty lines. The rendered AGS block stays within 40 lines.
 
 ## Writing material

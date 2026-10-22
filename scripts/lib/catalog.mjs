@@ -4,14 +4,15 @@ import path from "node:path";
 import { parse } from "yaml";
 import { hostLinkTargets } from "./links.mjs";
 import { LOCK_FILES, whenMatches } from "./packages.mjs";
+import { DETECTION_CAPABILITIES, DETECTION_SIGNALS } from "./detection.mjs";
 import { BLOCK_BUDGET, blockLineCount, indexLine, renderBlockBody } from "./render.mjs";
 import { AgsError, assertPortablePaths, assertRelativePath, posix, walkFiles } from "./util.mjs";
 
 export const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const RESERVED_KEYS = new Set(["format", "host", "agsVersion", "reporting", "skills", "rules", "local", "integrations"]);
 const KEY_PART = /^[a-z][a-zA-Z0-9]*$/;
-const RULE_FIELDS = new Set(["id", "tier", "install", "when", "includes"]);
-const SKILL_FIELDS = new Set(["id", "install", "when", "includes", "params", "keywords"]);
+const RULE_FIELDS = new Set(["id", "tier", "install", "when", "includes", "summary"]);
+const SKILL_FIELDS = new Set(["id", "install", "when", "includes", "params", "keywords", "summary"]);
 const SETTING_FIELDS = new Set(["key", "type", "required", "default", "description"]);
 const INSTALL = new Set(["always", "detected", "opt-in"]);
 const TEMPLATE = "templates/agents-block.md";
@@ -222,6 +223,7 @@ function entryErrors(entry, kind, allowed, ids, errors) {
     ids.add(entry.id);
   }
   if (!INSTALL.has(entry.install)) errors.push(`${label}: install must be always, detected or opt-in`);
+  if (entry.summary != null && (typeof entry.summary !== "string" || !entry.summary.trim() || entry.summary.length > 100 || /[\r\n]/.test(entry.summary))) errors.push(`${label}: summary must be a non-empty single line of at most 100 characters`);
   if (entry.install === "detected" && entry.when == null) errors.push(`${label}: when is required with install: detected`);
   if (entry.install !== "detected" && entry.when != null) errors.push(`${label}: when is allowed only with install: detected`);
   if (entry.when != null) errors.push(...whenErrors(entry.when, label));
@@ -234,13 +236,15 @@ function whenErrors(when, label) {
   const errors = [];
   for (const clause of when.any) {
     const keys = isObject(clause) ? Object.keys(clause) : [];
-    if (keys.length !== 1 || !["package", "lockFile", "repoName"].includes(keys[0])) {
-      errors.push(`${label}: when clause must be package, lockFile or repoName`);
+    if (keys.length !== 1 || !["package", "lockFile", "repoName", "signal", "capability"].includes(keys[0])) {
+      errors.push(`${label}: when clause must be package, lockFile, repoName, signal or capability`);
       continue;
     }
     const value = clause[keys[0]];
     if (typeof value !== "string" || !value) errors.push(`${label}: when ${keys[0]} must be a non-empty string`);
     else if (keys[0] === "lockFile" && !LOCK_FILES.has(value)) errors.push(`${label}: lockFile is not a supported lock file name`);
+    else if (keys[0] === "signal" && !DETECTION_SIGNALS.has(value)) errors.push(`${label}: unknown detection signal ${value}`);
+    else if (keys[0] === "capability" && !DETECTION_CAPABILITIES.has(value)) errors.push(`${label}: unknown detection capability ${value}`);
   }
   return errors;
 }

@@ -47,6 +47,8 @@ Non-interactive decisions, `--plan`, and `--decide`: [Install a host](install-ho
 
 ## Manage hosts
 
+Outside the AGS checkout, omit `host`: `ags prepare`, `ags install`, `ags register`, `ags update`, `ags status`, `ags list`, and `ags unregister` are aliases for the commands below. This also works before AGS is installed in a new host. Flags, validation, plans, and confirmation are the same. Help accepts both forms, such as `ags help install` or `ags install --help`. Inside the AGS checkout, including its subdirectories, use the full `ags host ...` commands.
+
 | Command | Purpose |
 | --- | --- |
 | `ags host prepare` | Move existing agent setup into a backup before installation. |

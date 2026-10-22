@@ -11,7 +11,6 @@ import {
   hostSkillDir,
   latestRelease,
   loadCatalog,
-  optInItems,
   parseFrontmatter,
   releaseVersions,
   resolveSelection,
@@ -23,8 +22,11 @@ import {
 } from "./catalog.mjs";
 import { appendUnreleasedNote, gitOperationInProgress } from "./version.mjs";
 import { aliasItems, applyAliases, inspectAliases } from "./claude-skills.mjs";
-import { CONFIG_REL, configText, mergeConfig, missingRequired, newConfig, parseSets, readConfig, setAgsVersion, validateConfig, writeSelection } from "./config.mjs";
+import { CONFIG_REL, configText, mergeConfig, missingRequired, newConfig, parseSets, readConfig, setAgsVersion, settingValue, validateConfig, valueErrors, writeSelection } from "./config.mjs";
 import { detectEvidence } from "./packages.mjs";
+import { suggestedHostSettings } from "./detection.mjs";
+import { chooseInstallSelection } from "./install-selection.mjs";
+import { selectionHeading } from "./selection.mjs";
 import { migrationChain } from "./migrations.mjs";
 import { observeHost, observedPath } from "./observed.mjs";
 import { detectCapabilities } from "./capabilities.mjs";
@@ -210,6 +212,14 @@ function selectionSummary(selection) {
   return `Selection: rules ${selection.rules.join(", ") || "none"}; skills ${selection.skills.join(", ") || "none"}. Companions: ${selection.companions.join(", ") || "none"}.`;
 }
 
+function previewSettings(state) {
+  const data = state.doc.toJS();
+  return Object.fromEntries([
+    ...state.catalog.settings.map(setting => [setting.key, settingValue(data, setting.key)]).filter(([, value]) => value !== undefined),
+    ...Object.entries(data.integrations || {}).map(([key, value]) => [`integrations.${key}`, value]),
+  ]);
+}
+
 export function settingsError(catalog, missing, rerunArgs) {
   const declared = new Map((catalog.settings || []).map((setting) => [setting.key, setting]));
   const lines = ["Required settings have no value:"];
@@ -272,9 +282,10 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
         writeSelection(doc, group, "enabled", flagged.selection[group].enabled);
         writeSelection(doc, group, "disabled", flagged.selection[group].disabled);
       }
-      const selection = resolveSelection(catalog, doc.toJS() ?? {}, detectEvidence(hostRoot));
+      const evidence = detectEvidence(hostRoot);
+      const selection = resolveSelection(catalog, doc.toJS() ?? {}, evidence);
       if (selection.errors.length) throw new AgsError(`Invalid selection:\n${selection.errors.map((line) => `- ${line}`).join("\n")}`);
-      mergeConfig(doc, catalog, { skillIds: selection.skills, sets: setMap });
+      mergeConfig(doc, catalog, { skillIds: selection.skills, sets: setMap, suggested: suggestedHostSettings(hostRoot, evidence) });
       const data = doc.toJS() ?? {};
       const errors = validateConfig(data, catalog, { hostRoot });
       if (errors.length) throw new AgsError(`Invalid .agents/ags.yaml:\n${errors.map((line) => `- ${line}`).join("\n")}`);
@@ -346,7 +357,7 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
       if (state.setup) notes.push(...setupNotes(state.setup));
       notes.push(...state.warnings.map((line) => `Warning: ${line}`));
       return {
-        header: { title: `ags host install: ${posix(hostRoot)} at ${state.version}`, operation: "install", host: state.hostId, to: state.version, capabilities: state.capabilities, selection: { rules: state.selection.rules, skills: state.selection.skills }, aliases: state.aliases.observations, aliasParents: state.aliases.parents, notes },
+        header: { title: `ags host install: ${posix(hostRoot)} at ${state.version}`, operation: "install", location: posix(hostRoot), host: state.hostId, to: state.version, capabilities: state.capabilities, selection: { rules: state.selection.rules, skills: state.selection.skills }, settings: previewSettings(state), aliases: state.aliases.observations, aliasParents: state.aliases.parents, notes },
         items,
       };
     },
@@ -426,49 +437,25 @@ export function installOperation({ agsRoot = AGS_ROOT, route, id = null, name = 
   return op;
 }
 
-async function askOptIns(terminal, { catalog, source }, hostRoot) {
-  const items = optInItems(catalog);
-  if (!items.length) return [];
-  const choices = items.map(id => {
-    const rule = catalog.rules.find(entry => entry.id === id);
-    const entry = rule || catalog.skills.find(entry => entry.id === id);
-    const rel = rule ? rulePath(id) : `${skillDir(id)}/SKILL.md`;
-    return { value: id, label: `${id} (${rule ? "rule" : "skill"})`, description: parseFrontmatter(textOf(source.readFile(rel))).data?.description || "", includes: entry.includes || [] };
-  });
-  if (terminal.selectMany) {
-    const evidence = detectEvidence(hostRoot);
-    const selected = await terminal.selectMany({ title: "Choose optional AGS skills/rules", choices, included(ids) {
-      const flagged = applySelectionFlags(catalog, {}, { enable: ids });
-      const selection = resolveSelection(catalog, flagged.selection, evidence);
-      return [...selection.rules, ...selection.skills].filter(id => !ids.includes(id));
-    } });
-    if (selected == null) return null;
-    terminal.log(`Opt-in items: ${selected.join(", ") || "none"}. Companion skills are included automatically.`);
-    return selected;
-  }
-  terminal.log("Choose optional AGS skills and rules (companion skills are included automatically):");
-  choices.forEach((choice, index) => terminal.log(`  ${index + 1}. ${choice.label}: ${choice.description}${choice.includes.length ? ` Includes: ${choice.includes.join(", ")}.` : ""}`));
-  for (;;) {
-    const answer = String(await terminal.question(`Opt-in items: ${items.join(", ")}. Enable which? Comma-separated numbers or ids, empty for none, or stop: `)).trim();
-    if (answer.toLowerCase() === "stop") return null;
-    const ids = answer ? [...new Set(answer.split(",").map(value => value.trim()).filter(Boolean).map(value => /^\d+$/.test(value) ? items[Number(value) - 1] || value : value))] : [];
-    const unknown = ids.filter((value) => !items.includes(value));
-    if (!unknown.length) return ids;
-    terminal.warn(`Not opt-in items: ${unknown.join(", ")}.`);
-  }
-}
-
 async function promptMissingSettings(terminal, op, catalogOf) {
   try {
     op.inspect();
   } catch (error) {
     if (!error.missing) throw error;
+    if (op.name === "install") selectionHeading({ heading: "Installing AGS", title: "Configure required host settings" }, terminal.columns ?? 80).forEach(line => terminal.log(line));
     const declared = new Map((catalogOf().settings || []).map((setting) => [setting.key, setting]));
     for (const key of error.missing) {
-      const value = String(await terminal.question(`${key} (${declared.get(key)?.description ?? "required"}): `)).trim();
-      op.sets.push(`${key}=${value}`);
+      for (;;) {
+        const value = String(await terminal.question(`${key} (${declared.get(key)?.description ?? "required"}); [S] Stop: `)).trim();
+        if (["s", "stop"].includes(value.toLowerCase())) return false;
+        const problems = value ? valueErrors(declared.get(key), value, { hostRoot: op.hostRoot }) : ["A value is required."];
+        if (problems.length) { problems.forEach(problem => terminal.warn(problem)); continue; }
+        op.sets.push(`${key}=${value}`);
+        break;
+      }
     }
   }
+  return true;
 }
 
 export async function hostInstall({ agsRoot = AGS_ROOT, route, id, name, enable = [], disable = [], sets = [], officialSkills, includeNested = false, rerunArgs, terminal, options }) {
@@ -477,11 +464,15 @@ export async function hostInstall({ agsRoot = AGS_ROOT, route, id, name, enable 
     const resume = Boolean(hostConfigState(op.hostRoot));
     if (!resume && !enable.length && !disable.length) {
       const version = requireRelease(agsRoot);
-      const selected = await askOptIns(terminal, releaseInputs(agsRoot, version), op.hostRoot);
+      const inputs = releaseInputs(agsRoot, version);
+      const preferences = { integrations: Object.fromEntries([...parseSets(sets, inputs.catalog)].filter(([key]) => key.startsWith("integrations.")).map(([key, value]) => [key.slice(13), value])) };
+      const selected = await chooseInstallSelection({ terminal, ...inputs, hostRoot: op.hostRoot, version, officialSkills, preferences });
       if (selected == null) { terminal.log("Stopped. Nothing was written."); return 0; }
-      op.enable.push(...selected);
+      op.enable.push(...selected.enable);
+      op.disable.push(...selected.disable);
+      op.sets.push(...selected.sets.filter(value => !sets.some(given => given.startsWith(`${value.split("=")[0]}=`))));
     }
-    await promptMissingSettings(terminal, op, () => releaseInputs(agsRoot, requireRelease(agsRoot)).catalog);
+    if (!await promptMissingSettings(terminal, op, () => releaseInputs(agsRoot, requireRelease(agsRoot)).catalog)) { terminal.log("Stopped. Nothing was written."); return 0; }
   }
   return runOperation(op, { terminal, ...options });
 }
@@ -745,7 +736,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       }
       const selection = resolveSelection(catalog, doc.toJS() ?? {}, evidence);
       if (selection.errors.length) throw new AgsError(`Invalid selection:\n${selection.errors.map((line) => `- ${line}`).join("\n")}`);
-      mergeConfig(doc, catalog, { skillIds: selection.skills, sets: setMap });
+      mergeConfig(doc, catalog, { skillIds: selection.skills, sets: setMap, suggested: suggestedHostSettings(hostRoot, evidence) });
       const data = doc.toJS() ?? {};
       const errors = validateConfig(data, catalog, { hostRoot });
       if (errors.length) throw new AgsError(`Invalid .agents/ags.yaml:\n${errors.map((line) => `- ${line}`).join("\n")}`);
@@ -821,7 +812,7 @@ export function updateOperation({ agsRoot = AGS_ROOT, route, hostId = null, to =
       if (state.block.analysis.kind === "missing") notes.push("The AGS block is missing from AGENTS.md. restore recreates it at the top; to refuse it permanently, run ags host unregister.");
       notes.push(...state.warnings.map((line) => `Warning: ${line}`));
       return {
-        header: { title: `ags host update: ${posix(hostRoot)} from ${state.from} to ${state.version}`, operation: "update", host: state.hostId, from: state.from, to: state.version, selection: { rules: state.selection.rules, skills: state.selection.skills }, aliases: state.aliases.observations, aliasParents: state.aliases.parents, notes },
+        header: { title: `ags host update: ${posix(hostRoot)} from ${state.from} to ${state.version}`, operation: "update", host: state.hostId, from: state.from, to: state.version, selection: { rules: state.selection.rules, skills: state.selection.skills }, settings: previewSettings(state), aliases: state.aliases.observations, aliasParents: state.aliases.parents, notes },
         items,
       };
     },
@@ -1100,6 +1091,6 @@ export async function hostUnregister({ agsRoot = AGS_ROOT, route, hostId = null,
 
 export async function hostUpdate({ agsRoot = AGS_ROOT, route, hostId = null, to = null, enable = [], disable = [], sets = [], commit = false, rerunArgs, terminal, options }) {
   const op = updateOperation({ agsRoot, route, hostId, to, enable, disable, sets, commit, rerunArgs });
-  if (terminal.interactive && !options.dryRun) await promptMissingSettings(terminal, op, () => releaseInputs(agsRoot, requireRelease(agsRoot)).catalog);
+  if (terminal.interactive && !options.dryRun && !await promptMissingSettings(terminal, op, () => releaseInputs(agsRoot, requireRelease(agsRoot)).catalog)) { terminal.log("Stopped. Nothing was written."); return 0; }
   return runOperation(op, { terminal, ...options });
 }

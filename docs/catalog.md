@@ -12,6 +12,10 @@ Ids match `[a-z0-9]+(-[a-z0-9]+)*`, at most 64 characters, and are unique across
 | `detected` | Installed when its `when` condition matches the project. |
 | `opt-in` | Installed when you select it. |
 
+Detected entries use `when.any` clauses: `package`, `lockFile`, `repoName`, `signal`, or `capability`. Signals are `git`, `git-remote`, `code`, `javascript`, `typescript`, `react`, `web-ui`, `stylesheets`, and `checks`. Capabilities are `skills`, `graphify`, `fallow`, `ast-grep`, and `intent`. Each entry may have a short `summary`, a single non-empty line of at most 100 characters, for installation rows.
+
+Source detection uses tracked and non-ignored project files and excludes dependency and generated directories such as `node_modules`, `vendor`, `dist`, `build`, `coverage`, and `.tmp`. Framework dependencies also identify TypeScript, React, and web UI projects. Check detection requires an unambiguous recognized script name and excludes writing options. Git and tool detection are local; they perform no fetches or installations. Explicit disabled selections override recommendations. Installing a skill does not activate it outside its own task trigger.
+
 `includes` lists companion skills. Companions attach to skills or to soft rules. Strong rules have no companions. Selecting a parent expands one closure. Companions stay out of the explicit `skills.enabled` list. A required child that is explicitly disabled fails before any write. The message names the parent and the enable or disable choices that would fix it. The picker and the plan show included companions. An independently selected child remains if you later remove its former parent. A deleted required child offers reviewed restore or ignore. Disable is not a valid choice for that child while its parent stays selected.
 
 The groups below are the work the text assumes. Workflow rows apply in a host that never enables the TypeScript, React, CSS, or web rows.
@@ -23,6 +27,7 @@ The groups below are the work the text assumes. Workflow rows apply in a host th
 | `core` | strong rule | Every task: host facts win, local notes, evidence before "done", search. |
 | `tmp-conventions` | soft rule | Creating, moving, or archiving files under `.tmp/`. |
 | `workspace-operations` | soft rule | File moves, renames, copies, and optional navigation or indexing tools. |
+| `ags-sweep` | skill | Review and archive temporary working files. |
 | `plan-work` | skill | An execution procedure in `.tmp/plans/` for ambiguous, architectural, or risky work. |
 | `write-commit-diff` | skill | Write a git diff under `.tmp/scratch/` instead of printing it. |
 | `report-usage` | skill | Record a skill or action outcome when reporting is enabled. |
@@ -32,10 +37,23 @@ The groups below are the work the text assumes. Workflow rows apply in a host th
 | Id | When | Companions |
 | --- | --- | --- |
 | `ui-library-css` | `package.json` depends on `@platform/ui-library` | `css-authoring-conventions`, `css-theme-tokens` |
+| `code-idioms` | JavaScript/TypeScript project | `typescript-react` |
+| `state-topology` | Web UI project | — |
+| `ownership-boundaries`, `async-state`, `resource-boundaries` | Source code present | — |
+| `ags-graphify` | Graphify executable available | — |
+| `css-authoring-conventions` | Stylesheets present | `css-cleanup` |
+| `css-theme-tokens` | Stylesheets present | — |
+| `git-cleanup`, `commit-granular`, `start-branch` | Git repository | — |
+| `ship` | Git remote configured | `commit-granular`, `start-branch` |
+| `check` | Recognized project check scripts | — |
+| `react-state-transitions` | React project | — |
+| `architecture-review`, `systematic-debugging` | Source code present | — |
+| `typescript-react` | TypeScript or React project | — |
+| `web-platform-first`, `web-accessibility` | Web UI project | — |
 
 Use it when creating, editing, or reviewing that library's components or styles. Read its real types, props, style APIs, and tokens before adding local CSS.
 
-## Opt-in · TypeScript, React, and client architecture
+## TypeScript, React, and client architecture
 
 These are the craft defaults for the stack AGS is written for. `code-idioms` is the usual front door: it requires `typescript-react`. That companion covers backend TypeScript, React implementation, and a concrete client-cost investigation, and it loads only the reference the task needs.
 
@@ -50,7 +68,7 @@ These are the craft defaults for the stack AGS is written for. `code-idioms` is 
 | `react-state-transitions` | — | React state ownership, invariants, and effect-driven repair. Explicit review, plan, or refactor, or a demonstrated invalid intermediate paint. |
 | `architecture-review` | — | Evidence-based review of ownership, async truth, resource lifecycle, reuse, and contracts. Report only, unless implementation is separately authorized. |
 
-## Opt-in · CSS and web UI
+## CSS and web UI
 
 | Id | Companions | What it covers |
 | --- | --- | --- |
@@ -60,7 +78,9 @@ These are the craft defaults for the stack AGS is written for. `code-idioms` is 
 | `web-platform-first` | — | Semantic HTML, native interaction, layout, and CSS mechanisms for a web surface. |
 | `web-accessibility` | — | Semantics, names, keyboard, focus, forms, dialogs, composites, and visual or motion accessibility on the interaction you change. |
 
-## Opt-in · Git, checks, and planning
+## Git, checks, and planning
+
+Specification and backlog workflows (`write-spec`, `manage-backlog`, and `spec-first-plan`) remain opt-in. Companions may also be selected independently, even when their detection condition does not match.
 
 | Id | Companions | Settings | What it covers |
 | --- | --- | --- | --- |
@@ -73,7 +93,6 @@ These are the craft defaults for the stack AGS is written for. `code-idioms` is 
 | `manage-backlog` | — | — | An inactive inventory of deferred work. |
 | `spec-first-plan` | `write-spec`, `manage-backlog` | — | A specification, then a separate repository-grounded plan. Explicit requests only. |
 | `systematic-debugging` | — | — | A falsifiable hypothesis for a reproducible bug or failing check, before a fix. |
-| `ags-sweep` | — | — | Classify `.tmp` plans, records, and scratch into a hash manifest for `ags tmp clean`. |
 | `ags-graphify` | — | — | Local Graphify tracing when a dependency graph helps. The Graphify executable has to be available. |
 
 ## Settings

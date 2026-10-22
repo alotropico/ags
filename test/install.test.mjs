@@ -249,6 +249,7 @@ test("install: a resume backs up every host file it overwrites, ags.yaml and AGE
 test("install: a required setting is asked for or exits 3; --set supplies it with its description comment", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();
+  git(host, ["branch", "master"]);
   await assert.rejects(install(ags, host, { enable: ["ship"] }), (error) => error.exitCode === 3 && /git\.mainBranch/.test(error.message) && /--set 'git\.mainBranch=<value>'/.test(error.message));
   const done = await confirmed(ags, host, { enable: ["ship"], sets: ["git.mainBranch=main"] });
   assert.equal(done.code, 0, done.terminal.text());
@@ -262,10 +263,12 @@ test("install: a required setting is asked for or exits 3; --set supplies it wit
 test("install: in a terminal the opt-in items and missing values are asked", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();
-  const terminal = fakeTerminal(["ship, nope", "ship", "trunk", "yes"]);
+  git(host, ["branch", "master"]);
+  const terminal = fakeTerminal(["", "ship, nope", "ship", "trunk", "yes"]);
   const { code } = await install(ags, host, { terminal });
   assert.equal(code, 0, terminal.lines.join("\n"));
-  assert.match(terminal.prompts[0], /Opt-in items: style, css-rules, css-clean, ship\./);
+  assert.match(terminal.lines.join("\n"), /Installing AGS\n=+\n1 of 2 - Recommended rules and skills for this host\n-+\n\n/);
+  assert.match(terminal.lines.join("\n"), /2 of 2 - Optional rules and skills you can enable/);
   assert.equal(parse(read(host, ".agents/ags.yaml")).git.mainBranch, "trunk");
 });
 
@@ -273,9 +276,16 @@ test("install: checkbox choices use release descriptions, resolve companions and
   const ags = agsFixture();
   const host = makeHostRepo();
   fs.writeFileSync(path.join(ags, "rules", "style.md"), "---\ndescription: Unreleased description.\n---\n");
+  git(host, ["branch", "master"]);
   const terminal = fakeTerminal(["trunk", "yes"]);
-  terminal.selectMany = async ({ choices, included }) => {
-    assert.deepEqual(choices.map(choice => choice.value), ["style", "css-rules", "css-clean", "ship"]);
+  let menus = 0;
+  terminal.selectMany = async ({ choices, included, initial }) => {
+    if (++menus === 1) {
+      assert.deepEqual(choices.map(choice => choice.value), ["core", "tmp-conventions", "plan-work"]);
+      assert.equal(choices[0].locked, true);
+      return initial;
+    }
+    assert.deepEqual(choices.map(choice => choice.value), ["style", "ui-kit", "css-rules", "css-clean", "ship"]);
     assert.equal(choices[0].description, "Editing style files.");
     assert.ok(included(["css-rules"]).includes("css-clean"));
     assert.ok(!included(["css-rules"]).includes("css-rules"));
@@ -296,9 +306,9 @@ test("install: automatic detected companions are shown and picker cancellation w
   const host = makeHostRepo({ files: { "package.json": JSON.stringify({ dependencies: { "@platform/ui-library": "1.0.0" } }) } });
   const beforeHost = treeSnapshot(host), beforeAgs = treeSnapshot(ags);
   const terminal = fakeTerminal();
-  terminal.selectMany = async ({ included }) => {
-    assert.ok(included([]).includes("css-rules"));
-    assert.ok(included([]).includes("css-clean"));
+  terminal.selectMany = async ({ included, initial }) => {
+    assert.ok(included(initial).includes("css-rules"));
+    assert.ok(included(initial).includes("css-clean"));
     return null;
   };
   assert.equal((await install(ags, host, { terminal })).code, 0);
@@ -310,17 +320,47 @@ test("install: automatic detected companions are shown and picker cancellation w
 test("install: simple terminals accept numbers and explicit flags bypass the picker", async () => {
   const ags = agsFixture();
   const host = makeHostRepo();
-  const terminal = fakeTerminal(["0,99", "1,2,2", "yes"]);
+  const terminal = fakeTerminal(["", "0,99", "1,3,3", "yes"]);
   assert.equal((await install(ags, host, { terminal })).code, 0);
-  assert.ok(terminal.lines.some(line => /1\. style \(rule\): Editing style files/.test(line)));
+  assert.ok(terminal.lines.some(line => /1\. \[ \] style \(rule\) - Editing style files/.test(line)));
   assert.deepEqual(parse(read(host, ".agents/ags.yaml")).skills.enabled, ["css-rules"]);
-  const flagged = fakeTerminal(["trunk", "yes"]);
+  const flagged = fakeTerminal(["yes"]);
   flagged.selectMany = () => { throw new Error("Flags must bypass the picker"); };
   assert.equal((await install(ags, makeHostRepo({ name: "flagged" }), { terminal: flagged, enable: ["ship"] })).code, 0);
   const stoppedHost = makeHostRepo();
   const before = treeSnapshot(stoppedHost);
   assert.equal((await install(ags, stoppedHost, { terminal: fakeTerminal(["stop"]) })).code, 0);
   assert.deepEqual(treeSnapshot(stoppedHost), before);
+});
+
+test("install: menu opt-outs persist and required companions do not become explicit enabled items", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  const terminal = fakeTerminal(["y"]);
+  let calls = 0;
+  terminal.selectMany = async ({ title, initial, included }) => {
+    if (++calls === 1) { assert.match(title, /Recommended/); assert.ok(initial.includes("plan-work")); return ["core"]; }
+    assert.match(title, /Optional/);
+    assert.ok(included(["css-rules"]).includes("css-clean"));
+    return ["css-rules"];
+  };
+  assert.equal((await install(ags, host, { terminal })).code, 0);
+  const config = parse(read(host, ".agents/ags.yaml"));
+  assert.deepEqual(config.rules.disabled, ["tmp-conventions"]);
+  assert.deepEqual(config.skills.disabled, ["plan-work"]);
+  assert.deepEqual(config.skills.enabled, ["css-rules"]);
+  assert.ok(exists(host, ".agents/skills/css-clean/SKILL.md"));
+  assert.equal(exists(host, ".agents/skills/plan-work/SKILL.md"), false);
+});
+
+test("install: Enter in both menus keeps defaults and short stop writes nothing", async () => {
+  const ags = agsFixture();
+  const host = makeHostRepo();
+  const before = treeSnapshot(host);
+  const terminal = fakeTerminal(["", "", "s"]);
+  assert.equal((await install(ags, host, { terminal })).code, 0);
+  assert.equal(terminal.prompts.length, 3);
+  assert.deepEqual(treeSnapshot(host), before);
 });
 
 test("install: refuses the AGS root and an AGS without release tags", async () => {
